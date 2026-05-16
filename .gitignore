@@ -6,6 +6,7 @@ agent_docs/*
 !agent_docs/feature-2-demo.md
 docs/superpowers/plans
 .env
+*.env.local
 overlord/data/sessions/
 backend/.venv/
 __pycache__/
