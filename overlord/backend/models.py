@@ -13,7 +13,7 @@ class AgentPayload(BaseModel):
 
 class ResolutionPayload(BaseModel):
     conflict_type: Literal[
-        "merge_conflict", "intent_conflict", "dependency_conflict"
+        "merge_conflict", "intent_conflict", "dependency_conflict", "duplicate_work"
     ]
     compatibility: Literal["conflict", "compatible"] | None = None
     reasoning: str
@@ -23,6 +23,10 @@ class ResolutionPayload(BaseModel):
     resolved_code: str
     tokens_saved_estimate: str
     history_used: list[str] | None = None
+    duplicate_detected: bool | None = None
+    agent_to_continue: str | None = None
+    agent_to_reassign: str | None = None
+    suggested_new_task: str | None = None
 
 
 class ResolveResponse(BaseModel):

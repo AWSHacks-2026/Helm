@@ -31,3 +31,46 @@ Agent B code:
 Respond ONLY with a single JSON object matching this schema (no markdown, no preamble):
 {json.dumps(schema, indent=2)}
 """
+
+
+def build_task_deduplication_prompt(agent_a: dict, agent_b: dict) -> str:
+    return f"""
+You are Overlord, a supervisor for multiple AI coding agents.
+
+Perform semantic task deduplication before either agent wastes work.
+
+Agent A Intent:
+{agent_a["intent"]}
+
+Agent A Proposed Action:
+{agent_a.get("proposed_action", "")}
+
+Agent A Current Code Or Plan:
+{agent_a.get("code", "")}
+
+Agent B Intent:
+{agent_b["intent"]}
+
+Agent B Proposed Action:
+{agent_b.get("proposed_action", "")}
+
+Agent B Current Code Or Plan:
+{agent_b.get("code", "")}
+
+Your job:
+1. Decide whether these agents are working on semantically overlapping tasks.
+2. If duplicate work is detected, choose exactly one agent to continue.
+3. Choose the other agent to reassign.
+4. Suggest a concrete new task for the reassigned agent that does not overlap.
+5. Explain the reasoning in one concise paragraph.
+
+Respond ONLY in JSON with this exact shape:
+{{
+  "conflict_type": "duplicate_work",
+  "duplicate_detected": true,
+  "agent_to_continue": "agent_a",
+  "agent_to_reassign": "agent_b",
+  "suggested_new_task": "Implement audit logging for authentication events.",
+  "reasoning": "Both agents are implementing overlapping authentication work."
+}}
+""".strip()

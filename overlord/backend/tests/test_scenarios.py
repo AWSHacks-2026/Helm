@@ -57,6 +57,23 @@ def test_intent_conflict_scenario_contains_performance_vs_minimalism():
     ]
 
 
+def test_duplicate_work_scenario_contains_overlapping_auth_intents():
+    scenario = SCENARIOS["duplicate_work"]
+
+    assert scenario["title"] == "Duplicate User Authentication Work"
+    assert scenario["agent_a"]["intent"] == (
+        "I am implementing JWT-based user authentication for the API login flow."
+    )
+    assert scenario["agent_b"]["intent"] == (
+        "I am building user sign-in and session validation for the same API."
+    )
+    assert "login" in scenario["agent_a"]["code"]
+    assert "session validation" in scenario["agent_b"]["code"]
+    assert "authentication" in scenario["agent_a"]["proposed_action"]
+    assert "sign-in" in scenario["agent_b"]["proposed_action"]
+    assert "duplicate_work" in get_scenario_names()
+
+
 def test_get_scenario_returns_deep_copy():
     scenario = get_scenario("intent_conflict")
 
