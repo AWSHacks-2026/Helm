@@ -3,7 +3,7 @@ from bedrock import knowledge_base
 
 def test_append_and_list_history(tmp_path, monkeypatch):
     monkeypatch.setenv("OVERLORD_SESSION_PATH", str(tmp_path / "session.json"))
-    monkeypatch.setenv("OVERLORD_USE_LOCAL_KB", "true")
+    monkeypatch.setenv("OVERLORD_USE_LOCAL_MEMORY", "true")
     knowledge_base.append_event(
         "sess_kb",
         {

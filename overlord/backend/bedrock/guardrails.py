@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from typing import Any
 
+from bedrock import agentcore_memory as mem
 from bedrock import knowledge_base as kb
+from bedrock.agentcore_policy import evaluate_proposed_action
 
-_DELETE_ACTIONS = {"delete_file", "remove_file", "delete"}
-_ADD_ACTIONS = {"add_file", "create_file", "add"}
-_CONTRADICTION_PAIRS = [
-    (("cache", "caching"), ("remove", "delete", "strip", "minimize")),
-    (("performance", "speed", "optimize"), ("minimal", "dependency", "simplify")),
-]
+_DEFAULT_SESSION = "default"
 
 _ACTION_TYPE_MAP = {
     "write": "modify_file",
@@ -36,129 +32,17 @@ class PreflightResult:
         }
 
 
-def _check_reverses_recent_decision(proposed: dict[str, Any]) -> PreflightResult | None:
-    action_type = proposed.get("action_type", "")
-    file_path = proposed.get("file_path", "")
-    if action_type not in _DELETE_ACTIONS or not file_path:
-        return None
-
-    recent = kb.get_history(limit=20, record_type="action")
-    adds_by_other = [
-        r
-        for r in recent
-        if r["agent_id"] != proposed["agent_id"]
-        and r["payload"].get("file_path") == file_path
-        and r["payload"].get("action_type") in _ADD_ACTIONS
-    ]
-    if not adds_by_other:
-        return None
-
-    last_add = adds_by_other[-1]
-    ctx = kb.retrieve_context(
-        f"{file_path} cache utility {last_add['agent_id']}", max_results=5
-    )
+def preflight_check(
+    proposed_action: dict[str, Any],
+    session_id: str = _DEFAULT_SESSION,
+) -> PreflightResult:
+    """Coordination policy via AgentCore Policy bridge + Memory context."""
+    result = evaluate_proposed_action(session_id, proposed_action)
     return PreflightResult(
-        allowed=False,
-        rule="reverses_recent_decision",
-        message=(
-            f"Blocked: {proposed['agent_id']} would delete {file_path}, but "
-            f"{last_add['agent_id']} added or extended it recently "
-            f"({last_add['payload'].get('description', '')})."
-        ),
-        kb_context=ctx,
-    )
-
-
-def _check_intent_contradiction(proposed: dict[str, Any]) -> PreflightResult | None:
-    intents = kb.get_history(limit=20, record_type="intent")
-    description = (proposed.get("description") or "").lower()
-    for record in intents:
-        if record["agent_id"] == proposed["agent_id"]:
-            continue
-        intent_text = record["payload"].get("intent", "").lower()
-        for positive, negative in _CONTRADICTION_PAIRS:
-            if any(p in intent_text for p in positive) and any(
-                n in description for n in negative
-            ):
-                ctx = kb.retrieve_context(intent_text + " " + description, max_results=5)
-                return PreflightResult(
-                    allowed=False,
-                    rule="intent_contradiction",
-                    message=(
-                        f"Intent conflict: {record['agent_id']} ({intent_text}) vs "
-                        f"{proposed['agent_id']} action ({description})."
-                    ),
-                    kb_context=ctx,
-                )
-    return None
-
-
-def _check_file_overlap(proposed_action: dict[str, Any]) -> PreflightResult | None:
-    agent_id = proposed_action["agent_id"]
-    file_path = proposed_action.get("file_path", "")
-    history = kb.get_history(limit=100, record_type="action")
-
-    for record in history:
-        if record["agent_id"] == agent_id:
-            continue
-        other_path = record["payload"].get("file_path", "")
-        if file_path and other_path == file_path:
-            ctx = kb.retrieve_context(
-                f"{file_path} {record['agent_id']} {record['payload'].get('description', '')}",
-                max_results=5,
-            )
-            return PreflightResult(
-                allowed=False,
-                rule="file_overlap",
-                message=(
-                    f"{record['agent_id']} already touched {file_path}; "
-                    f"{agent_id} must coordinate before modifying."
-                ),
-                kb_context=ctx,
-            )
-    return None
-
-
-def preflight_check(proposed_action: dict[str, Any]) -> PreflightResult:
-    reversed_result = _check_reverses_recent_decision(proposed_action)
-    if reversed_result:
-        return reversed_result
-
-    intent_result = _check_intent_contradiction(proposed_action)
-    if intent_result:
-        return intent_result
-
-    overlap_result = _check_file_overlap(proposed_action)
-    if overlap_result:
-        return overlap_result
-
-    bedrock_result = apply_bedrock_guardrail(
-        proposed_action.get("description", "") or str(proposed_action)
-    )
-    if bedrock_result and bedrock_result.get("action") == "GUARDRAIL_INTERVENED":
-        return PreflightResult(
-            allowed=False,
-            rule="bedrock_guardrail",
-            message="Bedrock Guardrail intervened on proposed action text.",
-        )
-
-    return PreflightResult(allowed=True, message="No conflicts detected.")
-
-
-def apply_bedrock_guardrail(text: str) -> dict[str, Any] | None:
-    guardrail_id = os.getenv("BEDROCK_GUARDRAIL_ID", "").strip()
-    if not guardrail_id:
-        return None
-
-    from bedrock.client import get_bedrock_runtime_client
-
-    client = get_bedrock_runtime_client()
-    version = os.getenv("BEDROCK_GUARDRAIL_VERSION", "DRAFT")
-    return client.apply_guardrail(
-        guardrailIdentifier=guardrail_id,
-        guardrailVersion=version,
-        source="INPUT",
-        content=[{"text": {"text": text}}],
+        allowed=result.allowed,
+        rule=result.rule,
+        message=result.message,
+        kb_context=result.kb_context,
     )
 
 
@@ -183,14 +67,16 @@ def handle_proposed_action(
     proposed_action: dict[str, Any],
     agent_a: dict[str, str],
     agent_b: dict[str, str],
+    session_id: str = _DEFAULT_SESSION,
 ) -> dict[str, Any]:
-    preflight = preflight_check(proposed_action)
+    preflight = preflight_check(proposed_action, session_id=session_id)
     if preflight.allowed:
         kb.log_action(
             agent_id=proposed_action["agent_id"],
             action_type=proposed_action.get("action_type", "unknown"),
             file_path=proposed_action.get("file_path", ""),
             description=proposed_action.get("description", ""),
+            session_id=session_id,
         )
         return {"preflight": preflight.to_dict(), "resolution": None, "executed": True}
 
@@ -210,6 +96,7 @@ def handle_proposed_action(
             agent_a.get("agent_id", "agent_a"),
             agent_b.get("agent_id", "agent_b"),
         ],
+        session_id=session_id,
     )
     return {
         "preflight": preflight.to_dict(),
@@ -237,12 +124,12 @@ GUARDRAIL_DEMO_SCENARIO = {
 }
 
 
-def seed_guardrail_demo() -> None:
-    kb.log_intent("agent_a", GUARDRAIL_DEMO_SCENARIO["agent_a"]["intent"])
-    kb.log_action("agent_a", "add_file", "utils/cache.py", "Added caching utility")
-    kb.log_action("agent_a", "modify_file", "utils/cache.py", "Extended cache API")
-    kb.log_action("agent_a", "add_file", "utils/cache.py", "Documented cache usage")
-    kb.log_intent("agent_b", GUARDRAIL_DEMO_SCENARIO["agent_b"]["intent"])
+def seed_guardrail_demo(session_id: str = "guardrail-demo") -> None:
+    mem.log_intent(session_id, "agent_a", GUARDRAIL_DEMO_SCENARIO["agent_a"]["intent"])
+    mem.log_action(session_id, "agent_a", "add_file", "utils/cache.py", "Added caching utility")
+    mem.log_action(session_id, "agent_a", "modify_file", "utils/cache.py", "Extended cache API")
+    mem.log_action(session_id, "agent_a", "add_file", "utils/cache.py", "Documented cache usage")
+    mem.log_intent(session_id, "agent_b", GUARDRAIL_DEMO_SCENARIO["agent_b"]["intent"])
 
 
 def check_action(
@@ -254,7 +141,7 @@ def check_action(
     proposed_code: str,
     session_store: Any,
 ) -> Any:
-    """Agentic workflow guardrail check: in-memory session store + KB preflight."""
+    """Agentic workflow guardrail check: session store + AgentCore policy preflight."""
     from models import GuardrailCheckResponse
 
     others = session_store.agents_on_file(session_id, file_path, exclude=agent_id)
@@ -271,7 +158,7 @@ def check_action(
         "file_path": file_path,
         "description": proposed_code or f"{action} on {file_path}",
     }
-    preflight = preflight_check(proposed)
+    preflight = preflight_check(proposed, session_id=session_id)
     if not preflight.allowed:
         return GuardrailCheckResponse(
             allowed=False,

@@ -39,6 +39,18 @@ cd backend && uvicorn main:app --reload --port 8000
 | GET | `/history?session_id=` | Session event log |
 | WS | `/ws/conflicts?session_id=` | Live conflict stream |
 
+## AWS architecture (Memory + Policy)
+
+| Layer | Service | Role |
+|-------|---------|------|
+| Session history | **AgentCore Memory** | Per-session agent actions, intents, decisions |
+| Coordination rules | **AgentCore Policy** (Cedar) | Block file overlap, intent clashes, reversing peer work |
+| Arbitration | **Bedrock Sonnet** (`invoke_model`) | Overlord resolves blocked actions |
+
+Local defaults: `OVERLORD_USE_LOCAL_MEMORY=true` and `OVERLORD_USE_LOCAL_POLICY=true` (no AWS resources required for demo).
+
+Cloud setup: see [`infra/agentcore/README.md`](infra/agentcore/README.md).
+
 ## Demo scenarios (three acts)
 
 | Act | Scenario | How to run |
