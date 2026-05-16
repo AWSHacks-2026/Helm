@@ -1,1 +1,3 @@
 .venv/
+.worktrees/
+agent_docs/
