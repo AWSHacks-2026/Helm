@@ -4,7 +4,8 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
-from agents.scenarios import SCENARIOS
+from agents.scenarios import SCENARIOS, get_scenario
+from agents.simulator import resolve_intent_conflict
 from overlord import arbitrate
 from routes.guardrail_demo import run_guardrail_demo
 
@@ -46,11 +47,11 @@ def demo_smoke():
         )
 
     try:
-        scenario = SCENARIOS["intent_conflict"]
-        raw = arbitrate(
-            scenario["agent_a"],
-            scenario["agent_b"],
-            conflict_kind="intent",
+        scenario = get_scenario("intent_conflict")
+        raw = resolve_intent_conflict(
+            agent_a=scenario["agent_a"],
+            agent_b=scenario["agent_b"],
+            history=scenario.get("history", []),
         )
         ok = raw.get("conflict_type") == "intent_conflict"
         checks.append(
