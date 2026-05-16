@@ -1,29 +1,30 @@
 from copy import deepcopy
 from typing import Any
 
+from agents.merge_scenarios import MERGE_SCENARIO_META, MERGE_SCENARIOS
 from bedrock.guardrails import GUARDRAIL_DEMO_SCENARIO
 
-SCENARIOS: dict[str, dict[str, Any]] = {
-    "merge_conflict": {
-        "agent_a": {
-            "intent": "I am optimizing this function for speed using caching",
-            "code": """
-def get_user(user_id):
-    if user_id in cache:
-        return cache[user_id]
-    result = db.query(user_id)
-    cache[user_id] = result
-    return result
-""".strip(),
-        },
-        "agent_b": {
-            "intent": "I am refactoring this function for readability and adding type hints",
-            "code": """
-def get_user(user_id: str) -> User:
-    return db.query(user_id)
-""".strip(),
-        },
+SCENARIO_META: dict[str, dict[str, str]] = {
+    **MERGE_SCENARIO_META,
+    "intent_conflict": {
+        "kind": "intent",
+        "title": "Act 2 — Performance vs minimal dependencies",
+        "description": "Contradictory goals before code diverges.",
     },
+    "dependency_conflict": {
+        "kind": "dependency",
+        "title": "Redis vs in-memory cache",
+        "description": "Conflicting dependency changes on requirements.txt.",
+    },
+    "guardrail_prevention": {
+        "kind": "guardrail",
+        "title": "Act 3 — Block delete of peer's cache utility",
+        "description": "Use POST /guardrail/check (not /resolve) for full flow.",
+    },
+}
+
+SCENARIOS: dict[str, dict[str, Any]] = {
+    **MERGE_SCENARIOS,
     "intent_conflict": {
         "title": "Performance vs. Minimalism",
         "agent_a": {
@@ -84,6 +85,10 @@ def get_user(user_id: str) -> User:
         "agent_b": GUARDRAIL_DEMO_SCENARIO["agent_b"],
     },
 }
+
+
+def get_scenario_kind(name: str) -> str:
+    return SCENARIO_META[name]["kind"]
 
 
 def get_scenario_names() -> list[str]:

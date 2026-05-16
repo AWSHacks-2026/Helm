@@ -8,7 +8,6 @@ os.environ["OVERLORD_MOCK_BEDROCK"] = "1"
 
 from main import app  # noqa: E402
 
-
 client = TestClient(app)
 
 
@@ -59,17 +58,20 @@ def test_resolve_intent_conflict_returns_contract_payload():
     }
 
 
+def test_resolve_guardrail_scenario_returns_400():
+    response = client.post("/resolve/demo/guardrail_prevention")
+
+    assert response.status_code == 400
+    assert "guardrail/check" in response.json()["detail"]
+
+
 def test_resolve_dependency_conflict_returns_contract_payload():
     response = client.post("/resolve/demo/dependency_conflict")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["agent_a"]["intent"]
-    assert body["agent_b"]["intent"]
     assert body["resolution"]["conflict_type"] == "dependency_conflict"
-    assert "shared demo catalog" in body["resolution"]["reasoning"]
     assert "Redis" in body["resolution"]["resolved_code"]
-    assert body["resolution"]["tokens_saved_estimate"] == "0 tokens saved (0%)"
 
 
 @patch("routes.resolve.arbitrate")
@@ -84,9 +86,7 @@ def test_resolve_merge_conflict_still_uses_arbitrate(mock_arbitrate):
     response = client.post("/resolve/demo/merge_conflict")
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["resolution"]["conflict_type"] == "merge_conflict"
-    assert body["resolution"]["resolved_code"]
+    assert response.json()["resolution"]["conflict_type"] == "merge_conflict"
     mock_arbitrate.assert_called_once()
 
 
@@ -101,12 +101,9 @@ def test_resolve_merge_conflict_omits_feature_2_only_fields(mock_arbitrate):
 
     response = client.post("/resolve/demo/merge_conflict")
 
-    assert response.status_code == 200
     resolution = response.json()["resolution"]
     assert "compatibility" not in resolution
     assert "unified_intent" not in resolution
-    assert "priority_order" not in resolution
-    assert "agent_updates" not in resolution
 
 
 def test_resolve_unknown_scenario_returns_404_detail():

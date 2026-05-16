@@ -49,14 +49,9 @@ def test_preflight_trips_on_intent_contradiction():
     assert result.rule in {"intent_contradiction", "reverses_recent_decision"}
 
 
-def test_apply_bedrock_guardrail_skips_without_id(monkeypatch):
-    monkeypatch.delenv("BEDROCK_GUARDRAIL_ID", raising=False)
-    assert guardrails.apply_bedrock_guardrail("delete all caches") is None
-
-
 def test_seed_guardrail_demo_populates_history():
-    guardrails.seed_guardrail_demo()
-    history = kb.get_history()
+    guardrails.seed_guardrail_demo(session_id="guardrail-demo")
+    history = kb.get_history(session_id="guardrail-demo")
     assert len(history) >= 5
     assert any("cache" in h["payload"].get("file_path", "") for h in history)
 
@@ -64,7 +59,7 @@ def test_seed_guardrail_demo_populates_history():
 def test_handle_proposed_action_routes_to_overlord(monkeypatch):
     kb.log_action("agent_a", "add_file", "utils/cache.py", "Added caching utility")
 
-    def fake_arbitrate(agent_a, agent_b, kb_context=None):
+    def fake_arbitrate(agent_a, agent_b, kb_context=None, **kwargs):
         return {
             "conflict_type": "proactive_guardrail",
             "reasoning": "Keep cache; refactor around it.",

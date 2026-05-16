@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
-from agents.scenarios import SCENARIOS, get_scenario, get_scenario_names
+from agents.scenarios import SCENARIOS, get_scenario, get_scenario_kind, get_scenario_names
 from agents.simulator import resolve_intent_conflict
 from models import (
     AgentPayload,
@@ -45,9 +45,15 @@ def resolve_live(
     kb_context = knowledge_base.get_context_for_agents(
         [payload.agent_a.agent_id, payload.agent_b.agent_id],
         module_hint=payload.file_path,
+        session_id=payload.session_id,
     )
 
-    raw = arbitrate(agent_a.model_dump(), agent_b.model_dump(), kb_context=kb_context or None)
+    raw = arbitrate(
+        agent_a.model_dump(),
+        agent_b.model_dump(),
+        kb_context=kb_context or None,
+        session_id=payload.session_id,
+    )
     resolution = ResolutionPayload.model_validate(raw)
 
     record = store.create(
@@ -109,6 +115,13 @@ def resolve_demo_scenario(scenario_name: str, request: Request) -> ResolveRespon
     if scenario_name not in SCENARIOS:
         raise HTTPException(status_code=404, detail="Scenario not found")
 
+    kind = get_scenario_kind(scenario_name)
+    if kind == "guardrail":
+        raise HTTPException(
+            status_code=400,
+            detail="Use POST /guardrail/check for guardrail_prevention scenario",
+        )
+
     scenario = get_scenario(scenario_name)
     agent_a = AgentPayload.model_validate(scenario["agent_a"])
     agent_b = AgentPayload.model_validate(scenario["agent_b"])
@@ -142,9 +155,11 @@ def resolve_demo_scenario(scenario_name: str, request: Request) -> ResolveRespon
     from bedrock import knowledge_base
 
     kb_context = None
+    module_hint = scenario.get("file_path", "get_user")
     try:
         kb_context = knowledge_base.get_context_for_agents(
-            ["agent_a", "agent_b"], module_hint="get_user"
+            ["agent_a", "agent_b"],
+            module_hint=module_hint,
         )
     except Exception:
         kb_context = None
@@ -153,6 +168,8 @@ def resolve_demo_scenario(scenario_name: str, request: Request) -> ResolveRespon
         agent_a.model_dump(),
         agent_b.model_dump(),
         kb_context=kb_context or None,
+        conflict_kind=kind,
+        session_id=f"demo-{scenario_name}",
     )
     resolution = ResolutionPayload.model_validate(raw_resolution)
 

@@ -4,10 +4,12 @@ import json
 import os
 import uuid
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 from enum import Enum
-from pathlib import Path
 from typing import Any
+
+from bedrock import agentcore_memory as mem
+
+_DEFAULT_SESSION = "default"
 
 
 class RecordType(str, Enum):
@@ -31,43 +33,19 @@ class KnowledgeRecord:
         return data
 
 
-def _session_path() -> Path:
-    return Path(os.getenv("OVERLORD_SESSION_PATH", ".overlord/session.json"))
-
-
-def _use_local_kb() -> bool:
-    return os.getenv("OVERLORD_USE_LOCAL_KB", "true").lower() == "true"
-
-
-def _read_all() -> list[dict[str, Any]]:
-    path = _session_path()
-    if not path.exists():
-        return []
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _append(record: KnowledgeRecord) -> KnowledgeRecord:
-    path = _session_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    records = _read_all()
-    records.append(record.to_dict())
-    path.write_text(json.dumps(records, indent=2), encoding="utf-8")
-    return record
-
-
-def _make_record(
-    record_type: RecordType,
-    agent_id: str,
-    payload: dict[str, Any],
-    session_id: str = "default",
-) -> KnowledgeRecord:
+def _record_from_raw(raw: dict[str, Any]) -> KnowledgeRecord:
+    rt = raw.get("record_type", "action")
+    if isinstance(rt, RecordType):
+        record_type = rt
+    else:
+        record_type = RecordType(rt)
     return KnowledgeRecord(
-        id=str(uuid.uuid4()),
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        id=raw["id"],
+        timestamp=raw["timestamp"],
         record_type=record_type,
-        agent_id=agent_id,
-        session_id=session_id,
-        payload=payload,
+        agent_id=raw.get("actor_id", raw.get("agent_id", "unknown")),
+        session_id=raw.get("session_id", _DEFAULT_SESSION),
+        payload=raw.get("payload", {}),
     )
 
 
@@ -77,117 +55,87 @@ def log_action(
     file_path: str,
     description: str,
     metadata: dict[str, Any] | None = None,
-    session_id: str = "default",
+    session_id: str = _DEFAULT_SESSION,
 ) -> KnowledgeRecord:
-    payload = {
-        "action_type": action_type,
-        "file_path": file_path,
-        "description": description,
-        "metadata": metadata or {},
-    }
-    record = _make_record(RecordType.ACTION, agent_id, payload, session_id)
-    return _append(record)
-
-
-def log_intent(agent_id: str, intent: str, session_id: str = "default") -> KnowledgeRecord:
-    record = _make_record(
-        RecordType.INTENT,
-        agent_id,
-        {"intent": intent},
+    raw = mem.log_action(
         session_id,
+        agent_id,
+        action_type,
+        file_path,
+        description,
+        metadata,
     )
-    return _append(record)
+    return _record_from_raw(raw)
+
+
+def log_intent(agent_id: str, intent: str, session_id: str = _DEFAULT_SESSION) -> KnowledgeRecord:
+    raw = mem.log_intent(session_id, agent_id, intent)
+    return _record_from_raw(raw)
 
 
 def log_decision(
     reasoning: str,
     affected_agents: list[str],
     decision_id: str | None = None,
-    session_id: str = "default",
+    session_id: str = _DEFAULT_SESSION,
 ) -> KnowledgeRecord:
-    payload = {
-        "decision_id": decision_id or str(uuid.uuid4()),
-        "reasoning": reasoning,
-        "affected_agents": affected_agents,
-    }
-    record = _make_record(RecordType.DECISION, "overlord", payload, session_id)
-    return _append(record)
+    raw = mem.log_decision(session_id, reasoning, affected_agents, decision_id)
+    return _record_from_raw(raw)
 
 
 def get_history(
     limit: int = 50,
     record_type: str | None = None,
     agent_id: str | None = None,
+    session_id: str = _DEFAULT_SESSION,
 ) -> list[dict[str, Any]]:
-    records = _read_all()
-    if record_type:
-        records = [r for r in records if r["record_type"] == record_type]
-    if agent_id:
-        records = [r for r in records if r["agent_id"] == agent_id]
-    return records[-limit:]
+    events = mem.list_events(
+        session_id,
+        actor_id=agent_id,
+        record_type=record_type,
+        limit=limit,
+    )
+    return [
+        {
+            "id": e["id"],
+            "timestamp": e["timestamp"],
+            "record_type": e["record_type"],
+            "agent_id": e.get("actor_id", e.get("agent_id")),
+            "session_id": e["session_id"],
+            "payload": e["payload"],
+        }
+        for e in events
+    ]
 
 
 def get_context_for_agents(
     agent_ids: list[str],
     module_hint: str | None = None,
+    session_id: str = _DEFAULT_SESSION,
 ) -> str:
     query_parts = list(agent_ids)
     if module_hint:
         query_parts.append(module_hint)
-    results = retrieve_context(" ".join(query_parts), max_results=5)
+    results = retrieve_context(" ".join(query_parts), max_results=5, session_id=session_id)
     return json.dumps(results, indent=2)
 
 
-def retrieve_context(query: str, max_results: int = 5) -> list[dict[str, Any]]:
-    kb_id = os.getenv("BEDROCK_KB_ID", "").strip()
-    if kb_id and not _use_local_kb():
-        return _retrieve_from_bedrock(query, max_results, kb_id)
-    return _retrieve_local(query, max_results)
+def retrieve_context(
+    query: str,
+    max_results: int = 5,
+    session_id: str = _DEFAULT_SESSION,
+) -> list[dict[str, Any]]:
+    return mem.retrieve_context(session_id, query, top_k=max_results)
 
 
-def _retrieve_local(query: str, max_results: int) -> list[dict[str, Any]]:
-    tokens = {t.lower() for t in query.split() if len(t) > 2}
-    scored: list[tuple[int, dict[str, Any]]] = []
-    for record in _read_all():
-        blob = json.dumps(record).lower()
-        score = sum(1 for t in tokens if t in blob)
-        if score:
-            scored.append((score, record))
-    scored.sort(key=lambda x: x[0], reverse=True)
-    return [r for _, r in scored[:max_results]]
-
-
-def _retrieve_from_bedrock(query: str, max_results: int, kb_id: str) -> list[dict[str, Any]]:
-    from bedrock.client import get_bedrock_agent_client
-
-    client = get_bedrock_agent_client()
-    response = client.retrieve(
-        knowledgeBaseId=kb_id,
-        retrievalQuery={"text": query},
-        retrievalConfiguration={
-            "vectorSearchConfiguration": {"numberOfResults": max_results}
-        },
-    )
-    results = []
-    for item in response.get("retrievalResults", []):
-        results.append(
-            {
-                "score": item.get("score"),
-                "content": item.get("content", {}).get("text", ""),
-                "metadata": item.get("metadata", {}),
-            }
-        )
-    return results
-
-
-def sync_to_s3(session_id: str = "default") -> str:
+def sync_to_s3(session_id: str = _DEFAULT_SESSION) -> str:
     import boto3
 
     bucket = os.getenv("OVERLORD_S3_BUCKET", "").strip()
     if not bucket:
         raise ValueError("OVERLORD_S3_BUCKET is not configured")
 
-    records = _read_all()
+    records = get_history(limit=10_000, session_id=session_id)
     key = f"sessions/{session_id}/{uuid.uuid4()}.json"
     region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION", "us-east-1")
     client = boto3.client("s3", region_name=region)
@@ -200,8 +148,6 @@ def sync_to_s3(session_id: str = "default") -> str:
     return key
 
 
-# --- Agentic workflow API adapters (session-scoped events for dashboard/MCP) ---
-
 _EVENT_TYPE_BY_RECORD = {
     "intent": "intent_declared",
     "action": "action",
@@ -210,21 +156,18 @@ _EVENT_TYPE_BY_RECORD = {
 
 
 def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
-    """Bridge agentic workflow events into the shared knowledge base."""
+    """Bridge agentic workflow events into AgentCore Memory."""
     event_type = event.get("event_type", "")
     payload = event.get("payload", event)
 
     if event_type == "intent_declared":
-        intent_payload: dict[str, Any] = {"intent": payload["intent"]}
-        if payload.get("file_path"):
-            intent_payload["file_path"] = payload["file_path"]
-        record = _make_record(
-            RecordType.INTENT,
-            payload["agent_id"],
-            intent_payload,
+        raw = mem.log_intent(
             session_id,
+            payload["agent_id"],
+            payload["intent"],
+            file_path=payload.get("file_path", ""),
         )
-        record = _append(record)
+        record = _record_from_raw(raw)
     elif event_type == "guardrail_blocked":
         record = log_action(
             agent_id=payload.get("agent_id", "unknown"),
@@ -252,7 +195,7 @@ def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
 
 def list_history(session_id: str) -> list[dict[str, Any]]:
     """Session-filtered history for GET /history?session_id=."""
-    records = [r for r in _read_all() if r.get("session_id") == session_id]
+    records = get_history(limit=10_000, session_id=session_id)
     events: list[dict[str, Any]] = []
     for record in sorted(records, key=lambda r: r["timestamp"], reverse=True):
         record_type = record["record_type"]

@@ -5,7 +5,7 @@ def test_kb_context_forwarded_to_arbitrate(monkeypatch):
     kb.log_action("agent_a", "add_file", "utils/cache.py", "Added caching utility")
     captured: dict = {}
 
-    def fake_arbitrate(agent_a, agent_b, kb_context=None):
+    def fake_arbitrate(agent_a, agent_b, kb_context=None, **kwargs):
         captured["kb_context"] = kb_context
         return {
             "reasoning": "ok",

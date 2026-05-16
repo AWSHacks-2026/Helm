@@ -7,11 +7,15 @@ import {
   fetchHistory,
   ResolveDetail,
 } from "./api/client";
+import DemoLab from "./DemoLab";
+import MergeLab from "./MergeLab";
 import { useConflictStream } from "./hooks/useConflictStream";
 
 const SESSION_KEY = "overlord_session_id";
 
-export default function App() {
+type Tab = "dashboard" | "demo" | "merge";
+
+function Dashboard() {
   const [sessionId, setSessionId] = useState(
     () => localStorage.getItem(SESSION_KEY) ?? "default"
   );
@@ -133,5 +137,48 @@ export default function App() {
         <pre>{JSON.stringify(history, null, 2)}</pre>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>("merge");
+
+  return (
+    <>
+      <nav className="app-nav">
+        <button
+          type="button"
+          className={tab === "merge" ? "active" : ""}
+          onClick={() => setTab("merge")}
+        >
+          Merge lab
+        </button>
+        <button
+          type="button"
+          className={tab === "demo" ? "active" : ""}
+          onClick={() => setTab("demo")}
+        >
+          Demo lab
+        </button>
+        <button
+          type="button"
+          className={tab === "dashboard" ? "active" : ""}
+          onClick={() => setTab("dashboard")}
+        >
+          Dashboard
+        </button>
+      </nav>
+      {tab === "merge" ? (
+        <div className="app app-merge">
+          <MergeLab />
+        </div>
+      ) : tab === "demo" ? (
+        <div className="app app-demo">
+          <DemoLab />
+        </div>
+      ) : (
+        <Dashboard />
+      )}
+    </>
   );
 }

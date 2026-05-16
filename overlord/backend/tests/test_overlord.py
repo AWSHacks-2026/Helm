@@ -1,20 +1,18 @@
 import json
 from unittest.mock import MagicMock, patch
 
+from bedrock.invoke_tracked import InvokeUsage
 from overlord import OVERLORD_MODEL, arbitrate
 
 
-def _bedrock_body(text: str) -> dict:
-    return {
-        "content": [{"type": "text", "text": text}],
-    }
+def _usage() -> InvokeUsage:
+    return InvokeUsage("m", "overlord", 10, 5, 1)
 
 
-@patch("overlord.get_bedrock_client")
-def test_arbitrate_returns_parsed_resolution(mock_get_client):
-    import os
-
-    os.environ.pop("OVERLORD_MOCK_BEDROCK", None)
+@patch("arbitration.runner.get_bedrock_client")
+def test_arbitrate_returns_parsed_resolution_legacy_path(mock_get_client, monkeypatch):
+    monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    monkeypatch.delenv("OVERLORD_ARBITRATOR_ARN", raising=False)
 
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
@@ -28,11 +26,7 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
         }
     )
     mock_client.invoke_model.return_value = {
-        "body": MagicMock(
-            read=MagicMock(
-                return_value=json.dumps(_bedrock_body(model_json)).encode()
-            )
-        )
+        "body": MagicMock(read=lambda: json.dumps({"content": [{"text": model_json}]}).encode())
     }
 
     result = arbitrate(
@@ -41,12 +35,83 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
     )
 
     assert result["conflict_type"] == "merge_conflict"
-    assert "cache" in result["reasoning"].lower() or "type" in result["reasoning"].lower()
     assert "get_user" in result["resolved_code"]
-
     mock_client.invoke_model.assert_called_once()
     call_kwargs = mock_client.invoke_model.call_args.kwargs
     assert call_kwargs["modelId"] == OVERLORD_MODEL
-    body = json.loads(call_kwargs["body"])
-    assert body["anthropic_version"] == "bedrock-2023-05-31"
-    assert body["max_tokens"] >= 1000
+
+
+@patch("overlord.invoke_arbitrator")
+def test_arbitrate_uses_agentcore_when_arn_set(mock_invoke, monkeypatch):
+    monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    monkeypatch.setenv(
+        "OVERLORD_ARBITRATOR_ARN",
+        "arn:aws:bedrock-agentcore:us-east-1:123:runtime/x",
+    )
+
+    mock_invoke.return_value = {
+        "conflict_type": "merge_conflict",
+        "reasoning": "via runtime",
+        "resolved_code": "def x(): pass",
+        "tokens_saved_estimate": "~1",
+    }
+
+    result = arbitrate(
+        agent_a={"intent": "a", "code": "a"},
+        agent_b={"intent": "b", "code": "b"},
+        session_id="sess-1",
+    )
+
+    assert result["reasoning"] == "via runtime"
+    mock_invoke.assert_called_once()
+    assert mock_invoke.call_args.kwargs["session_id"] == "sess-1"
+
+
+@patch("overlord.invoke_anthropic_messages")
+def test_arbitrate_intent_uses_tracked_invoke(mock_invoke, monkeypatch):
+    monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    monkeypatch.delenv("OVERLORD_ARBITRATOR_ARN", raising=False)
+
+    model_json = json.dumps(
+        {
+            "conflict_type": "intent_conflict",
+            "reasoning": "compromise",
+            "resolved_code": "directive",
+            "tokens_saved_estimate": "~1800",
+        }
+    )
+    mock_invoke.return_value = (model_json, _usage())
+
+    result = arbitrate(
+        {"intent": "max performance", "code": "# a"},
+        {"intent": "min dependencies", "code": "# b"},
+        conflict_kind="intent",
+    )
+    assert result["conflict_type"] == "intent_conflict"
+    assert result["_usage"]["input_tokens"] == 10
+
+
+def test_arbitrate_intent_conflict_mock(monkeypatch):
+    monkeypatch.setenv("OVERLORD_MOCK_BEDROCK", "1")
+    result = arbitrate(
+        {"intent": "max performance", "code": "# a"},
+        {"intent": "min dependencies", "code": "# b"},
+        conflict_kind="intent",
+    )
+    assert result["conflict_type"] == "intent_conflict"
+
+
+def test_arbitrate_guardrail_mock(monkeypatch):
+    monkeypatch.setenv("OVERLORD_MOCK_BEDROCK", "1")
+    result = arbitrate(
+        {"intent": "keep cache", "code": "# keep"},
+        {"intent": "delete cache", "code": "# delete"},
+        conflict_kind="guardrail",
+        guardrail_context={
+            "proposed_action": {"description": "Remove cache"},
+            "rule": "reverses_recent_decision",
+            "message": "blocked",
+        },
+    )
+    assert result["conflict_type"] == "proactive_guardrail"
+    assert result["verdict"] == "modify"

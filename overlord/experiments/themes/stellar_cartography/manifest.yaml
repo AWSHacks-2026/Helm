@@ -1,0 +1,31 @@
+name: stellar_cartography
+description: Star chart API — agents conflict on caching constellation lookups.
+base_dir: base
+assignments:
+  - id: agent_alpha
+    feature: |
+      Add an in-process dict cache keyed by constellation name in lookup_constellation().
+      Invalidate cache when the catalog version in settings changes.
+      Keep the function signature and return type unchanged.
+    files:
+      - app/services/constellation_lookup.py
+    acceptance:
+      must_include:
+        - lookup_constellation
+        - cache
+      must_include_any:
+        - - _cache
+  - id: agent_beta
+    feature: |
+      Add a simple on-disk JSON cache file under .cache/constellations.json for lookups.
+      Load cache on startup if the file exists; save after each lookup.
+      Do not change the public function signature of lookup_constellation.
+    files:
+      - app/services/constellation_lookup.py
+    acceptance:
+      must_include:
+        - lookup_constellation
+        - cache
+      must_include_any:
+        - json
+        - .cache
