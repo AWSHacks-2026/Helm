@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from agents.scenarios import SCENARIOS
+from agents.scenarios import SCENARIOS, get_scenario
+from agents.simulator import resolve_intent_conflict
 from bedrock import guardrails, knowledge_base as kb
 from bedrock.guardrails import GUARDRAIL_DEMO_SCENARIO, seed_guardrail_demo
 from models import AgentPayload, ResolutionPayload, ResolveResponse
@@ -45,14 +46,52 @@ def guardrail_check():
     }
 
 
-@app.post("/resolve/{scenario_name}", response_model=ResolveResponse)
+@app.post(
+    "/resolve/{scenario_name}",
+    response_model=ResolveResponse,
+    response_model_exclude_none=True,
+)
 def resolve_conflict(scenario_name: str) -> ResolveResponse:
     if scenario_name not in SCENARIOS:
         raise HTTPException(status_code=404, detail="Scenario not found")
 
-    scenario = SCENARIOS[scenario_name]
+    scenario = get_scenario(scenario_name)
     agent_a = AgentPayload.model_validate(scenario["agent_a"])
     agent_b = AgentPayload.model_validate(scenario["agent_b"])
+
+    if scenario_name == "intent_conflict":
+        raw_resolution = resolve_intent_conflict(
+            agent_a=scenario["agent_a"],
+            agent_b=scenario["agent_b"],
+            history=scenario.get("history", []),
+        )
+        resolution = ResolutionPayload.model_validate(raw_resolution)
+        return ResolveResponse(
+            agent_a=agent_a,
+            agent_b=agent_b,
+            resolution=resolution,
+        )
+
+    if scenario_name == "dependency_conflict":
+        raw_resolution = {
+            "conflict_type": "dependency_conflict",
+            "reasoning": (
+                "The dependency scenario is part of the shared demo catalog; "
+                "full dependency arbitration belongs to another feature owner "
+                "or a future resolver."
+            ),
+            "resolved_code": (
+                "Directive: avoid adding Redis until benchmark evidence "
+                "justifies the dependency on the demo path."
+            ),
+            "tokens_saved_estimate": "0 tokens saved (0%)",
+        }
+        resolution = ResolutionPayload.model_validate(raw_resolution)
+        return ResolveResponse(
+            agent_a=agent_a,
+            agent_b=agent_b,
+            resolution=resolution,
+        )
 
     # Optional KB context when bedrock.knowledge_base is available (Person 3).
     kb_context = None

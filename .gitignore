@@ -3,4 +3,6 @@
 .env
 .worktrees/
 backend/.venv/
-agent_docs/
+agent_docs/*
+!agent_docs/
+!agent_docs/feature-2-demo.md
