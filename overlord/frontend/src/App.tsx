@@ -12,12 +12,14 @@ import MergeLab from "./MergeLab";
 import { useConflictStream } from "./hooks/useConflictStream";
 
 const SESSION_KEY = "overlord_session_id";
+const DEFAULT_SESSION =
+  import.meta.env.VITE_OVERLORD_TEAM_SESSION ?? "mergeai-hackathon-demo";
 
 type Tab = "dashboard" | "demo" | "merge";
 
 function Dashboard() {
   const [sessionId, setSessionId] = useState(
-    () => localStorage.getItem(SESSION_KEY) ?? "default"
+    () => localStorage.getItem(SESSION_KEY) ?? DEFAULT_SESSION
   );
   const [conflicts, setConflicts] = useState<ConflictSummary[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
