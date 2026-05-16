@@ -64,7 +64,7 @@ def test_seed_guardrail_demo_populates_history():
 def test_handle_proposed_action_routes_to_overlord(monkeypatch):
     kb.log_action("agent_a", "add_file", "utils/cache.py", "Added caching utility")
 
-    def fake_arbitrate(agent_a, agent_b, kb_context=None):
+    def fake_arbitrate(agent_a, agent_b, kb_context=None, **kwargs):
         return {
             "conflict_type": "proactive_guardrail",
             "reasoning": "Keep cache; refactor around it.",

@@ -50,3 +50,29 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
     body = json.loads(call_kwargs["body"])
     assert body["anthropic_version"] == "bedrock-2023-05-31"
     assert body["max_tokens"] >= 1000
+
+
+def test_arbitrate_intent_conflict_mock(monkeypatch):
+    monkeypatch.setenv("OVERLORD_MOCK_BEDROCK", "1")
+    result = arbitrate(
+        {"intent": "max performance", "code": "# a"},
+        {"intent": "min dependencies", "code": "# b"},
+        conflict_kind="intent",
+    )
+    assert result["conflict_type"] == "intent_conflict"
+
+
+def test_arbitrate_guardrail_mock(monkeypatch):
+    monkeypatch.setenv("OVERLORD_MOCK_BEDROCK", "1")
+    result = arbitrate(
+        {"intent": "keep cache", "code": "# keep"},
+        {"intent": "delete cache", "code": "# delete"},
+        conflict_kind="guardrail",
+        guardrail_context={
+            "proposed_action": {"description": "Remove cache"},
+            "rule": "reverses_recent_decision",
+            "message": "blocked",
+        },
+    )
+    assert result["conflict_type"] == "proactive_guardrail"
+    assert result["verdict"] == "modify"

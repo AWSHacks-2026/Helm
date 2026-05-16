@@ -160,10 +160,17 @@ def _arbitrate(
     agent_a: dict[str, str],
     agent_b: dict[str, str],
     kb_context: list[dict[str, Any]] | None = None,
+    guardrail_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from overlord import arbitrate
 
-    return arbitrate(agent_a, agent_b, kb_context=kb_context)
+    return arbitrate(
+        agent_a,
+        agent_b,
+        kb_context=kb_context,
+        conflict_kind="guardrail",
+        guardrail_context=guardrail_context,
+    )
 
 
 def handle_proposed_action(
@@ -181,7 +188,16 @@ def handle_proposed_action(
         )
         return {"preflight": preflight.to_dict(), "resolution": None, "executed": True}
 
-    resolution = _arbitrate(agent_a, agent_b, kb_context=preflight.kb_context)
+    resolution = _arbitrate(
+        agent_a,
+        agent_b,
+        kb_context=preflight.kb_context,
+        guardrail_context={
+            "proposed_action": proposed_action,
+            "rule": preflight.rule or "",
+            "message": preflight.message,
+        },
+    )
     kb.log_decision(
         reasoning=resolution.get("reasoning", ""),
         affected_agents=[
