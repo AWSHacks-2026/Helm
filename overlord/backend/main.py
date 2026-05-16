@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from agents.scenarios import SCENARIOS
+from bedrock import guardrails, knowledge_base as kb
+from bedrock.guardrails import GUARDRAIL_DEMO_SCENARIO, seed_guardrail_demo
 from models import AgentPayload, ResolutionPayload, ResolveResponse
 from overlord import arbitrate
 
@@ -17,6 +19,30 @@ app.add_middleware(
 @app.get("/scenarios")
 def get_scenarios() -> list[str]:
     return list(SCENARIOS.keys())
+
+
+@app.get("/history")
+def get_history(limit: int = 50):
+    return kb.get_history(limit=limit)
+
+
+@app.post("/guardrail/check")
+def guardrail_check():
+    seed_guardrail_demo()
+    scenario = GUARDRAIL_DEMO_SCENARIO
+    result = guardrails.handle_proposed_action(
+        scenario["proposed_action"],
+        scenario["agent_a"],
+        scenario["agent_b"],
+    )
+    return {
+        "agent_a": scenario["agent_a"],
+        "agent_b": scenario["agent_b"],
+        "proposed_action": scenario["proposed_action"],
+        "preflight": result["preflight"],
+        "resolution": result["resolution"],
+        "executed": result["executed"],
+    }
 
 
 @app.post("/resolve/{scenario_name}", response_model=ResolveResponse)
