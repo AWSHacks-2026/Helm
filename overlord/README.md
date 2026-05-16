@@ -28,7 +28,8 @@ cd backend && uvicorn main:app --reload --port 8000
 | POST | `/resolve` | Live conflict arbitration (IDE agents) |
 | POST | `/resolve/demo/{name}` | Hackathon demo scenarios |
 | POST | `/intents` | Record agent intent |
-| POST | `/guardrails/check` | Pre-write check |
+| POST | `/guardrails/check` | Pre-write check (agentic workflow; JSON body) |
+| POST | `/guardrail/check` | Hackathon demo: proactive cache-delete scenario |
 | GET | `/conflicts` | List conflicts for dashboard |
 | GET | `/conflicts/{id}` | Conflict detail |
 | POST | `/conflicts/{id}/approve` | Human approve/reject |

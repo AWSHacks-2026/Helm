@@ -1,3 +1,5 @@
+from bedrock.guardrails import GUARDRAIL_DEMO_SCENARIO
+
 SCENARIOS = {
     "merge_conflict": {
         "agent_a": {
@@ -18,5 +20,9 @@ def get_user(user_id: str) -> User:
     return db.query(user_id)
 """.strip(),
         },
+    },
+    "guardrail_prevention": {
+        "agent_a": GUARDRAIL_DEMO_SCENARIO["agent_a"],
+        "agent_b": GUARDRAIL_DEMO_SCENARIO["agent_b"],
     },
 }

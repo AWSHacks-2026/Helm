@@ -13,7 +13,8 @@ client = TestClient(app)
 
 
 def test_intent_recorded_in_history(tmp_path, monkeypatch):
-    monkeypatch.setattr(knowledge_base, "DATA_DIR", tmp_path)
+    monkeypatch.setenv("OVERLORD_SESSION_PATH", str(tmp_path / "session.json"))
+    monkeypatch.setenv("OVERLORD_USE_LOCAL_KB", "true")
     session_id = "sess_intent_hist"
 
     response = client.post(
