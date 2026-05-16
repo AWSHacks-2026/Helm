@@ -1,0 +1,10 @@
+{
+  "agent_a": {
+    "intent": "add caching for faster lookups",
+    "code": "def get_user(user_id):\n    if user_id in cache:\n        return cache[user_id]\n    return db.query(user_id)"
+  },
+  "agent_b": {
+    "intent": "add return type hints",
+    "code": "def get_user(user_id: str) -> User:\n    return db.query(user_id)"
+  }
+}

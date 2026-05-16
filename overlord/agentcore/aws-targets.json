@@ -1,0 +1,8 @@
+[
+  {
+    "name": "default",
+    "description": "Primary deployment (us-east-1)",
+    "account": "094869897653",
+    "region": "us-east-1"
+  }
+]

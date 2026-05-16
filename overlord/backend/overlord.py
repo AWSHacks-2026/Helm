@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from typing import Any
 
+from arbitration.runner import run_arbitration
+from bedrock.agentcore_client import invoke_arbitrator
 from bedrock.invoke_tracked import invoke_anthropic_messages
+from bedrock.model_ids import resolve_inference_profile_id
 from models import BedrockArbitrationResult
 from overlord_parse import extract_json_object
 from overlord_prompt import (
@@ -13,13 +17,9 @@ from overlord_prompt import (
     build_merge_conflict_prompt,
 )
 
-from bedrock.model_ids import resolve_inference_profile_id
-
 OVERLORD_MODEL = resolve_inference_profile_id(
-    os.getenv(
-        "OVERLORD_BEDROCK_MODEL_ID",
-        "us.anthropic.claude-sonnet-4-20250514-v1:0",
-    )
+    os.getenv("OVERLORD_BEDROCK_MODEL_ID")
+    or os.getenv("OVERLORD_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
 )
 MAX_TOKENS = 1500
 
@@ -30,8 +30,9 @@ def arbitrate(
     kb_context: str | list[dict[str, Any]] | None = None,
     conflict_kind: str = "merge",
     guardrail_context: dict[str, Any] | None = None,
+    session_id: str | None = None,
 ) -> dict[str, Any]:
-    """Call Sonnet via Bedrock to resolve a conflict between two agents."""
+    """Resolve via AgentCore Runtime (merge + ARN), legacy runner, or tracked Bedrock."""
     if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
         if conflict_kind == "intent":
             return _mock_intent_resolution()
@@ -39,6 +40,36 @@ def arbitrate(
             return _mock_guardrail_resolution()
         return _mock_merge_resolution()
 
+    arn = os.getenv("OVERLORD_ARBITRATOR_ARN", "").strip()
+    if arn and conflict_kind == "merge":
+        return invoke_arbitrator(
+            agent_runtime_arn=arn,
+            session_id=session_id or str(uuid.uuid4()),
+            agent_a=agent_a,
+            agent_b=agent_b,
+            kb_context=kb_context,
+        )
+
+    if conflict_kind == "merge":
+        return run_arbitration(agent_a, agent_b, kb_context=kb_context)
+
+    return _arbitrate_tracked(
+        agent_a,
+        agent_b,
+        kb_context=kb_context,
+        conflict_kind=conflict_kind,
+        guardrail_context=guardrail_context,
+    )
+
+
+def _arbitrate_tracked(
+    agent_a: dict,
+    agent_b: dict,
+    *,
+    kb_context: str | list[dict[str, Any]] | None,
+    conflict_kind: str,
+    guardrail_context: dict[str, Any] | None,
+) -> dict[str, Any]:
     prompt = _build_prompt(agent_a, agent_b, conflict_kind, guardrail_context)
     if kb_context:
         kb_text = (

@@ -9,9 +9,13 @@ def _usage() -> InvokeUsage:
     return InvokeUsage("m", "overlord", 10, 5, 1)
 
 
-@patch("overlord.invoke_anthropic_messages")
-def test_arbitrate_returns_parsed_resolution(mock_invoke, monkeypatch):
+@patch("arbitration.runner.get_bedrock_client")
+def test_arbitrate_returns_parsed_resolution_legacy_path(mock_get_client, monkeypatch):
     monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    monkeypatch.delenv("OVERLORD_ARBITRATOR_ARN", raising=False)
+
+    mock_client = MagicMock()
+    mock_get_client.return_value = mock_client
 
     model_json = json.dumps(
         {
@@ -21,7 +25,9 @@ def test_arbitrate_returns_parsed_resolution(mock_invoke, monkeypatch):
             "tokens_saved_estimate": "~2400",
         }
     )
-    mock_invoke.return_value = (model_json, _usage())
+    mock_client.invoke_model.return_value = {
+        "body": MagicMock(read=lambda: json.dumps({"content": [{"text": model_json}]}).encode())
+    }
 
     result = arbitrate(
         agent_a={"intent": "cache", "code": "def get_user(user_id): ..."},
@@ -30,26 +36,58 @@ def test_arbitrate_returns_parsed_resolution(mock_invoke, monkeypatch):
 
     assert result["conflict_type"] == "merge_conflict"
     assert "get_user" in result["resolved_code"]
-    assert result["_usage"]["input_tokens"] == 10
+    mock_client.invoke_model.assert_called_once()
+    call_kwargs = mock_client.invoke_model.call_args.kwargs
+    assert call_kwargs["modelId"] == OVERLORD_MODEL
 
+
+@patch("overlord.invoke_arbitrator")
+def test_arbitrate_uses_agentcore_when_arn_set(mock_invoke, monkeypatch):
+    monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    monkeypatch.setenv(
+        "OVERLORD_ARBITRATOR_ARN",
+        "arn:aws:bedrock-agentcore:us-east-1:123:runtime/x",
+    )
+
+    mock_invoke.return_value = {
+        "conflict_type": "merge_conflict",
+        "reasoning": "via runtime",
+        "resolved_code": "def x(): pass",
+        "tokens_saved_estimate": "~1",
+    }
+
+    result = arbitrate(
+        agent_a={"intent": "a", "code": "a"},
+        agent_b={"intent": "b", "code": "b"},
+        session_id="sess-1",
+    )
+
+    assert result["reasoning"] == "via runtime"
     mock_invoke.assert_called_once()
-    assert mock_invoke.call_args.kwargs["model_id"] == OVERLORD_MODEL
+    assert mock_invoke.call_args.kwargs["session_id"] == "sess-1"
 
 
 @patch("overlord.invoke_anthropic_messages")
-def test_arbitrate_attaches_usage_when_not_mock(mock_invoke, monkeypatch):
+def test_arbitrate_intent_uses_tracked_invoke(mock_invoke, monkeypatch):
     monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    monkeypatch.delenv("OVERLORD_ARBITRATOR_ARN", raising=False)
+
     model_json = json.dumps(
         {
-            "conflict_type": "merge_conflict",
-            "reasoning": "r",
-            "resolved_code": "def f(): pass",
-            "tokens_saved_estimate": "0",
+            "conflict_type": "intent_conflict",
+            "reasoning": "compromise",
+            "resolved_code": "directive",
+            "tokens_saved_estimate": "~1800",
         }
     )
-    mock_invoke.return_value = (model_json, InvokeUsage("m", "overlord", 10, 5, 1))
+    mock_invoke.return_value = (model_json, _usage())
 
-    result = arbitrate({"intent": "a", "code": "a"}, {"intent": "b", "code": "b"})
+    result = arbitrate(
+        {"intent": "max performance", "code": "# a"},
+        {"intent": "min dependencies", "code": "# b"},
+        conflict_kind="intent",
+    )
+    assert result["conflict_type"] == "intent_conflict"
     assert result["_usage"]["input_tokens"] == 10
 
 
