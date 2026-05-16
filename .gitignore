@@ -3,3 +3,4 @@
 .env
 .worktrees/
 backend/.venv/
+agent_docs/
