@@ -1,23 +1,17 @@
 import json
 from unittest.mock import MagicMock, patch
 
+from bedrock.invoke_tracked import InvokeUsage
 from overlord import OVERLORD_MODEL, arbitrate
 
 
-def _bedrock_body(text: str) -> dict:
-    return {
-        "content": [{"type": "text", "text": text}],
-    }
+def _usage() -> InvokeUsage:
+    return InvokeUsage("m", "overlord", 10, 5, 1)
 
 
-@patch("overlord.get_bedrock_client")
-def test_arbitrate_returns_parsed_resolution(mock_get_client):
-    import os
-
-    os.environ.pop("OVERLORD_MOCK_BEDROCK", None)
-
-    mock_client = MagicMock()
-    mock_get_client.return_value = mock_client
+@patch("overlord.invoke_anthropic_messages")
+def test_arbitrate_returns_parsed_resolution(mock_invoke, monkeypatch):
+    monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
 
     model_json = json.dumps(
         {
@@ -27,13 +21,7 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
             "tokens_saved_estimate": "~2400",
         }
     )
-    mock_client.invoke_model.return_value = {
-        "body": MagicMock(
-            read=MagicMock(
-                return_value=json.dumps(_bedrock_body(model_json)).encode()
-            )
-        )
-    }
+    mock_invoke.return_value = (model_json, _usage())
 
     result = arbitrate(
         agent_a={"intent": "cache", "code": "def get_user(user_id): ..."},
@@ -41,15 +29,28 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
     )
 
     assert result["conflict_type"] == "merge_conflict"
-    assert "cache" in result["reasoning"].lower() or "type" in result["reasoning"].lower()
     assert "get_user" in result["resolved_code"]
+    assert result["_usage"]["input_tokens"] == 10
 
-    mock_client.invoke_model.assert_called_once()
-    call_kwargs = mock_client.invoke_model.call_args.kwargs
-    assert call_kwargs["modelId"] == OVERLORD_MODEL
-    body = json.loads(call_kwargs["body"])
-    assert body["anthropic_version"] == "bedrock-2023-05-31"
-    assert body["max_tokens"] >= 1000
+    mock_invoke.assert_called_once()
+    assert mock_invoke.call_args.kwargs["model_id"] == OVERLORD_MODEL
+
+
+@patch("overlord.invoke_anthropic_messages")
+def test_arbitrate_attaches_usage_when_not_mock(mock_invoke, monkeypatch):
+    monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
+    model_json = json.dumps(
+        {
+            "conflict_type": "merge_conflict",
+            "reasoning": "r",
+            "resolved_code": "def f(): pass",
+            "tokens_saved_estimate": "0",
+        }
+    )
+    mock_invoke.return_value = (model_json, InvokeUsage("m", "overlord", 10, 5, 1))
+
+    result = arbitrate({"intent": "a", "code": "a"}, {"intent": "b", "code": "b"})
+    assert result["_usage"]["input_tokens"] == 10
 
 
 def test_arbitrate_intent_conflict_mock(monkeypatch):

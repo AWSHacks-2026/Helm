@@ -1,0 +1,28 @@
+name: aquarium_logistics
+description: Fish tank maintenance — agents conflict on feeding schedule notifications.
+base_dir: base
+assignments:
+  - id: agent_alpha
+    feature: |
+      Extend FeedingSchedule.add_feeding() to accept optional email and send a notification
+      when email is provided (log to a notifications list on the schedule object).
+    files:
+      - app/scheduling/feeding_planner.py
+    acceptance:
+      must_include:
+        - add_feeding
+        - email
+      must_include_any:
+        - - notification
+  - id: agent_beta
+    feature: |
+      Add a send_reminders() method on FeedingSchedule that prints reminder lines
+      for all feedings in the next 24 hours. Call it from add_feeding automatically.
+    files:
+      - app/scheduling/feeding_planner.py
+    acceptance:
+      must_include:
+        - add_feeding
+        - send_reminders
+      must_include_any:
+        - - reminder

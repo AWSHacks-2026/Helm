@@ -1,5 +1,8 @@
 # AgentCore setup (Memory + Policy)
 
+**Full hackathon guide:** [`docs/AWS_SETUP.md`](../../docs/AWS_SETUP.md)  
+**Automation:** `python scripts/bootstrap_agentcore.py` · `python scripts/verify_aws_setup.py`
+
 ## Memory
 
 1. In AWS Console → **Amazon Bedrock AgentCore** → **Memory**, create a memory resource.

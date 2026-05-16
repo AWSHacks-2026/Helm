@@ -4,7 +4,7 @@ import json
 import os
 from typing import Any
 
-from bedrock.client import get_bedrock_client
+from bedrock.invoke_tracked import invoke_anthropic_messages
 from models import BedrockArbitrationResult
 from overlord_parse import extract_json_object
 from overlord_prompt import (
@@ -13,7 +13,14 @@ from overlord_prompt import (
     build_merge_conflict_prompt,
 )
 
-OVERLORD_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+from bedrock.model_ids import resolve_inference_profile_id
+
+OVERLORD_MODEL = resolve_inference_profile_id(
+    os.getenv(
+        "OVERLORD_BEDROCK_MODEL_ID",
+        "us.anthropic.claude-sonnet-4-20250514-v1:0",
+    )
+)
 MAX_TOKENS = 1500
 
 
@@ -41,21 +48,20 @@ def arbitrate(
         )
         prompt += f"\n\nRelevant history from Knowledge Base:\n{kb_text}"
 
-    client = get_bedrock_client()
-    response = client.invoke_model(
-        modelId=OVERLORD_MODEL,
-        body=json.dumps(
-            {
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": MAX_TOKENS,
-                "messages": [{"role": "user", "content": prompt}],
-            }
-        ),
+    text, usage = invoke_anthropic_messages(
+        model_id=OVERLORD_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=MAX_TOKENS,
+        role="overlord",
     )
-
-    payload = json.loads(response["body"].read())
-    text = payload["content"][0]["text"]
-    return _parse_arbitration_response(text)
+    result = _parse_arbitration_response(text)
+    result["_usage"] = {
+        "model_id": usage.model_id,
+        "input_tokens": usage.input_tokens,
+        "output_tokens": usage.output_tokens,
+        "latency_ms": usage.latency_ms,
+    }
+    return result
 
 
 def _build_prompt(

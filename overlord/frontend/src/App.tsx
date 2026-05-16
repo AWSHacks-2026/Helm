@@ -8,11 +8,12 @@ import {
   ResolveDetail,
 } from "./api/client";
 import DemoLab from "./DemoLab";
+import MergeLab from "./MergeLab";
 import { useConflictStream } from "./hooks/useConflictStream";
 
 const SESSION_KEY = "overlord_session_id";
 
-type Tab = "dashboard" | "demo";
+type Tab = "dashboard" | "demo" | "merge";
 
 function Dashboard() {
   const [sessionId, setSessionId] = useState(
@@ -140,11 +141,18 @@ function Dashboard() {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("demo");
+  const [tab, setTab] = useState<Tab>("merge");
 
   return (
     <>
       <nav className="app-nav">
+        <button
+          type="button"
+          className={tab === "merge" ? "active" : ""}
+          onClick={() => setTab("merge")}
+        >
+          Merge lab
+        </button>
         <button
           type="button"
           className={tab === "demo" ? "active" : ""}
@@ -160,7 +168,11 @@ export default function App() {
           Dashboard
         </button>
       </nav>
-      {tab === "demo" ? (
+      {tab === "merge" ? (
+        <div className="app app-merge">
+          <MergeLab />
+        </div>
+      ) : tab === "demo" ? (
         <div className="app app-demo">
           <DemoLab />
         </div>

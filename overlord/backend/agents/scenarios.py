@@ -1,14 +1,11 @@
 from copy import deepcopy
 from typing import Any
 
+from agents.merge_scenarios import MERGE_SCENARIO_META, MERGE_SCENARIOS
 from bedrock.guardrails import GUARDRAIL_DEMO_SCENARIO
 
 SCENARIO_META: dict[str, dict[str, str]] = {
-    "merge_conflict": {
-        "kind": "merge",
-        "title": "Act 1 — Cache vs readability (get_user)",
-        "description": "Two agents edited the same function differently.",
-    },
+    **MERGE_SCENARIO_META,
     "intent_conflict": {
         "kind": "intent",
         "title": "Act 2 — Performance vs minimal dependencies",
@@ -27,26 +24,7 @@ SCENARIO_META: dict[str, dict[str, str]] = {
 }
 
 SCENARIOS: dict[str, dict[str, Any]] = {
-    "merge_conflict": {
-        "agent_a": {
-            "intent": "I am optimizing this function for speed using caching",
-            "code": """
-def get_user(user_id):
-    if user_id in cache:
-        return cache[user_id]
-    result = db.query(user_id)
-    cache[user_id] = result
-    return result
-""".strip(),
-        },
-        "agent_b": {
-            "intent": "I am refactoring this function for readability and adding type hints",
-            "code": """
-def get_user(user_id: str) -> User:
-    return db.query(user_id)
-""".strip(),
-        },
-    },
+    **MERGE_SCENARIOS,
     "intent_conflict": {
         "title": "Performance vs. Minimalism",
         "agent_a": {

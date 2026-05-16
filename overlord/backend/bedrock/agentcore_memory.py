@@ -172,7 +172,8 @@ def list_events(
             session_id=session_id,
             max_results=min(limit, 100),
         )
-        for ev in resp.get("events", []):
+        events = resp if isinstance(resp, list) else resp.get("events", [])
+        for ev in events:
             out.append(_event_to_record(session_id, aid, ev))
     out.sort(key=lambda r: r["timestamp"])
     if record_type:
@@ -226,22 +227,56 @@ def _distinct_actors(session_id: str) -> list[str]:
     return ["agent_a", "agent_b", "overlord"]
 
 
-def _event_to_record(session_id: str, actor_id: str, event: dict[str, Any]) -> dict[str, Any]:
-    meta = event.get("metadata") or {}
-    record_type = (meta.get("record_type") or {}).get("stringValue", "action")
-    payload_raw = event.get("payload")
+def _parse_event_payload(payload_raw: Any) -> dict[str, Any]:
     if isinstance(payload_raw, str):
         try:
-            payload = json.loads(payload_raw)
+            parsed = json.loads(payload_raw)
+            return parsed if isinstance(parsed, dict) else {"text": payload_raw}
         except json.JSONDecodeError:
-            payload = {"text": payload_raw}
-    else:
-        payload = payload_raw if isinstance(payload_raw, dict) else {}
+            return {"text": payload_raw}
+    if isinstance(payload_raw, dict):
+        return payload_raw
+    if isinstance(payload_raw, list):
+        texts: list[str] = []
+        for item in payload_raw:
+            if not isinstance(item, dict):
+                continue
+            block = item.get("conversational") or item.get("tool") or item
+            content = block.get("content") if isinstance(block, dict) else None
+            if isinstance(content, dict) and content.get("text"):
+                texts.append(str(content["text"]))
+            elif isinstance(content, str):
+                texts.append(content)
+        if not texts:
+            return {}
+        blob = texts[0] if len(texts) == 1 else "\n".join(texts)
+        try:
+            parsed = json.loads(blob)
+            return parsed if isinstance(parsed, dict) else {"text": blob}
+        except json.JSONDecodeError:
+            return {"intent": blob, "text": blob}
+    return {}
+
+
+def _metadata_string(meta: dict[str, Any], key: str, default: str = "") -> str:
+    value = meta.get(key, default)
+    if isinstance(value, dict):
+        return str(value.get("stringValue", default))
+    return str(value) if value is not None else default
+
+
+def _event_to_record(session_id: str, actor_id: str, event: dict[str, Any]) -> dict[str, Any]:
+    meta = event.get("metadata") or {}
+    record_type = _metadata_string(meta, "record_type", "action")
+    payload = _parse_event_payload(event.get("payload"))
+    ts = event.get("eventTimestamp", "")
+    if hasattr(ts, "isoformat"):
+        ts = ts.isoformat()
     return {
-        "id": event.get("eventId", ""),
-        "timestamp": event.get("eventTimestamp", ""),
+        "id": event.get("eventId", event.get("event_id", "")),
+        "timestamp": ts,
         "session_id": session_id,
-        "actor_id": actor_id,
+        "actor_id": event.get("actorId", actor_id),
         "record_type": record_type,
         "payload": payload,
     }

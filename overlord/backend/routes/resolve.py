@@ -150,9 +150,11 @@ def resolve_demo_scenario(scenario_name: str, request: Request) -> ResolveRespon
     from bedrock import knowledge_base
 
     kb_context = None
+    module_hint = scenario.get("file_path", "get_user")
     try:
         kb_context = knowledge_base.get_context_for_agents(
-            ["agent_a", "agent_b"], module_hint="get_user"
+            ["agent_a", "agent_b"],
+            module_hint=module_hint,
         )
     except Exception:
         kb_context = None
