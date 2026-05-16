@@ -15,6 +15,10 @@ def get_bedrock_client():
     )
 
 
+def get_bedrock_runtime_client():
+    return get_bedrock_client()
+
+
 def get_bedrock_agent_client():
     return boto3.client(
         service_name="bedrock-agent-runtime",
