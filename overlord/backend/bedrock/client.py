@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+REGION = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
 
 def get_bedrock_client():

@@ -27,4 +27,4 @@ def test_kb_context_forwarded_to_arbitrate(monkeypatch):
         {"intent": "remove cache", "code": "# delete"},
     )
     assert captured["kb_context"] is not None
-    assert len(captured["kb_context"]) >= 0
+    assert len(captured["kb_context"]) > 0

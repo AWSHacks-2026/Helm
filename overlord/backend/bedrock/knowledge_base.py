@@ -189,7 +189,8 @@ def sync_to_s3(session_id: str = "default") -> str:
 
     records = _read_all()
     key = f"sessions/{session_id}/{uuid.uuid4()}.json"
-    client = boto3.client("s3", region_name=os.getenv("AWS_REGION", "us-east-1"))
+    region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+    client = boto3.client("s3", region_name=region)
     client.put_object(
         Bucket=bucket,
         Key=key,

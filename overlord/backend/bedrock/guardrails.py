@@ -184,7 +184,10 @@ def handle_proposed_action(
     resolution = _arbitrate(agent_a, agent_b, kb_context=preflight.kb_context)
     kb.log_decision(
         reasoning=resolution.get("reasoning", ""),
-        affected_agents=["agent_a", "agent_b"],
+        affected_agents=[
+            agent_a.get("agent_id", "agent_a"),
+            agent_b.get("agent_id", "agent_b"),
+        ],
     )
     return {
         "preflight": preflight.to_dict(),
