@@ -106,9 +106,31 @@ def log_intent(
         actor_id=actor_id,
         session_id=session_id,
         messages=[(intent, "USER")],
-        metadata={"record_type": {"stringValue": "intent"}},
+        metadata={
+            "record_type": {"stringValue": "intent"},
+            "file_path": {"stringValue": file_path},
+        },
     )
     return record
+
+
+def agents_on_file(
+    session_id: str,
+    file_path: str,
+    *,
+    exclude: str | None = None,
+) -> list[str]:
+    agents: list[str] = []
+    for record in list_events(session_id, record_type="intent", limit=200):
+        payload = record.get("payload", {})
+        if payload.get("file_path") != file_path:
+            continue
+        aid = record.get("actor_id", "")
+        if exclude and aid == exclude:
+            continue
+        if aid and aid not in agents:
+            agents.append(aid)
+    return agents
 
 
 def log_decision(

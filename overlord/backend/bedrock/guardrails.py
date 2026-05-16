@@ -144,7 +144,9 @@ def check_action(
     """Agentic workflow guardrail check: session store + AgentCore policy preflight."""
     from models import GuardrailCheckResponse
 
-    others = session_store.agents_on_file(session_id, file_path, exclude=agent_id)
+    others = mem.agents_on_file(session_id, file_path, exclude=agent_id)
+    if not others:
+        others = session_store.agents_on_file(session_id, file_path, exclude=agent_id)
     if action in {"write", "delete"} and others:
         return GuardrailCheckResponse(
             allowed=False,
