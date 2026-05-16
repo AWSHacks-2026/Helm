@@ -1,3 +1,8 @@
 .venv/
 .worktrees/
-agent_docs/overlord/data/sessions/
+agent_docs/
+docs/superpowers/plans
+.env
+overlord/data/sessions/
+__pycache__/
+*.pyc
