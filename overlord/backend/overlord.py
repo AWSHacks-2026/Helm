@@ -13,7 +13,11 @@ OVERLORD_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 MAX_TOKENS = 1500
 
 
-def arbitrate(agent_a: dict, agent_b: dict, kb_context: str | None = None) -> dict[str, Any]:
+def arbitrate(
+    agent_a: dict,
+    agent_b: dict,
+    kb_context: str | list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """Call Sonnet via Bedrock to resolve a merge conflict between two agents."""
     if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
         return _mock_merge_resolution()
@@ -21,7 +25,12 @@ def arbitrate(agent_a: dict, agent_b: dict, kb_context: str | None = None) -> di
     client = get_bedrock_client()
     prompt = build_merge_conflict_prompt(agent_a, agent_b)
     if kb_context:
-        prompt += f"\n\nRelevant history from Knowledge Base:\n{kb_context}"
+        kb_text = (
+            json.dumps(kb_context, indent=2)
+            if isinstance(kb_context, list)
+            else kb_context
+        )
+        prompt += f"\n\nRelevant history from Knowledge Base:\n{kb_text}"
 
     response = client.invoke_model(
         modelId=OVERLORD_MODEL,
