@@ -13,6 +13,12 @@ _CONTRADICTION_PAIRS = [
     (("performance", "speed", "optimize"), ("minimal", "dependency", "simplify")),
 ]
 
+_ACTION_TYPE_MAP = {
+    "write": "modify_file",
+    "delete": "delete_file",
+    "read": "read_file",
+}
+
 
 @dataclass
 class PreflightResult:
@@ -237,3 +243,40 @@ def seed_guardrail_demo() -> None:
     kb.log_action("agent_a", "modify_file", "utils/cache.py", "Extended cache API")
     kb.log_action("agent_a", "add_file", "utils/cache.py", "Documented cache usage")
     kb.log_intent("agent_b", GUARDRAIL_DEMO_SCENARIO["agent_b"]["intent"])
+
+
+def check_action(
+    *,
+    session_id: str,
+    agent_id: str,
+    file_path: str,
+    action: str,
+    proposed_code: str,
+    session_store: Any,
+) -> Any:
+    """Agentic workflow guardrail check: in-memory session store + KB preflight."""
+    from models import GuardrailCheckResponse
+
+    others = session_store.agents_on_file(session_id, file_path, exclude=agent_id)
+    if action in {"write", "delete"} and others:
+        return GuardrailCheckResponse(
+            allowed=False,
+            reason=f"File {file_path} active for agents: {', '.join(others)}",
+            route_to_overlord=True,
+        )
+
+    proposed = {
+        "agent_id": agent_id,
+        "action_type": _ACTION_TYPE_MAP.get(action, action),
+        "file_path": file_path,
+        "description": proposed_code or f"{action} on {file_path}",
+    }
+    preflight = preflight_check(proposed)
+    if not preflight.allowed:
+        return GuardrailCheckResponse(
+            allowed=False,
+            reason=preflight.message,
+            route_to_overlord=True,
+        )
+
+    return GuardrailCheckResponse(allowed=True)

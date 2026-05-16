@@ -27,7 +27,7 @@ def test_demo_smoke_all_pass():
         assert check["passed"] is True, check
 
 
-def test_root_lists_demo_smoke():
-    r = client.get("/")
+def test_health_lists_demo_smoke():
+    r = client.get("/health")
     assert r.status_code == 200
     assert r.json()["demo_smoke"] == "/demo/smoke"

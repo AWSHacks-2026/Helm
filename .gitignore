@@ -2,7 +2,12 @@
 .overlord/
 .env
 .worktrees/
-backend/.venv/
 agent_docs/
+docs/superpowers/plans
+overlord/data/sessions/
+backend/.venv/
+overlord/.venv/
 __pycache__/
 *.py[cod]
+*.pyc
+node_modules/

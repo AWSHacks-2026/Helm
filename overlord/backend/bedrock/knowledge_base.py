@@ -198,3 +198,75 @@ def sync_to_s3(session_id: str = "default") -> str:
         ContentType="application/json",
     )
     return key
+
+
+# --- Agentic workflow API adapters (session-scoped events for dashboard/MCP) ---
+
+_EVENT_TYPE_BY_RECORD = {
+    "intent": "intent_declared",
+    "action": "action",
+    "decision": "conflict_resolved",
+}
+
+
+def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
+    """Bridge agentic workflow events into the shared knowledge base."""
+    event_type = event.get("event_type", "")
+    payload = event.get("payload", event)
+
+    if event_type == "intent_declared":
+        intent_payload: dict[str, Any] = {"intent": payload["intent"]}
+        if payload.get("file_path"):
+            intent_payload["file_path"] = payload["file_path"]
+        record = _make_record(
+            RecordType.INTENT,
+            payload["agent_id"],
+            intent_payload,
+            session_id,
+        )
+        record = _append(record)
+    elif event_type == "guardrail_blocked":
+        record = log_action(
+            agent_id=payload.get("agent_id", "unknown"),
+            action_type="guardrail_blocked",
+            file_path=payload.get("file_path", ""),
+            description=payload.get("reason", "blocked"),
+            session_id=session_id,
+        )
+    elif event_type in {"conflict_resolved", "conflict_approved"}:
+        record = log_decision(
+            reasoning=json.dumps(payload),
+            affected_agents=payload.get("affected_agents", []),
+            session_id=session_id,
+        )
+    else:
+        record = log_action(
+            agent_id=payload.get("agent_id", "unknown"),
+            action_type=event_type or "event",
+            file_path=payload.get("file_path", ""),
+            description=json.dumps(payload),
+            session_id=session_id,
+        )
+    return record.to_dict()
+
+
+def list_history(session_id: str) -> list[dict[str, Any]]:
+    """Session-filtered history for GET /history?session_id=."""
+    records = [r for r in _read_all() if r.get("session_id") == session_id]
+    events: list[dict[str, Any]] = []
+    for record in sorted(records, key=lambda r: r["timestamp"], reverse=True):
+        record_type = record["record_type"]
+        payload = record.get("payload", {})
+        event_type = _EVENT_TYPE_BY_RECORD.get(record_type, record_type)
+        if record_type == "action" and payload.get("action_type") == "guardrail_blocked":
+            event_type = "guardrail_blocked"
+        events.append(
+            {
+                "event_id": record["id"],
+                "session_id": record["session_id"],
+                "timestamp": record["timestamp"],
+                "event_type": event_type,
+                "payload": payload,
+            }
+        )
+    return events
