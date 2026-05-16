@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.conflicts import router as conflicts_router
 from routes.demo_smoke import router as demo_smoke_router
 from routes.guardrail_demo import router as guardrail_demo_router
+from routes.git_resolve import router as git_resolve_router
 from routes.guardrails import router as guardrails_router
 from routes.health import router as health_router
 from routes.history import router as history_router
@@ -39,6 +40,7 @@ app.include_router(resolve_router)
 app.include_router(merge_lab_router)
 app.include_router(live_benchmark_router)
 app.include_router(intents_router)
+app.include_router(git_resolve_router)
 app.include_router(guardrails_router)
 app.include_router(guardrail_demo_router)
 app.include_router(demo_smoke_router)
