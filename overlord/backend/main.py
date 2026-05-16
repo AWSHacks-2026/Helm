@@ -1,11 +1,28 @@
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from agents.scenarios import SCENARIOS
-from models import AgentPayload, ResolutionPayload, ResolveResponse
-from overlord import arbitrate
+from routes.conflicts import router as conflicts_router
+from routes.guardrails import router as guardrails_router
+from routes.health import router as health_router
+from routes.history import router as history_router
+from routes.intents import router as intents_router
+from routes.resolve import router as resolve_router
+from store.conflicts import ConflictStore
+from store.sessions import SessionStore
+from ws.hub import ConnectionManager
 
-app = FastAPI(title="Overlord", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.conflict_store = ConflictStore()
+    app.state.session_store = SessionStore()
+    app.state.ws_hub = ConnectionManager()
+    yield
+
+
+app = FastAPI(title="Overlord", version="0.2.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,41 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/scenarios")
-def get_scenarios() -> list[str]:
-    return list(SCENARIOS.keys())
-
-
-@app.post("/resolve/{scenario_name}", response_model=ResolveResponse)
-def resolve_conflict(scenario_name: str) -> ResolveResponse:
-    if scenario_name not in SCENARIOS:
-        raise HTTPException(status_code=404, detail="Scenario not found")
-
-    scenario = SCENARIOS[scenario_name]
-    agent_a = AgentPayload.model_validate(scenario["agent_a"])
-    agent_b = AgentPayload.model_validate(scenario["agent_b"])
-
-    # Optional KB context when bedrock.knowledge_base is available (Person 3).
-    kb_context = None
-    try:
-        from bedrock.knowledge_base import get_context_for_agents
-
-        kb_context = get_context_for_agents(
-            ["agent_a", "agent_b"], module_hint="get_user"
-        )
-    except ImportError:
-        pass
-
-    raw_resolution = arbitrate(
-        agent_a.model_dump(),
-        agent_b.model_dump(),
-        kb_context=kb_context,
-    )
-    resolution = ResolutionPayload.model_validate(raw_resolution)
-
-    return ResolveResponse(
-        agent_a=agent_a,
-        agent_b=agent_b,
-        resolution=resolution,
-    )
+app.include_router(health_router)
+app.include_router(resolve_router)
+app.include_router(intents_router)
+app.include_router(guardrails_router)
+app.include_router(conflicts_router)
+app.include_router(history_router)
