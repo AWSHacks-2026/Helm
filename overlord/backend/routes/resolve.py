@@ -11,7 +11,7 @@ from models import (
     ResolutionPayload,
     ResolveResponse,
 )
-from overlord import arbitrate
+from overlord import arbitrate, detect_duplication
 
 router = APIRouter(tags=["resolve"])
 
@@ -125,6 +125,14 @@ def resolve_demo_scenario(scenario_name: str, request: Request) -> ResolveRespon
     scenario = get_scenario(scenario_name)
     agent_a = AgentPayload.model_validate(scenario["agent_a"])
     agent_b = AgentPayload.model_validate(scenario["agent_b"])
+
+    if scenario_name == "duplicate_work":
+        raw_resolution = detect_duplication(
+            agent_a=scenario["agent_a"],
+            agent_b=scenario["agent_b"],
+        )
+        resolution = ResolutionPayload.model_validate(raw_resolution)
+        return ResolveResponse(agent_a=agent_a, agent_b=agent_b, resolution=resolution)
 
     if scenario_name == "intent_conflict":
         raw_resolution = resolve_intent_conflict(
