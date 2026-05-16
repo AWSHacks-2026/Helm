@@ -6,6 +6,7 @@ import uuid
 from typing import Any
 
 from arbitration.runner import run_arbitration
+from bedrock.client import get_bedrock_client
 from bedrock.agentcore_client import invoke_arbitrator
 from bedrock.invoke_tracked import invoke_anthropic_messages
 from bedrock.model_ids import resolve_inference_profile_id
@@ -15,6 +16,7 @@ from overlord_prompt import (
     build_guardrail_resolution_prompt,
     build_intent_conflict_prompt,
     build_merge_conflict_prompt,
+    build_task_deduplication_prompt,
 )
 
 OVERLORD_MODEL = resolve_inference_profile_id(
@@ -124,6 +126,56 @@ def _parse_arbitration_response(text: str) -> dict[str, Any]:
     return result
 
 
+def detect_duplication(agent_a: dict, agent_b: dict) -> dict[str, Any]:
+    """Call Sonnet via Bedrock to detect duplicate semantic work between agents."""
+    if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
+        return _mock_duplication_resolution()
+
+    client = get_bedrock_client()
+    prompt = build_task_deduplication_prompt(agent_a, agent_b)
+
+    response = client.invoke_model(
+        modelId=OVERLORD_MODEL,
+        body=json.dumps(
+            {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 1000,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+        ),
+    )
+
+    payload = json.loads(response["body"].read())
+    text = payload["content"][0]["text"]
+    raw = extract_json_object(text)
+    return _normalize_duplication_resolution(raw)
+
+
+def _normalize_duplication_resolution(raw: dict[str, Any]) -> dict[str, Any]:
+    duplicate_detected = raw["duplicate_detected"]
+    if not isinstance(duplicate_detected, bool):
+        raise ValueError("duplicate_detected must be a boolean")
+
+    agent_to_continue = raw["agent_to_continue"]
+    agent_to_reassign = raw["agent_to_reassign"]
+    valid_agents = {"agent_a", "agent_b"}
+    if agent_to_continue not in valid_agents or agent_to_reassign not in valid_agents:
+        raise ValueError("agent assignments must be agent_a or agent_b")
+    if agent_to_continue == agent_to_reassign:
+        raise ValueError("agent_to_continue and agent_to_reassign must differ")
+
+    return {
+        "conflict_type": "duplicate_work",
+        "duplicate_detected": duplicate_detected,
+        "agent_to_continue": agent_to_continue,
+        "agent_to_reassign": agent_to_reassign,
+        "suggested_new_task": raw["suggested_new_task"],
+        "reasoning": raw["reasoning"],
+        "resolved_code": "",
+        "tokens_saved_estimate": raw.get("tokens_saved_estimate", "~1800"),
+    }
+
+
 def _mock_merge_resolution() -> dict[str, Any]:
     return {
         "conflict_type": "merge_conflict",
@@ -165,4 +217,21 @@ def _mock_guardrail_resolution() -> dict[str, Any]:
         ),
         "tokens_saved_estimate": "~2400 (mock)",
         "verdict": "modify",
+    }
+
+
+def _mock_duplication_resolution() -> dict[str, Any]:
+    return {
+        "conflict_type": "duplicate_work",
+        "duplicate_detected": True,
+        "agent_to_continue": "agent_a",
+        "agent_to_reassign": "agent_b",
+        "suggested_new_task": "Implement audit logging for authentication events.",
+        "reasoning": (
+            "Both agents are working on overlapping user authentication tasks; "
+            "Agent A should continue because its scope covers the login flow, while "
+            "Agent B should move to adjacent audit logging work."
+        ),
+        "resolved_code": "",
+        "tokens_saved_estimate": "~1800 (mock)",
     }

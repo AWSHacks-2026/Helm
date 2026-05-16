@@ -11,6 +11,11 @@ SCENARIO_META: dict[str, dict[str, str]] = {
         "title": "Act 2 — Performance vs minimal dependencies",
         "description": "Contradictory goals before code diverges.",
     },
+    "duplicate_work": {
+        "kind": "duplicate_work",
+        "title": "Duplicate user authentication work",
+        "description": "Overlapping authentication intents before agents duplicate effort.",
+    },
     "dependency_conflict": {
         "kind": "dependency",
         "title": "Redis vs in-memory cache",
@@ -63,6 +68,43 @@ SCENARIOS: dict[str, dict[str, Any]] = {
             {
                 "agent": "agent_b",
                 "decision": "Reduced image size by removing unused transitive dependencies.",
+            },
+        ],
+    },
+    "duplicate_work": {
+        "title": "Duplicate User Authentication Work",
+        "agent_a": {
+            "intent": (
+                "I am implementing JWT-based user authentication for the API login flow."
+            ),
+            "code": (
+                "# Agent A plans to add login endpoints, password verification, "
+                "and JWT token creation."
+            ),
+            "proposed_action": (
+                "Build API authentication endpoints for login and token issuance."
+            ),
+        },
+        "agent_b": {
+            "intent": (
+                "I am building user sign-in and session validation for the same API."
+            ),
+            "code": (
+                "# Agent B plans to add sign-in handlers, session validation, "
+                "and authenticated request checks."
+            ),
+            "proposed_action": (
+                "Build sign-in and session validation for authenticated API access."
+            ),
+        },
+        "history": [
+            {
+                "agent": "agent_a",
+                "decision": "Claimed ownership of API login and token creation.",
+            },
+            {
+                "agent": "agent_b",
+                "decision": "Started a parallel sign-in and session validation task.",
             },
         ],
     },
