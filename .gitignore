@@ -1,7 +1,9 @@
 .venv/
 .overlord/
 .worktrees/
-agent_docs/
+agent_docs/*
+!agent_docs/
+!agent_docs/feature-2-demo.md
 docs/superpowers/plans
 .env
 overlord/data/sessions/
