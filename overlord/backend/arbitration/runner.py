@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 from bedrock.client import get_bedrock_client
@@ -9,7 +10,10 @@ from overlord_parse import extract_json_object
 
 from arbitration.prompt import build_merge_conflict_prompt
 
-OVERLORD_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+OVERLORD_MODEL = os.getenv(
+    "OVERLORD_BEDROCK_MODEL",
+    "us.anthropic.claude-sonnet-4-6",
+)
 MAX_TOKENS = 1500
 
 

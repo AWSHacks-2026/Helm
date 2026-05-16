@@ -18,16 +18,44 @@ In another terminal:
 ```bash
 curl -s -X POST http://localhost:8080/invocations \
   -H "Content-Type: application/json" \
-  -d '{"agent_a":{"intent":"cache","code":"def f(): pass"},"agent_b":{"intent":"types","code":"def f(x: int): pass"}}'
+  -d @sample_invoke_payload.json
+```
+
+**Deployed runtime (CLI):** `--json` is output-only. Use a payload file:
+
+```bash
+agentcore invoke --runtime OverlordArbitrator --prompt-file sample_invoke_payload.json
 ```
 
 ## Deploy
 
+Prerequisites: `aws login` (or AWS credentials), Node 20+, `npm install -g @aws/agentcore`.
+
+1. **Deployment target** — `overlord/agentcore/aws-targets.json` must list your AWS account and region:
+
+```json
+[
+  {
+    "name": "default",
+    "account": "YOUR_12_DIGIT_ACCOUNT_ID",
+    "region": "us-east-1"
+  }
+]
+```
+
+Get account ID: `aws sts get-caller-identity --query Account --output text`
+
+2. **CDK deps** (once):
+
 ```bash
-npm install -g @aws/agentcore
-cd overlord/agentcore/arbitrator
-agentcore create   # if agentcore.json missing
+cd overlord/agentcore/cdk && npm install
+```
+
+3. **Deploy** (from project root `overlord/`, not `arbitrator/`):
+
+```bash
+cd overlord
 agentcore deploy
 ```
 
-Set `OVERLORD_ARBITRATOR_ARN` in `overlord/.env` from deploy output.
+4. Set `OVERLORD_ARBITRATOR_ARN` in `overlord/.env` from deploy output (`agentcore fetch` also shows ARNs).

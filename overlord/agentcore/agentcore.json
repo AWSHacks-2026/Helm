@@ -1,12 +1,33 @@
 {
-  "name": "overlord-arbitrator",
-  "region": "us-east-1",
-  "runtime": {
-    "entrypoint": "main.py",
-    "pythonVersion": "PYTHON_3_11",
-    "sourceDirectory": "arbitrator"
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "Overlord",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "Overlord"
   },
-  "deployment": {
-    "type": "direct_code"
-  }
+  "runtimes": [
+    {
+      "name": "OverlordArbitrator",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "agentcore/arbitrator/",
+      "runtimeVersion": "PYTHON_3_11",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "instrumentation": {
+        "enableOtel": false
+      }
+    }
+  ],
+  "memories": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "configBundles": [],
+  "abTests": [],
+  "httpGateways": []
 }

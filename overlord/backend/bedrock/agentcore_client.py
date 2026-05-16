@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from typing import Any
 
 import boto3
@@ -13,6 +14,15 @@ from overlord_parse import extract_json_object
 load_dotenv()
 
 REGION = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+RUNTIME_SESSION_MIN_LEN = 33
+
+
+def normalize_runtime_session_id(session_id: str) -> str:
+    """AgentCore requires runtimeSessionId length >= 33."""
+    sid = (session_id or "").strip()
+    if len(sid) >= RUNTIME_SESSION_MIN_LEN:
+        return sid
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"overlord:{sid or 'default'}"))
 
 
 def get_agentcore_client():
@@ -74,7 +84,7 @@ def invoke_arbitrator(
 
     response = client.invoke_agent_runtime(
         agentRuntimeArn=agent_runtime_arn,
-        runtimeSessionId=session_id,
+        runtimeSessionId=normalize_runtime_session_id(session_id),
         payload=json.dumps(payload_dict).encode("utf-8"),
     )
     return parse_agentcore_response(response)
