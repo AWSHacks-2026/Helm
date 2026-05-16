@@ -46,7 +46,12 @@ def resolve_live(
         module_hint=payload.file_path,
     )
 
-    raw = arbitrate(agent_a.model_dump(), agent_b.model_dump(), kb_context=kb_context or None)
+    raw = arbitrate(
+        agent_a.model_dump(),
+        agent_b.model_dump(),
+        kb_context=kb_context or None,
+        session_id=payload.session_id,
+    )
     resolution = ResolutionPayload.model_validate(raw)
 
     record = store.create(
@@ -117,6 +122,7 @@ def resolve_demo_scenario(scenario_name: str, request: Request) -> ResolveRespon
         agent_a.model_dump(),
         agent_b.model_dump(),
         kb_context=kb_context or None,
+        session_id=f"demo-{scenario_name}",
     )
     resolution = ResolutionPayload.model_validate(raw_resolution)
 

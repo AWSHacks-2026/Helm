@@ -1,0 +1,12 @@
+{
+  "name": "overlord-arbitrator",
+  "region": "us-east-1",
+  "runtime": {
+    "entrypoint": "main.py",
+    "pythonVersion": "PYTHON_3_11",
+    "sourceDirectory": "arbitrator"
+  },
+  "deployment": {
+    "type": "direct_code"
+  }
+}
