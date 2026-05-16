@@ -4,3 +4,5 @@
 .worktrees/
 backend/.venv/
 agent_docs/
+__pycache__/
+*.py[cod]
