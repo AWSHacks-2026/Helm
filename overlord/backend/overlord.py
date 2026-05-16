@@ -15,13 +15,13 @@ MAX_TOKENS = 1500
 
 def arbitrate(agent_a: dict, agent_b: dict, kb_context: str | None = None) -> dict[str, Any]:
     """Call Sonnet via Bedrock to resolve a merge conflict between two agents."""
+    if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
+        return _mock_merge_resolution()
+
     client = get_bedrock_client()
     prompt = build_merge_conflict_prompt(agent_a, agent_b)
     if kb_context:
         prompt += f"\n\nRelevant history from Knowledge Base:\n{kb_context}"
-
-    if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
-        return _mock_merge_resolution()
 
     response = client.invoke_model(
         modelId=OVERLORD_MODEL,
