@@ -1,6 +1,6 @@
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppShell, type AppView } from "./AppShell";
 
@@ -43,6 +43,10 @@ const textContent = (node: ReactNode): string => {
 };
 
 describe("AppShell", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("renders top navigation, active state, and page content", () => {
     const html = renderToStaticMarkup(
       <AppShell view="proof" onViewChange={() => undefined}>
@@ -51,6 +55,9 @@ describe("AppShell", () => {
     );
 
     expect(html).toContain("Helm");
+    expect(html).toContain("Problem Statement");
+    expect(html).toContain("Our Solution");
+    expect(html).toContain("Technical Workflow");
     expect(html).toContain("Control Tower");
     expect(html).toContain("Incidents");
     expect(html).not.toContain("Missions");
@@ -60,6 +67,25 @@ describe("AppShell", () => {
     expect(html).toContain("app-shell");
     expect(html).toContain("Selected page");
     expect(html).toContain("class=\"active\"");
+  });
+
+  it("keeps Results visible in presenter mode while hiding Developer Labs", () => {
+    vi.stubGlobal("window", { location: { search: "?presenter=1" } });
+
+    const html = renderToStaticMarkup(
+      <AppShell view="proof" onViewChange={() => undefined}>
+        <section>Selected page</section>
+      </AppShell>,
+    );
+
+    expect(html).toContain("Problem Statement");
+    expect(html).toContain("Our Solution");
+    expect(html).toContain("Technical Workflow");
+    expect(html).toContain("Control Tower");
+    expect(html).toContain("Incidents");
+    expect(html).toContain("Gratitude");
+    expect(html).toContain("Results");
+    expect(html).not.toContain("Developer Labs");
   });
 
   it("wires nav buttons to view changes", () => {
@@ -75,6 +101,9 @@ describe("AppShell", () => {
     );
 
     (buttonsByLabel.get("Helm")?.props as ButtonProps).onClick?.();
+    (buttonsByLabel.get("Problem Statement")?.props as ButtonProps).onClick?.();
+    (buttonsByLabel.get("Our Solution")?.props as ButtonProps).onClick?.();
+    (buttonsByLabel.get("Technical Workflow")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Control Tower")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Incidents")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Gratitude")?.props as ButtonProps).onClick?.();
@@ -82,11 +111,14 @@ describe("AppShell", () => {
     (buttonsByLabel.get("Developer Labs")?.props as ButtonProps).onClick?.();
 
     expect(onViewChange).toHaveBeenNthCalledWith(1, "landing" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(2, "control" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(3, "incidents" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(4, "gratitude" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(5, "proof" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(6, "labs" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(2, "problem" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(3, "solution" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(4, "technical" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(5, "control" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(6, "incidents" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(7, "gratitude" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(8, "proof" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(9, "labs" satisfies AppView);
     expect((buttonsByLabel.get("Control Tower")?.props as ButtonProps).className).toBe(
       "active",
     );

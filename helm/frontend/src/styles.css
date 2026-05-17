@@ -1034,8 +1034,357 @@ body.presenter-mode .pillar-headline-grid {
   font-size: 0.85em;
 }
 
-body.presenter-mode .app-nav button:last-child {
-  display: none;
+.presentation-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.presentation-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.presentation-hero::after {
+  position: absolute;
+  right: -5rem;
+  bottom: -7rem;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(101, 232, 209, 0.16), transparent 68%);
+  content: "";
+}
+
+.presentation-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.presentation-metric-card strong {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+}
+
+.presentation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.presentation-card {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  border: 1px solid rgba(139, 171, 217, 0.16);
+  border-radius: 24px;
+  padding: 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
+    rgba(12, 18, 31, 0.92);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.presentation-card h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.presentation-card p {
+  margin: 0;
+  color: #aebbd0;
+}
+
+.coordination-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(101, 232, 209, 0.28);
+  border-radius: 24px;
+  padding: 1.1rem;
+  background: rgba(6, 10, 18, 0.34);
+}
+
+.coordination-diagram span {
+  border: 1px solid rgba(139, 171, 217, 0.2);
+  border-radius: 999px;
+  padding: 0.65rem 0.95rem;
+  background: rgba(20, 30, 49, 0.8);
+  color: #edf4ff;
+  font-weight: 800;
+}
+
+.coordination-diagram .coordination-arrow {
+  border-color: transparent;
+  background: transparent;
+  color: #65e8d1;
+}
+
+.technical-badge-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  max-width: 28rem;
+}
+
+.technical-badge-stack span {
+  border: 1px solid rgba(101, 232, 209, 0.35);
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  background: rgba(16, 121, 124, 0.16);
+  color: #bffcf1;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.architecture-panel,
+.env-switch-panel {
+  border: 1px solid rgba(139, 171, 217, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
+    rgba(12, 18, 31, 0.92);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.architecture-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.architecture-panel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.architecture-panel-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.35rem, 3vw, 2.4rem);
+  letter-spacing: -0.04em;
+}
+
+.architecture-panel-header p:not(.eyebrow) {
+  margin: 0;
+  color: #9fb0c9;
+  font-size: 0.9rem;
+}
+
+.architecture-flowchart {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgba(139, 171, 217, 0.16);
+  border-radius: 18px;
+  background: rgba(6, 10, 18, 0.28);
+}
+
+.architecture-lane {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  min-height: 6rem;
+  border-bottom: 1px solid rgba(139, 171, 217, 0.14);
+}
+
+.architecture-lane:last-child {
+  border-bottom: 0;
+}
+
+.architecture-lane-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(139, 171, 217, 0.16);
+  background: rgba(6, 10, 18, 0.36);
+  color: #8fa2bd;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.architecture-lane-body {
+  display: grid;
+  align-content: center;
+  gap: 0.55rem;
+  padding: 0.85rem;
+}
+
+.architecture-node-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.architecture-node-wrap {
+  display: flex;
+  align-items: stretch;
+}
+
+.architecture-node {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 8.3rem;
+  border: 1px solid rgba(139, 171, 217, 0.18);
+  border-radius: 14px;
+  padding: 0.65rem 0.8rem;
+  background: rgba(20, 30, 49, 0.8);
+}
+
+.architecture-node strong {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.architecture-node span {
+  color: #9fb0c9;
+  font-size: 0.76rem;
+}
+
+.architecture-node--teal {
+  border-color: rgba(101, 232, 209, 0.38);
+  background: rgba(16, 121, 124, 0.18);
+}
+
+.architecture-node--purple {
+  border-color: rgba(195, 139, 255, 0.36);
+  background: rgba(88, 70, 180, 0.18);
+}
+
+.architecture-node--coral,
+.architecture-node--red {
+  border-color: rgba(251, 113, 133, 0.38);
+  background: rgba(153, 60, 29, 0.18);
+}
+
+.architecture-node--amber {
+  border-color: rgba(255, 193, 110, 0.42);
+  background: rgba(133, 79, 11, 0.18);
+}
+
+.architecture-node--blue {
+  border-color: rgba(125, 184, 255, 0.38);
+  background: rgba(24, 95, 165, 0.18);
+}
+
+.architecture-node--green {
+  border-color: rgba(101, 232, 209, 0.42);
+  background: rgba(59, 109, 17, 0.18);
+}
+
+.architecture-lane-note {
+  margin: 0;
+  color: #8fa2bd;
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.env-switch-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.env-switch-panel dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.env-switch-panel dl div {
+  border-radius: 14px;
+  padding: 0.85rem;
+  background: rgba(6, 10, 18, 0.36);
+}
+
+.env-switch-panel dt {
+  color: #65e8d1;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.env-switch-panel dd {
+  margin: 0.3rem 0 0;
+  color: #edf4ff;
+}
+
+.solution-research-panel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(139, 171, 217, 0.16);
+  border-radius: 24px;
+  padding: 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
+    rgba(12, 18, 31, 0.92);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.solution-research-copy {
+  max-width: 62rem;
+}
+
+.solution-research-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.5rem, 3vw, 2.6rem);
+  letter-spacing: -0.04em;
+}
+
+.solution-research-copy p:not(.eyebrow) {
+  margin: 0.8rem 0 0;
+  color: #aebbd0;
+}
+
+.solution-research-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.solution-research-charts figure {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  border: 1px solid rgba(139, 171, 217, 0.16);
+  border-radius: 18px;
+  padding: 0.8rem;
+  background: rgba(6, 10, 18, 0.36);
+}
+
+.solution-research-charts img {
+  width: 100%;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.solution-research-charts figcaption {
+  color: #d7e6fb;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: center;
 }
 
 body.presenter-mode .screen-header h1 {
@@ -1414,14 +1763,22 @@ body.presenter-mode .demo-chart-button img {
     padding: 1.25rem;
   }
 
+  .app-nav {
+    flex-wrap: wrap;
+  }
+
   .metric-grid,
-  .proof-strip {
+  .proof-strip,
+  .impact-grid,
+  .presentation-grid,
+  .solution-research-charts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .dashboard-grid,
   .incident-layout,
-  .legacy-grid {
+  .legacy-grid,
+  .env-switch-panel dl {
     grid-template-columns: 1fr;
   }
 
@@ -1466,12 +1823,54 @@ body.presenter-mode .demo-chart-button img {
   .landing-actions,
   .metric-grid,
   .proof-strip,
-  .merge-conflict-grid {
+  .merge-conflict-grid,
+  .impact-grid,
+  .presentation-grid,
+  .solution-research-charts {
     grid-template-columns: 1fr;
+  }
+
+  .coordination-diagram {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .coordination-diagram span {
+    text-align: center;
   }
 
   .screen-header {
     display: grid;
+  }
+
+  .technical-badge-stack {
+    justify-content: flex-start;
+  }
+
+  .architecture-panel-header {
+    display: grid;
+  }
+
+  .architecture-lane {
+    grid-template-columns: 1fr;
+  }
+
+  .architecture-lane-label {
+    min-height: auto;
+    justify-content: flex-start;
+    border-right: 0;
+    border-bottom: 1px solid rgba(139, 171, 217, 0.16);
+    padding: 0.6rem 0.8rem;
+    writing-mode: horizontal-tb;
+    transform: none;
+  }
+
+  .architecture-node-wrap {
+    flex: 1 1 100%;
+  }
+
+  .architecture-node {
+    width: 100%;
   }
 
   .timeline-list li,

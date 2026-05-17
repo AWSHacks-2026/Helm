@@ -4,6 +4,9 @@ import { readPresenterMode } from "../hooks/usePresenterMode";
 
 export type AppView =
   | "landing"
+  | "problem"
+  | "solution"
+  | "technical"
   | "control"
   | "incidents"
   | "missions"
@@ -18,6 +21,9 @@ interface AppShellProps {
 }
 
 const navItems: Array<{ view: AppView; label: string }> = [
+  { view: "problem", label: "Problem Statement" },
+  { view: "solution", label: "Our Solution" },
+  { view: "technical", label: "Technical Workflow" },
   { view: "control", label: "Control Tower" },
   { view: "incidents", label: "Incidents" },
   { view: "gratitude", label: "Gratitude" },

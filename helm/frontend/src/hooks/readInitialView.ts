@@ -2,6 +2,9 @@ import type { AppView } from "../components/AppShell";
 
 const VIEWS: AppView[] = [
   "landing",
+  "problem",
+  "solution",
+  "technical",
   "control",
   "incidents",
   "missions",

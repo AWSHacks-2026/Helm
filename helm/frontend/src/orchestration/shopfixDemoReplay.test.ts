@@ -20,6 +20,6 @@ describe("shopfixDemoReplay", () => {
     ).toBe("resolved");
     expect(model.metrics.openIncidents).toBe(0);
     expect(model.metrics.projectHealth).toBe("clean");
-    expect(model.timeline.at(-1)?.title).toContain("Fleet coordinated");
+    expect(model.timeline[model.timeline.length - 1]?.title).toContain("Fleet coordinated");
   });
 });
