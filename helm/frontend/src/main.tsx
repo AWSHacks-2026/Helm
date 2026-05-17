@@ -4,6 +4,7 @@ import App from "./App";
 import "./theme/tokens.css";
 import "./theme/motion.css";
 import "./styles.css";
+import "./theme/ui-polish.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

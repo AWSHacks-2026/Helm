@@ -111,29 +111,30 @@ a {
 .landing-card button:hover,
 .proof-actions button:hover,
 .filter-pills button:hover {
-  border-color: rgba(125, 184, 255, 0.58);
-  background: rgba(39, 57, 92, 0.86);
+  border-color: var(--semantic-save-muted);
+  background: var(--btn-bg-hover);
+  color: var(--text-primary);
   transform: translateY(-1px);
 }
 
 .app-nav button.active,
 .top-nav button.active,
 .filter-pills button.active {
-  border-color: rgba(74, 124, 89, 0.62);
-  background: linear-gradient(135deg, rgba(32, 91, 180, 0.94), rgba(14, 117, 126, 0.88));
-  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
 }
 
 .app-nav .brand-button,
 .top-nav .brand-button,
 .brand-button {
   margin-right: auto;
-  border-color: rgba(74, 124, 89, 0.48);
-  background: linear-gradient(135deg, rgba(41, 79, 177, 0.95), rgba(13, 141, 139, 0.88));
-  color: var(--text-primary);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  border-color: var(--semantic-save-muted);
+  background: var(--bg-surface);
+  color: var(--semantic-save);
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .landing-page,
@@ -237,14 +238,22 @@ body.presenter-mode .demo-scenario-picker .eyebrow {
 }
 
 .landing-card-primary {
-  border-color: rgba(74, 124, 89, 0.35);
+  border-color: var(--semantic-save-muted);
+  background: var(--accent-gift);
 }
 
 .landing-card-primary button.primary,
 button.primary {
   background: var(--accent-primary);
-  color: var(--text-primary);
-  font-weight: 800;
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-weight: 700;
+}
+
+.landing-card button:not(.primary) {
+  background: var(--btn-bg);
+  border-color: var(--btn-border);
+  color: var(--btn-text);
 }
 
 .landing-shopfix-link {
@@ -288,7 +297,7 @@ button.primary {
   gap: 0.15rem;
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
-  background: rgba(20, 30, 49, 0.8);
+  background: var(--bg-muted);
   border: 1px solid rgba(139, 171, 217, 0.2);
 }
 
@@ -487,7 +496,7 @@ button.primary {
   border-radius: 14px;
   padding: 0.75rem 0.9rem;
   background: rgba(255, 255, 255, 0.76);
-  color: #edf4ff;
+  color: var(--text-primary);
   outline: none;
 }
 
@@ -500,10 +509,6 @@ button.primary {
 .landing-card button,
 .proof-actions button {
   width: fit-content;
-  border-color: rgba(74, 124, 89, 0.42);
-  background: linear-gradient(135deg, #2867d8, #0d8b8d);
-  color: var(--text-primary);
-  font-weight: 800;
 }
 
 .proof-strip {
@@ -737,7 +742,7 @@ button.primary {
   border-radius: 18px;
   padding: 0.9rem;
   background: rgba(255, 255, 255, 0.44);
-  color: #edf4ff;
+  color: var(--text-primary);
   text-align: left;
   transition:
     border-color 160ms ease,
@@ -833,7 +838,7 @@ button.primary {
 .incident-detail dd,
 .summary-list dd {
   margin: 0;
-  color: #edf4ff;
+  color: var(--text-primary);
 }
 
 .incident-detail details {
@@ -964,9 +969,7 @@ body.presenter-mode .pillar-headline-grid {
     rgba(12, 18, 31, 0.92);
   border-radius: 24px;
   padding: 1rem 1.2rem 1.2rem;
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 .presenter-script summary {
@@ -1063,9 +1066,7 @@ body.presenter-mode .pillar-headline-grid {
   background:
     linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
     rgba(12, 18, 31, 0.92);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 .presentation-card h2 {
@@ -1096,8 +1097,8 @@ body.presenter-mode .pillar-headline-grid {
   border: 1px solid rgba(139, 171, 217, 0.2);
   border-radius: 999px;
   padding: 0.65rem 0.95rem;
-  background: rgba(20, 30, 49, 0.8);
-  color: #edf4ff;
+  background: var(--bg-muted);
+  color: var(--text-primary);
   font-weight: 800;
 }
 
@@ -1132,9 +1133,7 @@ body.presenter-mode .pillar-headline-grid {
   background:
     linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
     rgba(12, 18, 31, 0.92);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 .architecture-panel {
@@ -1223,7 +1222,7 @@ body.presenter-mode .pillar-headline-grid {
   border: 1px solid rgba(139, 171, 217, 0.18);
   border-radius: 14px;
   padding: 0.65rem 0.8rem;
-  background: rgba(20, 30, 49, 0.8);
+  background: var(--bg-muted);
 }
 
 .architecture-node strong {
@@ -1302,7 +1301,7 @@ body.presenter-mode .pillar-headline-grid {
 
 .env-switch-panel dd {
   margin: 0.3rem 0 0;
-  color: #edf4ff;
+  color: var(--text-primary);
 }
 
 .solution-research-panel {
@@ -1314,9 +1313,7 @@ body.presenter-mode .pillar-headline-grid {
   background:
     linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
     rgba(12, 18, 31, 0.92);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-soft);
 }
 
 .solution-research-copy {
@@ -1520,7 +1517,7 @@ body.presenter-mode .demo-chart-button img {
   border-radius: 12px;
   padding: 0.45rem 0.85rem;
   background: rgba(255, 255, 255, 0.76);
-  color: #edf4ff;
+  color: var(--text-primary);
   cursor: pointer;
   font-weight: 700;
 }
@@ -1544,7 +1541,7 @@ body.presenter-mode .demo-chart-button img {
   border-radius: 18px;
   padding: 0.9rem 1rem;
   background: rgba(73, 16, 31, 0.86);
-  color: #ffd8df;
+  color: var(--semantic-danger-text);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
 }
 
@@ -1575,7 +1572,7 @@ body.presenter-mode .demo-chart-button img {
 
 .conflict-item:hover,
 .conflict-item.active {
-  background: rgba(39, 57, 92, 0.86);
+  background: var(--semantic-save-bg);
 }
 
 .app-demo,
@@ -1604,8 +1601,8 @@ body.presenter-mode .demo-chart-button img {
   border: 1px solid rgba(255, 111, 135, 0.38);
   border-radius: 14px;
   padding: 0.75rem 0.9rem;
-  background: rgba(73, 16, 31, 0.66);
-  color: #ffd8df;
+  background: var(--semantic-danger-bg);
+  color: var(--semantic-danger-text);
 }
 
 .demo-actions,
@@ -1623,15 +1620,15 @@ body.presenter-mode .demo-chart-button img {
   border: 1px solid rgba(125, 184, 255, 0.42);
   border-radius: 999px;
   padding: 0.55rem 1rem;
-  background: rgba(19, 27, 44, 0.86);
-  color: #d8e8ff;
+  background: var(--bg-surface);
+  color: var(--text-primary);
 }
 
 .demo-actions button:hover,
 .merge-toolbar button:hover,
 .demo-smoke-btn:hover {
   border-color: rgba(74, 124, 89, 0.58);
-  background: rgba(39, 57, 92, 0.86);
+  background: var(--semantic-save-bg);
 }
 
 .demo-smoke.pass,
@@ -1765,7 +1762,7 @@ body.presenter-mode .demo-chart-button img {
 .merge-helm-block {
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: #1e2a3d;
+  background: var(--bg-muted);
   border-radius: 6px;
 }
 
