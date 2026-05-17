@@ -159,6 +159,44 @@ _EVENT_TYPE_BY_RECORD = {
     "decision": "conflict_resolved",
 }
 
+_DECISION_EVENT_TYPES = {"conflict_resolved", "conflict_approved"}
+
+
+def _parse_json_object(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _infer_decision_event_type(payload: dict[str, Any]) -> str | None:
+    if "conflict_id" not in payload:
+        return None
+    if "status" in payload:
+        return "conflict_approved"
+    if "resolution" in payload:
+        return "conflict_resolved"
+    return None
+
+
+def _decision_event_from_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    event_type = "conflict_resolved"
+    reasoning_payload = _parse_json_object(payload.get("reasoning"))
+    if reasoning_payload is None:
+        inferred = _infer_decision_event_type(payload)
+        return inferred or event_type, payload
+
+    envelope_event_type = reasoning_payload.get("event_type")
+    envelope_payload = reasoning_payload.get("payload")
+    if envelope_event_type in _DECISION_EVENT_TYPES and isinstance(envelope_payload, dict):
+        return envelope_event_type, envelope_payload
+
+    inferred = _infer_decision_event_type(reasoning_payload)
+    return inferred or event_type, reasoning_payload
+
 
 def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
     """Bridge agentic workflow events into AgentCore Memory."""
@@ -183,7 +221,7 @@ def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
         )
     elif event_type in {"conflict_resolved", "conflict_approved"}:
         record = log_decision(
-            reasoning=json.dumps(payload),
+            reasoning=json.dumps({"event_type": event_type, "payload": payload}),
             affected_agents=payload.get("affected_agents", []),
             session_id=session_id,
         )
@@ -208,12 +246,15 @@ def list_history(session_id: str) -> list[dict[str, Any]]:
         event_type = _EVENT_TYPE_BY_RECORD.get(record_type, record_type)
         if record_type == "action" and payload.get("action_type") == "guardrail_blocked":
             event_type = "guardrail_blocked"
+        if record_type == "decision":
+            event_type, payload = _decision_event_from_payload(payload)
         events.append(
             {
                 "event_id": record["id"],
                 "session_id": record["session_id"],
                 "timestamp": record["timestamp"],
                 "event_type": event_type,
+                "agent_id": record.get("agent_id"),
                 "payload": payload,
             }
         )

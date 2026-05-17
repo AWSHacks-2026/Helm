@@ -1,186 +1,114 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  approveConflict,
-  ConflictSummary,
-  fetchConflictDetail,
-  fetchConflicts,
-  fetchHistory,
-  ResolveDetail,
-} from "./api/client";
-import DemoLab from "./DemoLab";
-import MergeLab from "./MergeLab";
-import { useConflictStream } from "./hooks/useConflictStream";
+import { useState } from "react";
+
+import { AppShell, type AppView } from "./components/AppShell";
+import { BenchmarkProof } from "./components/BenchmarkProof";
+import { ControlTower } from "./components/ControlTower";
+import { IncidentConsole } from "./components/IncidentConsole";
+import { LandingPage } from "./components/LandingPage";
+import { LegacyLabPanel } from "./components/LegacyLabPanel";
+import { useDemoReplay } from "./hooks/useDemoReplay";
+import { useLiveSession } from "./hooks/useLiveSession";
 
 const SESSION_KEY = "overlord_session_id";
 const DEFAULT_SESSION =
   import.meta.env.VITE_OVERLORD_TEAM_SESSION ?? "mergeai-hackathon-demo";
 
-type Tab = "dashboard" | "demo" | "merge";
-
-function Dashboard() {
-  const [sessionId, setSessionId] = useState(
-    () => localStorage.getItem(SESSION_KEY) ?? DEFAULT_SESSION
-  );
-  const [conflicts, setConflicts] = useState<ConflictSummary[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<ResolveDetail | null>(null);
-  const [history, setHistory] = useState<unknown[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    if (!sessionId) return;
-    try {
-      setError(null);
-      const [list, hist] = await Promise.all([
-        fetchConflicts(sessionId),
-        fetchHistory(sessionId),
-      ]);
-      setConflicts(list);
-      setHistory(hist);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    localStorage.setItem(SESSION_KEY, sessionId);
-    refresh();
-  }, [sessionId, refresh]);
-
-  useConflictStream(
-    sessionId,
-    useCallback(() => {
-      refresh();
-    }, [refresh])
-  );
-
-  useEffect(() => {
-    if (!selectedId) {
-      setDetail(null);
-      return;
-    }
-    fetchConflictDetail(selectedId)
-      .then(setDetail)
-      .catch((err) => setError(err instanceof Error ? err.message : String(err)));
-  }, [selectedId]);
-
-  const tokensSaved = detail?.resolution.tokens_saved_estimate ?? "—";
-
-  return (
-    <div className="app">
-      <div className="panel">
-        <h2>Session</h2>
-        <input
-          value={sessionId}
-          onChange={(e) => setSessionId(e.target.value)}
-          placeholder="session_id"
-        />
-        <p>Tokens saved (latest): {tokensSaved}</p>
-        <h2>Conflicts</h2>
-        {error && <p style={{ color: "#f88" }}>{error}</p>}
-        {conflicts.map((c) => (
-          <div
-            key={c.conflict_id}
-            className={`conflict-item ${selectedId === c.conflict_id ? "active" : ""}`}
-            onClick={() => setSelectedId(c.conflict_id)}
-          >
-            {c.file_path} — {c.status}
-          </div>
-        ))}
-      </div>
-
-      <div className="panel">
-        <h2>Conflict detail</h2>
-        {!detail && <p>Select a conflict</p>}
-        {detail && (
-          <>
-            <p>
-              <strong>{detail.file_path}</strong> ({detail.status})
-            </p>
-            <h3>Agent A</h3>
-            <pre>
-              {detail.agent_a.intent}
-              {"\n\n"}
-              {detail.agent_a.code}
-            </pre>
-            <h3>Agent B</h3>
-            <pre>
-              {detail.agent_b.intent}
-              {"\n\n"}
-              {detail.agent_b.code}
-            </pre>
-            <h3>Resolution</h3>
-            <pre>{detail.resolution.reasoning}</pre>
-            <pre>{detail.resolution.resolved_code}</pre>
-            <button
-              type="button"
-              onClick={async () => {
-                await approveConflict(detail.conflict_id, true);
-                refresh();
-              }}
-            >
-              Approve
-            </button>
-            <button
-              type="button"
-              onClick={async () => {
-                await approveConflict(detail.conflict_id, false);
-                refresh();
-              }}
-            >
-              Reject
-            </button>
-          </>
-        )}
-      </div>
-
-      <div className="panel">
-        <h2>History</h2>
-        <pre>{JSON.stringify(history, null, 2)}</pre>
-      </div>
-    </div>
-  );
-}
+type DataMode = "replay" | "live";
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("merge");
+  const [view, setView] = useState<AppView>("landing");
+  const [dataMode, setDataMode] = useState<DataMode>("replay");
+  const [replayStarted, setReplayStarted] = useState(false);
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState(
+    () => localStorage.getItem(SESSION_KEY) ?? DEFAULT_SESSION,
+  );
+  const replayEnabled =
+    dataMode === "replay" &&
+    replayStarted &&
+    (view === "control" || view === "incidents");
+  const replay = useDemoReplay({ enabled: replayEnabled });
+  const live = useLiveSession(dataMode === "live" ? sessionId : "");
+  const currentModel = dataMode === "live" ? live.model : replay.model;
+  const connectionLabel =
+    dataMode === "live"
+      ? `Live: ${live.status}`
+      : replay.isComplete
+        ? "Replay complete"
+        : "Replay running";
+
+  const handleStartReplay = () => {
+    setDataMode("replay");
+    setReplayStarted(true);
+    replay.reset();
+    setSelectedIncidentId(null);
+    setView("control");
+  };
+
+  const handleSessionIdChange = (nextSessionId: string) => {
+    setSessionId(nextSessionId);
+    localStorage.setItem(SESSION_KEY, nextSessionId);
+  };
+
+  const handleOpenLiveSession = () => {
+    localStorage.setItem(SESSION_KEY, sessionId);
+    setDataMode("live");
+    setSelectedIncidentId(null);
+    setView("control");
+  };
+
+  const handleSelectIncident = (incidentId: string) => {
+    setSelectedIncidentId(incidentId);
+    setView("incidents");
+  };
+
+  const renderView = () => {
+    if (view === "landing") {
+      return (
+        <LandingPage
+          sessionId={sessionId}
+          onSessionIdChange={handleSessionIdChange}
+          onStartReplay={handleStartReplay}
+          onOpenLiveSession={handleOpenLiveSession}
+        />
+      );
+    }
+
+    if (view === "control") {
+      return (
+        <ControlTower
+          model={currentModel}
+          connectionLabel={connectionLabel}
+          onSelectIncident={handleSelectIncident}
+        />
+      );
+    }
+
+    if (view === "incidents") {
+      return (
+        <IncidentConsole
+          model={currentModel}
+          selectedIncidentId={selectedIncidentId}
+          onSelectIncident={setSelectedIncidentId}
+        />
+      );
+    }
+
+    if (view === "proof") {
+      return <BenchmarkProof />;
+    }
+
+    return <LegacyLabPanel />;
+  };
 
   return (
-    <>
-      <nav className="app-nav">
-        <button
-          type="button"
-          className={tab === "merge" ? "active" : ""}
-          onClick={() => setTab("merge")}
-        >
-          Merge lab
-        </button>
-        <button
-          type="button"
-          className={tab === "demo" ? "active" : ""}
-          onClick={() => setTab("demo")}
-        >
-          Demo lab
-        </button>
-        <button
-          type="button"
-          className={tab === "dashboard" ? "active" : ""}
-          onClick={() => setTab("dashboard")}
-        >
-          Dashboard
-        </button>
-      </nav>
-      {tab === "merge" ? (
-        <div className="app app-merge">
-          <MergeLab />
+    <AppShell view={view} onViewChange={setView}>
+      {dataMode === "live" && live.error && (
+        <div className="error-banner" role="alert">
+          Live session error: {live.error.message}
         </div>
-      ) : tab === "demo" ? (
-        <div className="app app-demo">
-          <DemoLab />
-        </div>
-      ) : (
-        <Dashboard />
       )}
-    </>
+      {renderView()}
+    </AppShell>
   );
 }

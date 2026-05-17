@@ -51,11 +51,13 @@ class AgentPayloadWithId(AgentPayload):
 
 
 ConflictStatus = Literal["pending_approval", "approved", "rejected", "auto_applied"]
+ConflictKind = Literal["merge", "intent", "dependency", "duplicate"]
 
 
 class LiveResolveRequest(BaseModel):
     session_id: str = Field(default_factory=resolve_team_session_id)
     file_path: str
+    conflict_kind: ConflictKind | None = None
     agent_a: AgentPayloadWithId
     agent_b: AgentPayloadWithId
 
@@ -102,7 +104,9 @@ class HistoryEvent(BaseModel):
         "guardrail_blocked",
         "conflict_resolved",
         "conflict_approved",
+        "action",
     ]
+    agent_id: str | None = None
     payload: dict
 
 

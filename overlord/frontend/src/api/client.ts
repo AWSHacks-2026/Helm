@@ -3,6 +3,8 @@ const BASE = import.meta.env.VITE_API_BASE ?? "/api";
 export type ConflictSummary = {
   conflict_id: string;
   session_id: string;
+  agent_a_id: string;
+  agent_b_id: string;
   file_path: string;
   status: string;
   conflict_type: string;
@@ -21,6 +23,10 @@ export type ResolveDetail = {
     reasoning: string;
     resolved_code: string;
     tokens_saved_estimate: string;
+    duplicate_detected?: boolean;
+    agent_to_continue?: string;
+    agent_to_reassign?: string;
+    suggested_new_task?: string;
   };
 };
 
@@ -33,7 +39,8 @@ export async function fetchConflicts(sessionId: string, status?: string) {
 }
 
 export async function fetchHistory(sessionId: string) {
-  const response = await fetch(`${BASE}/history?session_id=${sessionId}`);
+  const params = new URLSearchParams({ session_id: sessionId });
+  const response = await fetch(`${BASE}/history?${params}`);
   if (!response.ok) throw new Error(await response.text());
   return response.json();
 }

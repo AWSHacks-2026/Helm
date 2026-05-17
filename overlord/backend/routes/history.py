@@ -17,6 +17,7 @@ def get_history(session_id: str) -> list[HistoryEvent]:
                 session_id=item["session_id"],
                 timestamp=item["timestamp"],
                 event_type=item["event_type"],
+                agent_id=item.get("agent_id"),
                 payload=item.get("payload", {}),
             )
         )
