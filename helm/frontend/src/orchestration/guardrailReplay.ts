@@ -1,3 +1,4 @@
+import { formatAgentName } from "../content/agentPersonas";
 import { demoAgent, demoIncident } from "./demoScenarioHelpers";
 import type { TimelineEvent } from "./types";
 
@@ -12,7 +13,7 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
     "guardrail_block",
     "blocked",
     "Guardrail blocked session store delete",
-    "agent_b tried to remove the session table while agent_a was hardening TTL (reverses_recent_decision).",
+    `${formatAgentName("agent_b")} tried to remove the session table while ${formatAgentName("agent_a")} was hardening TTL (reverses_recent_decision).`,
     ["agent_b"],
     "2026-05-17T16:22:00.000Z",
     {
@@ -27,23 +28,23 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
       id: "gr-001",
       timestamp: T0,
       kind: "agent_started",
-      title: "agent_a started on auth.py",
+      title: `${formatAgentName("agent_a")} started on auth.py`,
       description: "Session TTL hardening in progress.",
-      agent: demoAgent("agent_a", "agent_a", "Harden session TTL", AUTH_PATH),
+      agent: demoAgent("agent_a", formatAgentName("agent_a"), "Harden session TTL", AUTH_PATH),
     },
     {
       id: "gr-002",
       timestamp: "2026-05-17T16:20:15.000Z",
       kind: "agent_started",
-      title: "agent_b started on auth.py",
+      title: `${formatAgentName("agent_b")} started on auth.py`,
       description: "OAuth validation on shared auth router.",
-      agent: demoAgent("agent_b", "agent_b", "OAuth callback validation", AUTH_PATH),
+      agent: demoAgent("agent_b", formatAgentName("agent_b"), "OAuth callback validation", AUTH_PATH),
     },
     {
       id: "gr-003",
       timestamp: "2026-05-17T16:21:00.000Z",
       kind: "intent_declared",
-      title: "agent_a registered task on auth.py",
+      title: `${formatAgentName("agent_a")} registered task on auth.py`,
       description: "TTL policy tracked on auth router.",
       agentId: "agent_a",
       taskTitle: "Harden session TTL",
@@ -53,7 +54,7 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
       id: "gr-004",
       timestamp: "2026-05-17T16:21:30.000Z",
       kind: "intent_declared",
-      title: "agent_b registered task on auth.py",
+      title: `${formatAgentName("agent_b")} registered task on auth.py`,
       description: "Destructive edit path flagged by guardrail policy.",
       agentId: "agent_b",
       taskTitle: "OAuth callback validation",
@@ -72,7 +73,7 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
       id: "gr-006",
       timestamp: "2026-05-17T16:22:30.000Z",
       kind: "agent_reassigned",
-      title: "agent_b redirected to listings.py",
+      title: `${formatAgentName("agent_b")} redirected to listings.py`,
       description: "Yielded to disjoint work after guardrail block.",
       agentId: "agent_b",
       taskTitle: "Listing search facets",

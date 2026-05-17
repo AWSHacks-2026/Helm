@@ -1,3 +1,4 @@
+import { formatAgentName } from "../../content/agentPersonas";
 import type { TraceAgentState } from "../../flightRecorder/types";
 
 type Props = {
@@ -11,7 +12,7 @@ export function TraceAgentNode({ agent }: Props) {
   return (
     <article className={`trace-agent-node status-${agent.status}`}>
       <header>
-        <h3>{agent.id}</h3>
+        <h3>{formatAgentName(agent.id)}</h3>
         <span className="status-chip">{titleCase(agent.status)}</span>
       </header>
       <p>{agent.taskTitle}</p>

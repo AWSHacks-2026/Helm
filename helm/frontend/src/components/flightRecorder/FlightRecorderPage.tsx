@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { humanizeTrace } from "../../flightRecorder/humanizeTrace";
 import {
   getTraceScenario,
   TRACE_SCENARIOS,
@@ -23,7 +24,7 @@ export function FlightRecorderPage() {
     try {
       const scenario = getTraceScenario(id);
       const loaded = await scenario.load();
-      setTrace(loaded);
+      setTrace(humanizeTrace(loaded));
     } catch (err) {
       setTrace(null);
       setLoadError(err instanceof Error ? err.message : String(err));

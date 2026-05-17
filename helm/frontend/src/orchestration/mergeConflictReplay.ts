@@ -1,3 +1,4 @@
+import { formatAgentName } from "../content/agentPersonas";
 import { demoAgent, demoIncident } from "./demoScenarioHelpers";
 import type { TimelineEvent } from "./types";
 
@@ -11,7 +12,7 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
     "merge_conflict",
     "open",
     "Merge conflict on ShopFix cart.py",
-    "agent_a added subscription proration hooks while agent_b rewrote checkout tax lines on the same router.",
+    `${formatAgentName("agent_a")} added subscription proration hooks while ${formatAgentName("agent_b")} rewrote checkout tax lines on the same router.`,
     ["agent_a", "agent_b"],
     "2026-05-17T16:12:30.000Z",
     {
@@ -46,23 +47,23 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
       id: "merge-001",
       timestamp: T0,
       kind: "agent_started",
-      title: "agent_a started on cart.py",
+      title: `${formatAgentName("agent_a")} started on cart.py`,
       description: "Subscription proration hooks on ShopFix cart router.",
-      agent: demoAgent("agent_a", "agent_a", "Cart proration hooks", CART_PATH),
+      agent: demoAgent("agent_a", formatAgentName("agent_a"), "Cart proration hooks", CART_PATH),
     },
     {
       id: "merge-002",
       timestamp: "2026-05-17T16:10:12.000Z",
       kind: "agent_started",
-      title: "agent_b started on cart.py",
+      title: `${formatAgentName("agent_b")} started on cart.py`,
       description: "Tax-inclusive checkout totals on the same file.",
-      agent: demoAgent("agent_b", "agent_b", "Tax-inclusive checkout", CART_PATH),
+      agent: demoAgent("agent_b", formatAgentName("agent_b"), "Tax-inclusive checkout", CART_PATH),
     },
     {
       id: "merge-003",
       timestamp: "2026-05-17T16:11:00.000Z",
       kind: "intent_declared",
-      title: "agent_a registered task on cart.py",
+      title: `${formatAgentName("agent_a")} registered task on cart.py`,
       description: "Proration changes tracked before edit.",
       agentId: "agent_a",
       taskTitle: "Cart proration hooks",
@@ -72,7 +73,7 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
       id: "merge-004",
       timestamp: "2026-05-17T16:11:30.000Z",
       kind: "intent_declared",
-      title: "agent_b registered task on cart.py",
+      title: `${formatAgentName("agent_b")} registered task on cart.py`,
       description: "Overlapping checkout_total() edits detected.",
       agentId: "agent_b",
       taskTitle: "Tax-inclusive checkout",

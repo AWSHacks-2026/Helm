@@ -11,10 +11,12 @@ import {
   runLiveBenchmark,
 } from "./api/liveBenchmark";
 
+import { formatAgentName } from "./content/agentPersonas";
+
 const STRATEGY_LABELS: Record<string, string> = {
   helm: "Helm",
-  pick_agent_a: "Naive: keep Agent A",
-  pick_agent_b: "Naive: keep Agent B",
+  pick_agent_a: `Naive: keep ${formatAgentName("agent_a")}`,
+  pick_agent_b: `Naive: keep ${formatAgentName("agent_b")}`,
   dual_edit_markers: "Naive: dual edit (markers)",
 };
 
@@ -215,12 +217,12 @@ export default function MergeLab() {
 
           <div className="merge-conflict-grid">
             <div className="merge-panel">
-              <h4>Agent A</h4>
+              <h4>{formatAgentName("agent_a")}</h4>
               <pre>{compare.agent_a.intent}</pre>
               <pre>{compare.agent_a.code}</pre>
             </div>
             <div className="merge-panel">
-              <h4>Agent B</h4>
+              <h4>{formatAgentName("agent_b")}</h4>
               <pre>{compare.agent_b.intent}</pre>
               <pre>{compare.agent_b.code}</pre>
             </div>

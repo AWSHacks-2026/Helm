@@ -1,3 +1,4 @@
+import { humanizeTrace } from "../humanizeTrace";
 import type { FlightTrace } from "../types";
 
 async function fetchTrace(url: string): Promise<FlightTrace> {
@@ -9,7 +10,7 @@ async function fetchTrace(url: string): Promise<FlightTrace> {
   if (!trace.frames?.length || !trace.frames[0]?.edges) {
     throw new Error(`Live trace JSON missing frames or edges: ${url}`);
   }
-  return trace;
+  return humanizeTrace(trace);
 }
 
 export async function loadLiveContentionN2HelmTrace(): Promise<FlightTrace> {

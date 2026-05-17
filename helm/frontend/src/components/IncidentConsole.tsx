@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { formatAgentIdList } from "../content/agentPersonas";
 import type { DashboardModel, IncidentState } from "../orchestration/types";
 
 interface IncidentConsoleProps {
@@ -146,7 +147,11 @@ export function IncidentConsole({
                 </div>
                 <div>
                   <dt>Agents</dt>
-                  <dd>{selectedIncident.agentIds.join(", ") || "No agents listed"}</dd>
+                  <dd>
+                    {selectedIncident.agentIds.length > 0
+                      ? formatAgentIdList(selectedIncident.agentIds)
+                      : "No agents listed"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Reasoning</dt>

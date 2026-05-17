@@ -26,7 +26,7 @@ describe("TraceGraph", () => {
     const html = renderToStaticMarkup(<TraceGraph frame={frame} />);
     expect(html).toContain("trace-graph");
     expect(html).toContain("trace-edge-guardrail");
-    expect(html).toContain("agent_a");
+    expect(html).toContain("Ravi");
     expect(html).toContain("Helm");
   });
 });
