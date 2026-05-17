@@ -176,7 +176,7 @@ MissionStatus = Literal["queued", "assigned", "in_progress", "blocked", "done", 
 class MissionCreateRequest(BaseModel):
     session_id: str = Field(default_factory=resolve_team_session_id)
     external_id: str | None = None
-    source: Literal["manual", "jira"] = "manual"
+    source: Literal["manual", "github"] = "manual"
     title: str
     description: str = ""
     file_path: str = ""
@@ -213,6 +213,6 @@ class MissionStartRequest(BaseModel):
     agent_id: str | None = None
 
 
-class JiraWebhookPayload(BaseModel):
+class GitHubWebhookPayload(BaseModel):
+    action: str
     issue: dict
-    webhookEvent: str | None = None

@@ -2,16 +2,17 @@
 set -euo pipefail
 BASE="${OVERLORD_API_BASE:?Set OVERLORD_API_BASE to shared server URL}"
 SESSION="${OVERLORD_TEAM_SESSION:-mergeai-hackathon-demo}"
+REPO="${GITHUB_REPO:-AWSHacks-2026/MergeAI}"
 
-export JIRA_MOCK=1
+export GITHUB_MOCK=1
 
-echo "=== Act D1: Jira-style missions (no real Jira) ==="
-echo "API=$BASE SESSION=$SESSION"
+echo "=== Act D1: GitHub Issues missions (no real GitHub API) ==="
+echo "API=$BASE SESSION=$SESSION REPO=$REPO"
 
 curl -s -X POST "$BASE/missions" -H 'Content-Type: application/json' -d "{
   \"session_id\": \"$SESSION\",
-  \"external_id\": \"PROJ-101\",
-  \"source\": \"jira\",
+  \"external_id\": \"${REPO}#101\",
+  \"source\": \"github\",
   \"title\": \"JWT auth\",
   \"file_path\": \"src/user.py\"
 }"
@@ -19,8 +20,8 @@ echo ""
 
 curl -s -X POST "$BASE/missions" -H 'Content-Type: application/json' -d "{
   \"session_id\": \"$SESSION\",
-  \"external_id\": \"PROJ-102\",
-  \"source\": \"jira\",
+  \"external_id\": \"${REPO}#102\",
+  \"source\": \"github\",
   \"title\": \"JWT refresh\",
   \"file_path\": \"src/user.py\"
 }"
@@ -28,8 +29,8 @@ echo ""
 
 curl -s -X POST "$BASE/missions" -H 'Content-Type: application/json' -d "{
   \"session_id\": \"$SESSION\",
-  \"external_id\": \"PROJ-103\",
-  \"source\": \"jira\",
+  \"external_id\": \"${REPO}#103\",
+  \"source\": \"github\",
   \"title\": \"Billing invoices\",
   \"file_path\": \"app/billing/invoices.py\"
 }"

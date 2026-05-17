@@ -48,7 +48,7 @@ Flip cloud on by setting `overlord/.env` (copy from `.env.example`).
 **Enables:** real merge resolution + guardrail Overlord verdicts (Acts 1 & 3).
 
 1. **Model access:** Console → **Amazon Bedrock** → **Model access** → enable  
-   `Anthropic Claude Sonnet 4` (`us.anthropic.claude-sonnet-4-20250514-v1:0`) in **us-east-1**.
+   `Anthropic Claude Sonnet 4.6` (`us.anthropic.claude-sonnet-4-6`) in **us-east-1**.
 
 2. **`overlord/.env`:**
 
@@ -214,7 +214,7 @@ curl -s http://127.0.0.1:8000/demo/smoke | python3 -m json.tool
 | Symptom | Fix |
 |---------|-----|
 | `AccessDeniedException` on invoke | Enable model in Bedrock console; check region `us-east-1` |
-| `ValidationException` model ID / inference profile | Use `us.anthropic.*` IDs in `.env` (e.g. Sonnet `us.anthropic.claude-sonnet-4-20250514-v1:0`, Haiku `us.anthropic.claude-3-5-haiku-20241022-v1:0`). Raw `anthropic.*` IDs are auto-prefixed in code. |
+| `ValidationException` model ID / inference profile | Use `us.anthropic.*` IDs in `.env` (e.g. Sonnet `us.anthropic.claude-sonnet-4-6`, Haiku `us.anthropic.claude-haiku-4-5-20251001-v1:0`). Raw `anthropic.*` IDs are auto-prefixed in code. |
 | Memory writes fail | Set `AGENTCORE_MEMORY_ID`, `OVERLORD_USE_LOCAL_MEMORY=false` |
 | Policy upload fails Cedar validation | Deploy Gateway first, put gateway ARN in `resource`; or use `validationMode=IGNORE_ALL_FINDINGS` in bootstrap script |
 | MCP sees stale data | Same `session_id` across `declare_intent` / `guardrail_check` |

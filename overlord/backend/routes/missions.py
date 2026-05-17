@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 
 from bedrock import knowledge_base
-from integrations.jira.client import JiraClient
+from integrations.github.client import GitHubClient
 from models import (
     MissionCreateRequest,
     MissionDelegateRequest,
@@ -66,16 +66,17 @@ async def delegate(payload: MissionDelegateRequest, request: Request) -> Mission
         payload.session_id,
         {"event_type": "mission_delegated", "payload": result},
     )
-    client = JiraClient.from_env()
-    if not client.mock and client.api_token:
+    client = GitHubClient.from_env()
+    if not client.mock and client.token:
         for assignment in result["assignments"]:
             mission = store.get(assignment["mission_id"])
-            if mission and mission.external_id:
+            if mission and mission.external_id and mission.source == "github":
                 agent_id = assignment.get("assigned_agent_id", "unassigned")
                 action = assignment.get("action", "assign")
+                issue_number = client.parse_external_id(mission.external_id)
                 client.add_comment(
-                    mission.external_id,
-                    f"Overlord: assigned `{agent_id}` ({action})",
+                    issue_number,
+                    f"**Overlord** assigned `{agent_id}` ({action})",
                 )
     await _broadcast_missions(request, payload.session_id)
     return MissionDelegateResponse(**result)

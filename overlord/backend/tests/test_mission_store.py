@@ -8,7 +8,7 @@ def test_create_and_list_by_session():
         title="JWT",
         file_path="src/auth/x.py",
         external_id="PROJ-1",
-        source="jira",
+        source="github",
     )
     listed = store.list_summaries(session_id="sess-1")
     assert len(listed) == 1

@@ -17,7 +17,7 @@ for m in json.load(sys.stdin):
 ")"
 
 if [[ -z "$MISSION_ID" ]]; then
-  echo "No mission assigned to $AGENT — run demo_jira_delegation.sh first"
+  echo "No mission assigned to $AGENT — run demo_github_delegation.sh first"
   exit 1
 fi
 

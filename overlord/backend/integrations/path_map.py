@@ -17,6 +17,9 @@ def resolve_file_path(
         if name in mapping:
             return mapping[name]
     for label in labels:
+        key = label.lower()
+        if key in mapping:
+            return mapping[key]
         if label in mapping:
             return mapping[label]
     return ""
