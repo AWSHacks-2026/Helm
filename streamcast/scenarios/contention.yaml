@@ -1,0 +1,2 @@
+suite: contention
+assignment_policy: hotspot_tasks_use_primary_file

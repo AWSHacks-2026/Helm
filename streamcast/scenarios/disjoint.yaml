@@ -1,3 +1,2 @@
 suite: disjoint
 assignment_policy: one_agent_per_task_unique_files
-# Uses tasks.yaml; hotspot tasks map to files.disjoint_alt

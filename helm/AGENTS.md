@@ -113,6 +113,18 @@ With contention gate on, guardrails still run on every proposed write; gate does
 
 ---
 
+## Live matrix benchmark (ShopFix + Streamcast)
+
+Unified runner with 10 tasks/cell, real Bedrock, tqdm timesteps:
+
+```bash
+cd helm && export HELM_MOCK_BEDROCK=0 HELM_GATE_ENABLED=1
+./scripts/run_shared_helm.sh   # separate terminal
+python scripts/run_live_matrix_benchmark.py --agents 2 --suites contention --cells shopfix:contention:2
+```
+
+Docs: `experiments/LIVE_MATRIX_BENCHMARK.md`
+
 ## ShopFix git benchmark (this branch)
 
 Etsy-lite fixture for **real git + optional real Bedrock** metrics:

@@ -1,0 +1,59 @@
+tasks:
+  - task_id: t01
+    intent: "Add JWT refresh token support in auth handlers"
+    files:
+      primary: app/auth/handlers.py
+
+  - task_id: t02
+    intent: "Add stream title search and category filter to streams API"
+    files:
+      primary: app/streams/live.py
+      disjoint_alt: app/streams/models.py
+
+  - task_id: t03
+    intent: "Add viewer count field when marking stream live"
+    files:
+      primary: app/streams/models.py
+
+  - task_id: t04
+    intent: "Add player quality selector endpoint in player session"
+    files:
+      primary: app/player/session.py
+
+  - task_id: t05
+    intent: "Add chat emote shortcuts and parsing in chat room"
+    files:
+      primary: app/chat/room.py
+
+  - task_id: t06
+    intent: "Add per-user chat rate limit buckets in chat room"
+    files:
+      primary: app/chat/room.py
+      disjoint_alt: app/auth/models.py
+
+  - task_id: t07
+    intent: "Watch page layout with stream embed; theme --agent-accent: {agent_accent}"
+    ui_accent: "{color}"
+    files:
+      primary: frontend/src/pages/WatchPage.tsx
+
+  - task_id: t08
+    intent: "Add RTMP ingest hook stubs to live streaming module"
+    hotspot_group: streams_live
+    files:
+      primary: app/streams/live.py
+      disjoint_alt: app/streams/models.py
+
+  - task_id: t09
+    intent: "Add WebRTC signaling placeholder endpoints to live module"
+    hotspot_group: streams_live
+    files:
+      primary: app/streams/live.py
+      disjoint_alt: app/player/session.py
+
+  - task_id: t10
+    intent: "Add VOD fallback recording metadata to live module"
+    hotspot_group: streams_live
+    files:
+      primary: app/streams/live.py
+      disjoint_alt: app/chat/room.py

@@ -1,0 +1,60 @@
+# Shared 10 tasks — assignment policy in disjoint.yaml / contention.yaml
+tasks:
+  - task_id: t01
+    intent: "Add email/password register endpoint with validation in auth router"
+    files:
+      primary: backend/app/routers/auth.py
+
+  - task_id: t02
+    intent: "Add paginated listing search with title filter in listings router"
+    files:
+      primary: backend/app/routers/listings.py
+
+  - task_id: t03
+    intent: "Add add-to-cart and remove-line-item endpoints in cart router"
+    files:
+      primary: backend/app/routers/cart.py
+
+  - task_id: t04
+    intent: "Add checkout endpoint that creates an order from cart in orders router"
+    files:
+      primary: backend/app/routers/orders.py
+
+  - task_id: t05
+    intent: "Redesign home page hero and category chips; use CSS variable --agent-accent: {agent_accent}"
+    ui_accent: "{color}"
+    files:
+      primary: frontend/src/pages/HomePage.tsx
+
+  - task_id: t06
+    intent: "Add cart summary sidebar with line totals; accent color --agent-accent: {agent_accent}"
+    ui_accent: "{color}"
+    files:
+      primary: frontend/src/pages/CartPage.tsx
+
+  - task_id: t07
+    intent: "Add seller stats cards to dashboard; theme --agent-accent: {agent_accent}"
+    ui_accent: "{color}"
+    files:
+      primary: frontend/src/pages/ShopDashboardPage.tsx
+
+  - task_id: t08
+    intent: "Add JWT access and refresh token endpoints to auth router"
+    hotspot_group: shopfix_auth
+    files:
+      primary: backend/app/routers/auth.py
+      disjoint_alt: backend/app/services/auth.py
+
+  - task_id: t09
+    intent: "Add session cookie login and logout flows to auth router"
+    hotspot_group: shopfix_auth
+    files:
+      primary: backend/app/routers/auth.py
+      disjoint_alt: backend/app/schemas/auth.py
+
+  - task_id: t10
+    intent: "Add OAuth2 callback routes and provider stubs to auth router"
+    hotspot_group: shopfix_auth
+    files:
+      primary: backend/app/routers/auth.py
+      disjoint_alt: backend/app/deps/auth.py
