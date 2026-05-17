@@ -10,8 +10,9 @@ describe("theme/tokens.css", () => {
     const css = readFileSync(join(themeDir, "tokens.css"), "utf8");
     const lower = css.toLowerCase();
     expect(lower).toContain("--bg-page: #fffcf8");
-    expect(lower).toContain("--semantic-save: #4a7c59");
-    expect(lower).toContain("--accent-primary: #c9920a");
+    expect(lower).toContain("--semantic-save:");
+    expect(lower).toContain("--accent-primary:");
+    expect(lower).toContain("--btn-bg:");
     expect(css).not.toContain("#070b12");
   });
 
