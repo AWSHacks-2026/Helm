@@ -33,5 +33,6 @@ def test_intent_recorded_in_history(tmp_path, monkeypatch):
     assert history.status_code == 200
     events = history.json()
     assert len(events) >= 1
-    assert events[0]["event_type"] == "intent_declared"
+    types = {e["event_type"] for e in events}
+    assert "intent_declared" in types
     shutil.rmtree(tmp_path)

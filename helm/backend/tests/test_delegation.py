@@ -59,3 +59,13 @@ def test_delegate_uses_thanksgiving_queue_over_llm_task(mock_dedup):
     assert reassigned
     assert store.get(backlog.mission_id).assigned_agent_id == "agent_b"
     assert reassigned[0]["assignment_source"] == "thanksgiving_queue"
+
+
+@patch("services.delegation.detect_duplication")
+def test_delegate_skips_dedup_when_disjoint_files(mock_dedup, monkeypatch):
+    monkeypatch.setenv("HELM_GATE_ENABLED", "1")
+    store = MissionStore()
+    store.create(session_id="s", title="A", file_path="src/auth/x.py")
+    store.create(session_id="s", title="B", file_path="src/billing/y.py")
+    delegate_missions(store, session_id="s", use_llm_dedup=True)
+    mock_dedup.assert_not_called()

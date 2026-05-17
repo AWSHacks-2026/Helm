@@ -74,10 +74,20 @@ class IntentRecordRequest(BaseModel):
     intent: str
 
 
+class ContentionPayload(BaseModel):
+    contention_detected: bool
+    gate_tier: Literal["allow", "triage", "arbitrate"]
+    contention_kind: str | None = None
+    signals: list[str] = []
+    peers: list[str] = []
+    coordination_recommended: bool = False
+
+
 class IntentRecordResponse(BaseModel):
     recorded: bool = True
     overlap_detected: bool = False
     alignment: dict | None = None
+    contention: ContentionPayload
 
 
 class GuardrailCheckRequest(BaseModel):
@@ -112,6 +122,7 @@ class HistoryEvent(BaseModel):
     event_type: Literal[
         "intent_declared",
         "intent_aligned",
+        "contention_gate",
         "guardrail_blocked",
         "gratitude_handoff",
         "conflict_resolved",
@@ -120,6 +131,7 @@ class HistoryEvent(BaseModel):
         "mission_assigned",
         "mission_delegated",
         "mission_started",
+        "action",
     ]
     payload: dict
 

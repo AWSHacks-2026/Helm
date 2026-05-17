@@ -25,6 +25,23 @@ This document summarizes live benchmark runs comparing **baseline (no Helm)** vs
 
 ---
 
+## 0. Contention gate — happy path (`commerce_disjoint`)
+
+**Scenario:** Six agents, six disjoint files — no file clusters ≥2 agents.
+
+**Config:** `HELM_GATE_ENABLED=1`, `HELM_MOCK_BEDROCK=1` (mock harness)
+
+| Metric | Baseline | Helm (gated) | Notes |
+|--------|----------|--------------|-------|
+| Bedrock dedup calls | N/A | **0** | Gate tier `allow`; `gate_skipped=true` |
+| Coordination | — | Skipped | Agents run without fleet Sonnet dedup |
+
+Run: `HELM_MOCK_BEDROCK=1 HELM_GATE_ENABLED=1 python scripts/run_dedup_benchmark.py` (scenario `commerce_disjoint` via harness API).
+
+Contention scenarios (`duplicate_work_fleet`, intent overlap) still use full Helm coordination when clusters or contradictions are detected.
+
+---
+
 ## 1. Fleet deduplication (6 agents) — headline result
 
 **Scenario:** `duplicate_work_fleet` on the commerce platform — overlapping auth (agents a/b/c), catalog (d/e), billing (f).

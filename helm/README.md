@@ -49,6 +49,10 @@ cd backend && uvicorn main:app --reload --port 8000
 
 Local defaults: `HELM_USE_LOCAL_MEMORY=true` and `HELM_USE_LOCAL_POLICY=true` (no AWS resources required for demo).
 
+### Contention gate
+
+Helm skips Bedrock coordination when agents do not collide (disjoint files, no intent overlap). Set `HELM_GATE_ENABLED=1` (default). Use `HELM_GATE_FORCE=1` to restore always-on dedup/align for legacy benchmarks. `POST /intents` returns a `contention` block with `gate_tier` (`allow` | `arbitrate`).
+
 Cloud setup: **[`docs/AWS_SETUP.md`](docs/AWS_SETUP.md)** (full playbook) · [`infra/agentcore/README.md`](infra/agentcore/README.md) (console notes)
 
 ```bash

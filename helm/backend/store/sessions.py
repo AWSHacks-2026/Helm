@@ -63,3 +63,15 @@ class SessionStore:
             if record.file_path == file_path and record.agent_id == agent_id:
                 intent = record.intent
         return intent
+
+    def file_clusters(
+        self, session_id: str, *, min_agents: int = 2
+    ) -> dict[str, list[str]]:
+        by_path: dict[str, list[str]] = {}
+        for record in self._intents.get(session_id, []):
+            agents = by_path.setdefault(record.file_path, [])
+            if record.agent_id not in agents:
+                agents.append(record.agent_id)
+        return {
+            path: agents for path, agents in by_path.items() if len(agents) >= min_agents
+        }
