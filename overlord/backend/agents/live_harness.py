@@ -8,6 +8,7 @@ from agents.haiku_agent import run_agent_edit, run_agent_merge_fix
 from agents.merge_evaluator import evaluate_merge_resolution
 from agents.merge_scenarios import get_merge_scenario
 from agents.usage_ledger import UsageLedger
+from bedrock.cost_estimate import build_cost_comparison
 from bedrock import agentcore_memory as mem
 from bedrock.invoke_tracked import InvokeUsage
 from overlord import arbitrate
@@ -161,11 +162,14 @@ def run_overlord_path(
         artifact["agent_b"]["code"],
         acceptance,
     )
-    mem.log_decision(
-        session_id,
-        raw.get("reasoning", "overlord merge resolution"),
-        ["agent_a", "agent_b"],
-    )
+    try:
+        mem.log_decision(
+            session_id,
+            raw.get("reasoning", "overlord merge resolution"),
+            ["agent_a", "agent_b"],
+        )
+    except Exception:
+        pass
     return {
         "path": "overlord",
         "rounds": 1,
@@ -207,10 +211,16 @@ def run_benchmark(
     token_delta = b_tokens - o_tokens
     token_savings_pct = int(100 * token_delta / b_tokens) if b_tokens else 0
 
+    b_ms = baseline["usage"]["total_latency_ms"]
+    o_ms = overlord["usage"]["total_latency_ms"]
+    time_delta_ms = b_ms - o_ms
+    time_savings_pct = int(100 * time_delta_ms / b_ms) if b_ms else 0
+
     return {
         "scenario": scenario_name,
         "session_id": session_id,
         "seed_mode": seed_mode,
+        "max_rounds": MAX_ROUNDS,
         "mock_bedrock": os.getenv("OVERLORD_MOCK_BEDROCK") == "1",
         "artifact": artifact,
         "baseline": baseline,
@@ -225,7 +235,13 @@ def run_benchmark(
             "token_delta": token_delta,
             "token_savings_pct": token_savings_pct,
             "overlord_beats_tokens": o_tokens < b_tokens,
+            **build_cost_comparison(baseline["usage"], overlord["usage"]),
             "overlord_beats_quality": overlord["evaluation"]["score"]
             > baseline["evaluation"]["score"],
+            "baseline_resolution_time_ms": b_ms,
+            "overlord_resolution_time_ms": o_ms,
+            "time_delta_ms": time_delta_ms,
+            "time_savings_pct": time_savings_pct,
+            "overlord_beats_time": o_ms < b_ms,
         },
     }

@@ -1,0 +1,36 @@
+name: commerce_platform
+description: >
+  Multi-module SaaS storefront — six agents touch shared surfaces; several
+  duplicate authentication and catalog work without coordination.
+base_dir: base
+assignments:
+  - id: agent_a
+    feature: |
+      Implement JWT login, refresh tokens, and password verification in the auth module.
+    files:
+      - app/auth/handlers.py
+  - id: agent_b
+    feature: |
+      Build user sign-in endpoints and session validation for the same API auth module.
+    files:
+      - app/auth/handlers.py
+  - id: agent_c
+    feature: |
+      Add OAuth2 social login callbacks and token exchange to the auth handlers file.
+    files:
+      - app/auth/handlers.py
+  - id: agent_d
+    feature: |
+      Implement product search, filtering, and pagination in the catalog module.
+    files:
+      - app/catalog/products.py
+  - id: agent_e
+    feature: |
+      Add product listing API with filters and sort — overlaps catalog search work.
+    files:
+      - app/catalog/products.py
+  - id: agent_f
+    feature: |
+      Build invoice creation, line items, and tax calculation in the billing module.
+    files:
+      - app/billing/invoices.py

@@ -29,6 +29,11 @@ MERGE_SCENARIO_META: dict[str, dict[str, str]] = {
         "title": "load_config — os.environ vs YAML file",
         "description": "Agent A reads env vars; Agent B loads settings.yaml.",
     },
+    "merge_conflict_fleet": {
+        "kind": "merge",
+        "title": "Commerce platform — six-agent merge conflicts",
+        "description": "Six agents produce conflicting code on auth, catalog, and billing modules.",
+    },
 }
 
 MERGE_SCENARIOS: dict[str, dict[str, Any]] = {
@@ -155,6 +160,155 @@ def load_config() -> dict:
             "must_not_equal_agent": True,
         },
     },
+    "merge_conflict_fleet": {
+        "title": "Commerce Platform — Six Agent Merge Conflicts",
+        "file_paths": {
+            "agent_a": "app/auth/handlers.py",
+            "agent_b": "app/auth/handlers.py",
+            "agent_c": "app/auth/handlers.py",
+            "agent_d": "app/catalog/products.py",
+            "agent_e": "app/catalog/products.py",
+            "agent_f": "app/billing/invoices.py",
+        },
+        "agents": {
+            "agent_a": {
+                "intent": "JWT login with in-memory token cache for fast auth",
+                "code": '''
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+import jwt
+
+router = APIRouter(prefix="/auth")
+_token_cache: dict[str, str] = {}
+
+class LoginBody(BaseModel):
+    email: str
+    password: str
+
+@router.post("/login")
+def login(body: LoginBody) -> dict:
+    if body.email in _token_cache:
+        return {"access_token": _token_cache[body.email]}
+    token = jwt.encode({"sub": body.email}, "secret", algorithm="HS256")
+    _token_cache[body.email] = token
+    return {"access_token": token}
+'''.strip(),
+            },
+            "agent_b": {
+                "intent": "Typed sign-in without caching — direct DB validation",
+                "code": '''
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr
+
+router = APIRouter(prefix="/auth")
+
+class LoginBody(BaseModel):
+    email: EmailStr
+    password: str
+
+@router.post("/login")
+def login(body: LoginBody) -> dict:
+    user = db.validate_user(body.email, body.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="invalid credentials")
+    return {"ok": True, "user_id": user.id}
+'''.strip(),
+            },
+            "agent_c": {
+                "intent": "Session-cookie auth instead of bearer tokens",
+                "code": '''
+from fastapi import APIRouter, Response
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/auth")
+_sessions: dict[str, str] = {}
+
+class LoginBody(BaseModel):
+    email: str
+    password: str
+
+@router.post("/login")
+def login(body: LoginBody, response: Response) -> dict:
+    session_id = f"sess_{body.email}"
+    _sessions[session_id] = body.email
+    response.set_cookie("session_id", session_id, httponly=True)
+    return {"session": session_id}
+'''.strip(),
+            },
+            "agent_d": {
+                "intent": "Product search with text filters and pagination",
+                "code": '''
+from dataclasses import dataclass
+
+@dataclass
+class Product:
+    sku: str
+    title: str
+    price_cents: int
+
+def search_products(query: str, limit: int = 20, offset: int = 0) -> list[Product]:
+  results = [p for p in _CATALOG if query.lower() in p.title.lower()]
+  return results[offset : offset + limit]
+'''.strip(),
+            },
+            "agent_e": {
+                "intent": "Product listing sorted by price with category filter",
+                "code": '''
+from dataclasses import dataclass
+
+@dataclass
+class Product:
+    sku: str
+    title: str
+    price_cents: int
+    category: str
+
+def list_products(category: str | None = None, sort: str = "price") -> list[Product]:
+    items = list(_CATALOG)
+    if category:
+        items = [p for p in items if p.category == category]
+    return sorted(items, key=lambda p: p.price_cents)
+'''.strip(),
+            },
+            "agent_f": {
+                "intent": "Invoice totals with tax lines",
+                "code": '''
+from dataclasses import dataclass, field
+
+@dataclass
+class InvoiceLine:
+    description: str
+    amount_cents: int
+
+@dataclass
+class Invoice:
+    customer_id: str
+    lines: list[InvoiceLine] = field(default_factory=list)
+    tax_rate: float = 0.08
+
+    def total_cents(self) -> int:
+        subtotal = sum(line.amount_cents for line in self.lines)
+        return int(subtotal * (1 + self.tax_rate))
+'''.strip(),
+            },
+        },
+        "acceptance_by_file": {
+            "app/auth/handlers.py": {
+                "must_include": ["router", "login", "def"],
+                "must_include_any": [["jwt", "token"], ["session", "cookie"]],
+                "must_not_equal_agent": True,
+            },
+            "app/catalog/products.py": {
+                "must_include": ["Product", "def"],
+                "must_include_any": [["search"], ["list", "sort"]],
+                "must_not_equal_agent": True,
+            },
+            "app/billing/invoices.py": {
+                "must_include": ["Invoice", "total", "def"],
+                "must_not_equal_agent": False,
+            },
+        },
+    },
 }
 
 # Deterministic mock resolutions when OVERLORD_MOCK_BEDROCK=1 (merge lab + smoke).
@@ -221,6 +375,11 @@ MERGE_MOCK_RESOLUTIONS: dict[str, dict[str, str]] = {
 
 def get_merge_scenario_names() -> list[str]:
     return list(MERGE_SCENARIOS.keys())
+
+
+def get_pairwise_merge_scenario_names() -> list[str]:
+    """Two-agent scenarios for live_harness (excludes fleet)."""
+    return [name for name in MERGE_SCENARIOS if "file_path" in MERGE_SCENARIOS[name]]
 
 
 def get_merge_scenario(name: str) -> dict[str, Any]:
