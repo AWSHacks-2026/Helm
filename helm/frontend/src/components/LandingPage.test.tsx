@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { LandingPage } from "./LandingPage";
 
 describe("LandingPage", () => {
-  it("includes hero course-lines illustration", () => {
+  it("renders hero copy without decorative illustration", () => {
     const html = renderToStaticMarkup(
       <LandingPage
         sessionId="demo"
@@ -12,8 +12,9 @@ describe("LandingPage", () => {
         onStartJudgeDemo={() => undefined}
       />,
     );
-    expect(html).toContain("landing-hero-art");
-    expect(html).toContain("Agent paths converging");
+    expect(html).not.toContain("landing-hero-art");
+    expect(html).not.toContain("hero-course-lines");
+    expect(html).toContain("hero-copy");
     expect(html).toContain("Build with Gratitude");
   });
 });

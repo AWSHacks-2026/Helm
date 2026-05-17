@@ -381,7 +381,7 @@ describe("fetchLiveSessionEvents", () => {
         payload: {
           conflict_id: "conflict-1",
           file_path: "src/search/query.ts",
-          summary: "Overlord generated a resolution.",
+          summary: "Helm generated a resolution.",
         },
       },
       {
@@ -402,7 +402,7 @@ describe("fetchLiveSessionEvents", () => {
       kind: "merge_resolved",
       agentId: "agent-05",
       incidentId: "conflict-1",
-      description: "Overlord generated a resolution.",
+      description: "Helm generated a resolution.",
     });
     expect(events.find((event) => event.id === "history-1")).toMatchObject({
       kind: "human_review",

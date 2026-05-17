@@ -12,12 +12,12 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
     "guardrail_block",
     "blocked",
     "Guardrail blocked session store delete",
-    "agent_b attempted to remove the session table while agent_a was hardening TTL — reverses_recent_decision.",
+    "agent_b tried to remove the session table while agent_a was hardening TTL (reverses_recent_decision).",
     ["agent_b"],
     "2026-05-17T16:22:00.000Z",
     {
       filePath: AUTH_PATH,
-      reasoning: "Policy reverses_recent_decision — destructive delete on shared auth router.",
+      reasoning: "Policy reverses_recent_decision: destructive delete on shared auth router.",
       suggestedTask: "Listing search facets on disjoint file",
     },
   );
@@ -64,7 +64,7 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
       timestamp: "2026-05-17T16:22:00.000Z",
       kind: "guardrail_blocked",
       title: "Guardrail blocked destructive auth edit",
-      description: "ShopFix auth.py — block before write on session store delete.",
+      description: "ShopFix auth.py: block before write on session store delete.",
       agentId: "agent_b",
       incident: guardrailIncident,
     },
@@ -83,7 +83,7 @@ export const createGuardrailReplayEvents = (): TimelineEvent[] => {
       timestamp: "2026-05-17T16:23:00.000Z",
       kind: "benchmark_result",
       title: "Guardrail benchmark",
-      description: "Blocked destructive delete — ~450 tokens of rework avoided.",
+      description: "Blocked destructive delete. ~450 tokens of rework avoided.",
       benchmark: {
         tokenSavingsLabel: "12%",
         baselineTokens: 900,

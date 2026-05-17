@@ -12,13 +12,13 @@ describe("presentation page content", () => {
     expect(text).toContain("token");
     expect(text).toContain("cost");
     expect(text).toContain("review");
-    expect(text).toContain("same repo");
+    expect(text).toContain("repo");
   });
 
   it("keeps the solution page simple while preserving the concurrency analogy", () => {
     const text = JSON.stringify(SOLUTION_PAGE).toLowerCase();
 
-    expect(SOLUTION_PAGE.title).toContain("coordinator");
+    expect(SOLUTION_PAGE.title).toContain("coordination layer");
     expect(text).toContain("dining philosophers");
     expect(text).toContain("threads");
     expect(text).toContain("helm");

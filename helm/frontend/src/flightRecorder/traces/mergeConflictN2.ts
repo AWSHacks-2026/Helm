@@ -18,7 +18,7 @@ export function loadMergeN2Trace(): FlightTrace {
     id: "merge_n2",
     label: "N=2 · Merge conflict (cart.py)",
     description:
-      "Two agents collide on checkout_total — Helm detects conflict markers and merges with Sonnet arbitration.",
+      "Two agents collide on checkout_total. Helm detects conflict markers and merges with Sonnet.",
     frames: buildTraceFrames(createMergeConflictReplayEvents(), {
       primaryFile: CART_PATH,
       agentIds: ["agent_a", "agent_b"],

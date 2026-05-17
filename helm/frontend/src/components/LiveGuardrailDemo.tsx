@@ -9,7 +9,7 @@ type LoadState = "idle" | "loading" | "done" | "error";
 const PRESENTER_GUARDRAIL = {
   rule: "reverses_recent_decision",
   message:
-    "Blocked session-wide delete on ShopFix auth.py — destructive change rejected before any write.",
+    "Blocked session-wide delete on ShopFix auth.py. Destructive change rejected before any write.",
 };
 
 export function LiveGuardrailDemo() {

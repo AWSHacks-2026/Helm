@@ -99,7 +99,7 @@ export function DemoChartGallery() {
           <p>
             {presenterMode
               ? "Click any chart to enlarge · ← → to move through the deck."
-              : "Live AWS benchmark plots — click to enlarge."}
+              : "Live AWS benchmark plots. Click to enlarge."}
           </p>
         </div>
         {presenterMode && slideshow && (

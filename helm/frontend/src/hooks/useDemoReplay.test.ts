@@ -33,7 +33,7 @@ const replayFixture = vi.hoisted(() => {
       timestamp: "2026-05-16T16:00:30.000Z",
       kind: "benchmark_result" as const,
       title: "Token benchmark completed",
-      description: "Overlord replay reduced coordination tokens.",
+      description: "Helm replay reduced coordination tokens.",
       benchmark: {
         tokenSavingsLabel: "42%",
         baselineTokens: 42000,

@@ -14,14 +14,14 @@ export const JUDGE_WALKTHROUGH: WalkthroughStep[] = [
     view: "control",
     title: "Fleet coordination in motion",
     instruction:
-      "Watch Overlord on ShopFix: dedup on auth.py before agents pile on, a guardrail block that prevents a destructive rewrite, reassignments instead of wasted Haiku runs.",
+      "Watch Helm on ShopFix: dedup on auth.py before agents pile on, a guardrail that blocks a bad rewrite, and reassignments instead of wasted Haiku runs.",
   },
   {
     id: "incident",
     view: "incidents",
     title: "Duplicate work stopped early",
     instruction:
-      "This is the grind our parents lived — two agents, one file. Open the incident: gate decision, reasoning, and who got sent to new work.",
+      "Two agents, one file. That is the grind our parents knew. Open the incident for the gate call, the reasoning, and who got new work.",
     selectIncidentType: "duplicate_work",
   },
   {
@@ -29,13 +29,13 @@ export const JUDGE_WALKTHROUGH: WalkthroughStep[] = [
     view: "gratitude",
     title: "Build with Gratitude",
     instruction:
-      "The ledger is the theme made visible: blocked writes, deduped missions, tokens not burned. Every metric is time back for someone still in the chair.",
+      "The ledger is the theme on screen: blocked writes, deduped missions, tokens you did not burn. Each metric is time back for someone still at the keyboard.",
   },
   {
     id: "proof",
     view: "proof",
     title: "Measured on Amazon Bedrock",
     instruction:
-      "Four pillars from live ShopFix benchmarks — not slide-ware. Use ← → on the chart deck; contention gate, dedup, merge fleet, guardrails.",
+      "Four pillars from live ShopFix runs, not slide-ware. Use the arrow keys on the chart deck: gate, dedup, merge fleet, guardrails.",
   },
 ];

@@ -44,17 +44,17 @@ export type SmokeResult = {
 const SCENARIO_META: Record<string, Omit<ScenarioMeta, "name">> = {
   merge_conflict: {
     kind: "merge",
-    title: "Act 1 — Cache vs readability",
+    title: "Act 1: Cache vs readability",
     description: "Two agents edited get_user differently.",
   },
   intent_conflict: {
     kind: "intent",
-    title: "Act 2 — Performance vs dependencies",
+    title: "Act 2: Performance vs dependencies",
     description: "Contradictory goals before code diverges.",
   },
   guardrail_prevention: {
     kind: "guardrail",
-    title: "Act 3 — Block cache utility delete",
+    title: "Act 3: Block cache utility delete",
     description: "Preflight blocks delete; Helm arbitrates.",
   },
 };

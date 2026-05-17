@@ -1,23 +1,23 @@
 const ACTS = [
   {
-    title: "Act 1 — Gate (disjoint)",
+    title: "Act 1: Gate (disjoint)",
     script:
-      "Six agents, six files, zero overlap. Helm runs the contention gate — zero dedup Bedrock calls, same cost as baseline, pytest passes.",
+      "Six agents, six files, zero overlap. Helm runs the contention gate with zero dedup Bedrock calls. Same cost as baseline. Pytest still passes.",
   },
   {
-    title: "Act 2 — Duplicate work (contention N=8)",
+    title: "Act 2: Duplicate work (contention N=8)",
     script:
-      "Baseline runs eight agents on overlapping files. Helm dedupes first — six agents run, eighteen percent cheaper, thirty-nine percent faster wall clock.",
+      "Baseline runs eight agents on overlapping files. Helm dedupes first. Six agents run. About eighteen percent cheaper and thirty-nine percent faster wall clock.",
   },
   {
-    title: "Act 3 — Merge fleet",
+    title: "Act 3: Merge fleet",
     script:
-      "When git actually conflicts on two files, parallel per-file Haiku merge-fix cuts merge phase wall time about thirty percent at N equals six.",
+      "When git actually conflicts on two files, parallel per-file Haiku merge-fix cuts merge-phase wall time about thirty percent at N equals six.",
   },
   {
-    title: "Act 4 — Guardrails (ShopFix auth)",
+    title: "Act 4: Guardrails (ShopFix auth)",
     script:
-      "On ShopFix auth.py the guardrail blocks a destructive delete before write — about forty-five percent cost and fifty-five percent wall versus running the bad edit twice.",
+      "On ShopFix auth.py the guardrail blocks a destructive delete before write. About forty-five percent cost and fifty-five percent wall versus running the bad edit twice.",
   },
 ];
 

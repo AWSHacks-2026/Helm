@@ -87,7 +87,7 @@ export default function DemoLab() {
           <ul>
             {smoke.checks.map((c) => (
               <li key={c.scenario}>
-                {c.passed ? "✓" : "✗"} {c.scenario} — {c.endpoint}
+                {c.passed ? "✓" : "✗"} {c.scenario}: {c.endpoint}
                 {c.detail ? ` (${c.detail})` : ""}
               </li>
             ))}

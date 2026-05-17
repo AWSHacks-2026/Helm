@@ -20,7 +20,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
     id: "fleet_contention",
     label: "Fleet dedup",
     subtitle:
-      "ShopFix fleet — overlapping auth.py work trimmed, guardrail block, and contention benchmark.",
+      "ShopFix fleet: overlapping auth.py trimmed, guardrail block, contention benchmark.",
     completeHint:
       "Replay complete · open Incidents for auth.py dedup or Results for charts.",
     createEvents: createShopfixDemoReplayEvents,
@@ -29,7 +29,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
     id: "merge_conflict",
     label: "Merge conflict",
     subtitle:
-      "ShopFix cart.py — two agents collide on checkout_total(), Helm resolves with Sonnet merge.",
+      "ShopFix cart.py: two agents collide on checkout_total(). Helm resolves with Sonnet.",
     completeHint:
       "Replay complete · open Incidents for cart.py merge detail or Results for merge benchmarks.",
     createEvents: createMergeConflictReplayEvents,
@@ -38,7 +38,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
     id: "guardrail_block",
     label: "Guardrail",
     subtitle:
-      "ShopFix auth.py — destructive session delete blocked before write, agent yielded to disjoint file.",
+      "ShopFix auth.py: destructive session delete blocked before write. Agent yielded to disjoint file.",
     completeHint:
       "Replay complete · open Incidents for the guardrail block or Gratitude for tokens returned.",
     createEvents: createGuardrailReplayEvents,

@@ -1,12 +1,11 @@
 import { AwsArchitectureStrip } from "./AwsArchitectureStrip";
-import { Illustration } from "./Illustration";
 import { SetupChecker } from "./SetupChecker";
 import {
   GRATITUDE_PITCH,
   HACKATHON_HOOK,
   HACKATHON_THEME,
+  HELM_TAGLINE,
   PRODUCT_NAME,
-  TECH_NAME,
 } from "../content/gratitudeMission";
 import { readPresenterMode } from "../hooks/usePresenterMode";
 
@@ -31,31 +30,24 @@ export function LandingPage({
   return (
     <main className={`landing-page ${presenterMode ? "landing-page--presenter" : ""}`}>
       <section className="hero-panel page-enter" aria-labelledby="landing-title">
-        <div className="hero-panel-inner">
         <div className="hero-copy">
-        <p className="eyebrow">
-          {HACKATHON_THEME} · {PRODUCT_NAME} · {TECH_NAME} Control Tower
-        </p>
-        <h1 id="landing-title">
-          {presenterMode
-            ? "Give engineers their hours back."
-            : "Coordinate agent fleets — and show what you gave back."}
-        </h1>
-        <p>{HACKATHON_HOOK}</p>
-        <p className="landing-hero-proof">{GRATITUDE_PITCH}</p>
-        {!presenterMode && (
-          <p className="landing-hero-link">
-            <a href="?view=gratitude">Session ledger (Gratitude) →</a>
-            {" · "}
-            <a href="?view=recorder">Coordination step-by-step (Under the hood) →</a>
+          <p className="eyebrow">
+            {HACKATHON_THEME} · {PRODUCT_NAME} Control Tower
           </p>
-        )}
-        </div>
-        <Illustration
-          name="hero-course-lines"
-          alt="Agent paths converging — Helm coordinates the fleet before merge"
-          className="landing-hero-art"
-        />
+          <h1 id="landing-title">
+            {presenterMode
+              ? "Give engineers their hours back."
+              : HELM_TAGLINE}
+          </h1>
+          <p>{HACKATHON_HOOK}</p>
+          <p className="landing-hero-proof">{GRATITUDE_PITCH}</p>
+          {!presenterMode && (
+            <p className="landing-hero-link">
+              <a href="?view=gratitude">Session ledger (Gratitude) →</a>
+              {" · "}
+              <a href="?view=recorder">Coordination step-by-step (Under the hood) →</a>
+            </p>
+          )}
         </div>
       </section>
 
@@ -81,7 +73,7 @@ export function LandingPage({
           <article className="landing-card">
             <p className="eyebrow">Replay only</p>
             <h2>Watch replay</h2>
-            <p>Skip the walkthrough — pick a scenario on the Control Tower.</p>
+            <p>Skip the walkthrough and pick a scenario on the Control Tower.</p>
             <label>
               Session ID
               <input

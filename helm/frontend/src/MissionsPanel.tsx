@@ -142,8 +142,8 @@ export default function MissionsPanel({ sessionId, onRefresh }: Props) {
         {missions.length === 0 && (
           <p className="missions-empty">
             No missions yet. Run{" "}
-            <code>./scripts/demo_github_delegation.sh</code> to load issues, then delegate —
-            counters on <strong>Gratitude</strong> update when Helm trims overlap.
+            <code>./scripts/demo_github_delegation.sh</code> to load issues, then delegate.
+            Counters on <strong>Gratitude</strong> update when Helm trims overlap.
           </p>
         )}
       </section>

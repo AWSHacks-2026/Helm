@@ -24,11 +24,11 @@ type Props = {
 };
 
 const METRIC_HINTS: Record<string, string> = {
-  Blocked: "A bad write stopped — someone kept their evening",
+  Blocked: "Risky write stopped early. Someone keeps their evening.",
   Deduped: "Overlap cut before two agents rebuilt the same file",
-  Yielded: "Sent to new work instead of thrashing",
-  Tokens: "Compute you did not burn on rework",
-  Haiku: "Fast coordination — Bedrock only when it matters",
+  Yielded: "Routed to new work instead of thrashing",
+  Tokens: "Model spend you did not burn on rework",
+  Haiku: "Fast coordination. Bedrock only when it matters.",
   Sonnet: "One hard merge instead of many agent rounds",
 };
 

@@ -23,7 +23,7 @@ export function TraceHelmNode({ helm }: Props) {
       {helm.active && helm.action && (
         <p className="helm-action">
           {actionLabel[helm.action]}
-          {helm.detail ? ` — ${helm.detail}` : ""}
+          {helm.detail ? `: ${helm.detail}` : ""}
         </p>
       )}
     </article>

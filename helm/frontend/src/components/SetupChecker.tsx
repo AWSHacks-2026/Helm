@@ -40,8 +40,8 @@ export function SetupChecker() {
             <strong>Helm API unreachable.</strong> {error}
           </p>
           <p className="setup-hint">
-            The Gratitude ledger needs the API — start Helm so the demo can show time
-            returned, not just replay animation.
+            The Gratitude ledger needs the API. Start Helm on port 8000 so the demo
+            shows time returned, not just replay animation.
           </p>
           <p className="setup-hint">
             Start:{" "}

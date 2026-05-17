@@ -10,7 +10,7 @@ describe("presentation pages", () => {
     const html = renderToStaticMarkup(<ProblemStatementPage />);
 
     expect(html).toContain("Problem Statement");
-    expect(html).toContain("Agent fleets are starting to thrash");
+    expect(html).toContain("Agent fleets thrash");
     expect(html).toContain("Duplicate tasks");
     expect(html).toContain("Token burn");
     expect(html).toContain("Human drag");
@@ -21,7 +21,7 @@ describe("presentation pages", () => {
     const html = renderToStaticMarkup(<SolutionPage />);
 
     expect(html).toContain("Our Solution");
-    expect(html).toContain("Overlord is the coordinator");
+    expect(html).toContain("Helm is the coordination layer");
     expect(html).toContain("dining philosophers");
     expect(html).toContain("Agents");
     expect(html).toContain("Helm");

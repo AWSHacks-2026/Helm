@@ -202,7 +202,7 @@ export const buildDashboardModel = (
   const defaultSubtitle =
     mode === "replay"
       ? "ShopFix Etsy-lite · pick a scenario below or watch the guided replay."
-      : "Live session — shared AgentCore memory and Bedrock coordination.";
+      : "Live session with shared AgentCore memory and Bedrock coordination.";
 
   return {
     mode,

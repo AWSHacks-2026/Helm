@@ -17,7 +17,7 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
     {
       filePath: CART_PATH,
       reasoning:
-        "Both branches touched checkout_total() — caching decorator vs tax-inclusive pricing.",
+        "Both branches touched checkout_total(): caching decorator vs tax-inclusive pricing.",
       suggestedTask: "Continue catalog facets work on disjoint file",
     },
   );
@@ -83,7 +83,7 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
       timestamp: "2026-05-17T16:12:30.000Z",
       kind: "merge_detected",
       title: "Merge conflict on cart.py",
-      description: "Git conflict markers in checkout_total — queued for Helm arbitration.",
+      description: "Git conflict markers in checkout_total. Queued for Helm arbitration.",
       agentId: "agent_b",
       incident: mergeIncident,
     },
@@ -93,7 +93,7 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
       kind: "merge_resolved",
       title: "Helm merged cart.py with Sonnet",
       description:
-        "Unified proration + tax lines — ~2,400 tokens saved vs two agents fixing independently.",
+        "Unified proration and tax lines. ~2,400 tokens saved vs two agents fixing alone.",
       agentId: "agent_a",
       incidentId: mergeIncident.id,
       incident: resolvedIncident,
@@ -115,7 +115,7 @@ export const createMergeConflictReplayEvents = (): TimelineEvent[] => {
       timestamp: "2026-05-17T16:14:15.000Z",
       kind: "intent_declared",
       title: "Cart router coordinated",
-      description: "Merge resolved — both agents unblocked on cart.py.",
+      description: "Merge resolved. Both agents unblocked on cart.py.",
       agentId: "agent_b",
       taskTitle: "Tax-inclusive checkout",
       filePath: CART_PATH,

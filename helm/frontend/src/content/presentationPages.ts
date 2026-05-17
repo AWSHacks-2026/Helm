@@ -37,98 +37,98 @@ export type TechnicalWorkflowPageContent = PresentationPageContent & {
 
 export const PROBLEM_PAGE: PresentationPageContent = {
   eyebrow: "Problem Statement",
-  title: "Agent fleets are starting to thrash like uncoordinated threads.",
+  title: "Agent fleets thrash when nobody owns the shared repo.",
   lede:
-    "Agentic AI lets teams launch many coding agents at once, but those agents often share the same repo, files, tests, and product goals. Without coordination, they duplicate work, overwrite each other, and spend tokens repairing damage they created.",
+    "You can spin up many coding agents at once, but they still share files, tests, and product goals. Without a coordinator, they duplicate work, overwrite each other, and spend tokens fixing collisions they created.",
   metrics: [
     {
       value: "Duplicate tasks",
-      label: "Two agents solve the same job",
+      label: "Two agents, one file",
       body:
-        "When agents receive overlapping prompts or discover the same failing area, they can both edit the same file and burn separate context windows on one piece of work.",
+        "Overlapping prompts or the same failing test send two agents to auth.py. Both burn context on work that only needed one owner.",
     },
     {
       value: "Token burn",
-      label: "The cost compounds",
+      label: "Cost stacks fast",
       body:
-        "Thrashing turns one useful model call into rounds of rebuild, rebase, re-test, and repair. The customer pays in tokens, latency, CI minutes, and review time.",
+        "One useful model call turns into rebuild, rebase, re-test, and repair. You pay in tokens, latency, CI minutes, and review time.",
     },
     {
       value: "Human drag",
-      label: "Engineers become traffic cops",
+      label: "Engineers as traffic cops",
       body:
-        "Instead of reviewing finished work, people using agentic AI have to inspect conflicts, decide which agent is right, and clean up duplicated changes.",
+        "Instead of reviewing finished work, people inspect conflicts, pick a winner, and clean up duplicate diffs.",
     },
   ],
   sections: [
     {
       title: "What thrashing means",
       body:
-        "Thrashing is when agents make progress locally but waste work globally. One agent fixes auth while another rewrites the same auth file, a third reverts part of it, and the team spends the next loop resolving the collision.",
+        "Agents make local progress but waste global effort. One fixes auth while another rewrites the same module, a third partially reverts it, and the team spends the next hour untangling the mess.",
     },
     {
       title: "Why agents do it",
       body:
-        "Most coding agents optimize for their own prompt. They do not automatically know which files peers are editing, which intent already exists, or whether another agent has claimed the same task.",
+        "Most agents optimize for their own prompt. They do not automatically see peer intents, file claims, or tasks another agent already took.",
     },
     {
-      title: "Why it becomes common",
+      title: "Why it gets worse",
       body:
-        "The moment teams run more than one agent against the same repo, shared resources appear: files, tests, APIs, product requirements, and git history. More parallelism creates more chances for overlap.",
+        "More agents on one repo means more shared surfaces: files, APIs, tests, git history. Parallelism without coordination is overlap waiting to happen.",
     },
     {
-      title: "Who feels the pain",
+      title: "Who feels it",
       body:
-        "Developers, reviewers, and platform teams feel it first. They see higher model bills, slower demos, noisy pull requests, merge conflicts, and less trust in autonomous agents.",
+        "Developers and platform teams see higher bills, slower demos, noisy PRs, and less trust that autonomous agents are safe to run wide open.",
     },
   ],
 };
 
 export const SOLUTION_PAGE: PresentationPageContent = {
   eyebrow: "Our Solution",
-  title: "Overlord is the coordinator above the agent fleet.",
+  title: "Helm is the coordination layer above your agent fleet.",
   lede:
-    "The simple idea: let agents work in parallel, but give them a shared operator that can see intent, detect collisions, block unsafe writes, and resolve conflicts once.",
+    "Let agents work in parallel, but give them one operator that sees intent, spots collisions, blocks unsafe writes, and resolves hard merges once.",
   metrics: [
     {
       value: "1",
       label: "Agents declare intent",
       body:
-        "Before work gets expensive, Helm records what each agent plans to touch and checks whether another agent is already nearby.",
+        "Before work gets expensive, Helm records what each agent plans to touch and whether another agent is already there.",
     },
     {
       value: "2",
       label: "Helm manages shared resources",
       body:
-        "Like a concurrency controller for threads, Helm decides when agents can proceed, when they need arbitration, and when duplicate work should be reassigned.",
+        "Like a lock for threads, Helm decides when agents proceed, when to arbitrate, and when duplicate work should be reassigned.",
     },
     {
       value: "3",
-      label: "Customers get work back",
+      label: "You get work back",
       body:
-        "The result is fewer wasted model calls, fewer collisions, safer writes, and a Gratitude ledger that shows the time and tokens returned.",
+        "Fewer wasted model calls, fewer collisions, safer writes, and a Gratitude ledger that shows time and tokens returned.",
     },
   ],
   sections: [
     {
-      title: "The five-year-old version",
+      title: "The simple version",
       body:
-        "Imagine several people coloring one picture at the same time. If nobody talks, two people may color the same part or erase each other. Overlord is the grown-up at the table who says, you take the sky, you take the trees, and stop before you spill paint.",
+        "Picture several people coloring one page. Without rules, two people color the same corner. Helm is the person at the table who assigns regions and stops someone from erasing fresh ink.",
     },
     {
-      title: "The technical analogy",
+      title: "The CS version",
       body:
-        "This is the dining philosophers problem for agentic software work. Threads need coordination when they share resources. Agents need coordination when they share files, tests, memory, and product intent.",
+        "This is dining philosophers for agentic coding. Shared files need coordination the same way shared memory does for threads.",
     },
     {
       title: "What Helm does",
       body:
-        "Helm gates contention, deduplicates overlapping tasks, applies guardrails before risky writes, arbitrates hard merges with Bedrock, and records the savings in session history.",
+        "Gates contention, deduplicates overlap, guardrails risky writes, arbitrates merges with Bedrock when needed, and logs savings to session history.",
     },
     {
-      title: "Why it stays simple",
+      title: "What Helm is not",
       body:
-        "Overlord does not replace the agents. It gives them a lightweight control tower so each agent can stay focused while the system prevents fleet-level chaos.",
+        "Helm does not replace your agents. It is a lightweight control tower so each agent stays focused while the fleet avoids pile-ups.",
     },
   ],
 };
@@ -137,7 +137,7 @@ export const TECHNICAL_WORKFLOW_PAGE: TechnicalWorkflowPageContent = {
   eyebrow: "Technical Workflow",
   title: "How Helm coordinates agent fleets on AWS.",
   lede:
-    "Architecture first: coding agents declare work, Helm decides whether coordination is needed, Amazon Bedrock handles the hard arbitration, and session history feeds the Control Tower and Gratitude ledger.",
+    "Agents declare work. Helm decides if coordination is worth a Bedrock call. Amazon Bedrock handles hard arbitration. Session history feeds the Control Tower and Gratitude ledger.",
   badges: [
     "Bedrock Claude Haiku 4.5",
     "Bedrock Claude Sonnet 4.6",
@@ -148,41 +148,41 @@ export const TECHNICAL_WORKFLOW_PAGE: TechnicalWorkflowPageContent = {
       value: "React 19 + Vite",
       label: "Control Tower UI",
       body:
-        "The presenter site is a TypeScript React app that renders replay state, incidents, gratitude, results, and this technical workflow.",
+        "TypeScript React app for replay, incidents, gratitude, results, flight recorder, and this workflow view.",
     },
     {
       value: "FastAPI :8000",
       label: "Helm coordination API",
       body:
-        "Python 3.11, FastAPI, Uvicorn, in-memory stores, websocket broadcasts, and API routes for intents, guardrails, resolve, history, missions, and gratitude.",
+        "Python 3.11, FastAPI, in-memory stores, websockets, and routes for intents, guardrails, resolve, history, missions, and gratitude.",
     },
     {
       value: "ShopFix :8001",
       label: "Real benchmark target",
       body:
-        "The Etsy-lite fixture gives Helm real git contention, auth/cart/listing files, and reproducible benchmark scenarios.",
+        "Etsy-lite fixture with real git sandboxes for auth, cart, and listing contention.",
     },
   ],
   sections: [
     {
       title: "AWS service usage",
       body:
-        "Amazon Bedrock Runtime runs Anthropic Messages calls. AgentCore Memory stores session events with a local .helm/session.json fallback. AgentCore Policy represents Cedar-style preflight checks. AgentCore Runtime can host the merge arbitrator when HELM_ARBITRATOR_ARN is configured.",
+        "Bedrock Runtime runs Anthropic Messages. AgentCore Memory stores session events with a local .helm/session.json fallback. AgentCore Policy mirrors Cedar-style preflight. AgentCore Runtime can host the merge arbitrator when HELM_ARBITRATOR_ARN is set.",
     },
     {
       title: "Bedrock routing",
       body:
-        "Claude Haiku 4.5 handles light coordination, agent work, guardrail checks, and cheaper merge paths. Claude Sonnet 4.6 handles fleet dedup, hard merges, and multi-agent arbitration when complexity crosses the routing threshold.",
+        "Haiku 4.5 for light coordination and agent edits. Sonnet 4.6 for fleet dedup and hard merges when complexity crosses the threshold.",
     },
     {
       title: "Two decisions, not one",
       body:
-        "Contention gate asks: should we spend Bedrock on coordination? Guardrails ask: may this agent write this file? They compose; neither replaces the other.",
+        "Contention gate asks: should we spend Bedrock on coordination? Guardrails ask: may this agent write this file? They stack. Neither replaces the other.",
     },
     {
       title: "Judge demo mode",
       body:
-        "HELM_MOCK_BEDROCK=1 swaps live Bedrock calls for local simulators, while replay events still sync through POST /history/event so the Gratitude ledger shows returned time and tokens.",
+        "HELM_MOCK_BEDROCK=1 uses local simulators. Replay still syncs through POST /history/event so Gratitude shows returned time and tokens.",
     },
   ],
   lanes: [

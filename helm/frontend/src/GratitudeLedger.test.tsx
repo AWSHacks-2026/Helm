@@ -28,7 +28,7 @@ describe("GratitudeLedgerPanel", () => {
     );
 
     expect(html).toContain("Build with Gratitude");
-    expect(html).toContain("Overlord");
+    expect(html).toContain("Helm");
     expect(html).toMatch(/parents/i);
     expect(html).toContain("What we gave back this session");
     expect(html).toContain("Session ledger");

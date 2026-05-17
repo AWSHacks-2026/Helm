@@ -16,7 +16,7 @@ export const DEMO_CHARTS: DemoChart[] = [
     title: "Four pillars at a glance",
     pillar: "overview",
     caption:
-      "Contention gate, parallel merge fleet, and ShopFix guardrails — live AWS ShopFix runs (intent opposition excluded).",
+      "Contention gate, parallel merge fleet, and ShopFix guardrails from live AWS ShopFix runs.",
     featured: true,
   },
   {
@@ -48,7 +48,7 @@ export const DEMO_CHARTS: DemoChart[] = [
     title: "Guardrails: block before write",
     pillar: "guardrails",
     caption:
-      "ShopFix auth.py — baseline runs destructive edit twice; Helm guardrail blocks once (~45% cost, ~55% wall median vs 2× Haiku).",
+      "ShopFix auth.py: baseline runs the destructive edit twice. Helm guardrail blocks once (~45% cost, ~55% wall vs 2x Haiku).",
   },
 ];
 

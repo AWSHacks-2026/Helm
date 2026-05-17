@@ -13,7 +13,7 @@ export function SolutionPage() {
         </div>
       </header>
 
-      <section className="coordination-diagram" aria-label="Overlord coordination flow">
+      <section className="coordination-diagram" aria-label="Helm coordination flow">
         <span>Agents</span>
         <span className="coordination-arrow">Intent</span>
         <span>Helm</span>

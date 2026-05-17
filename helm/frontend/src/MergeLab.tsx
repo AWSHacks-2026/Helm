@@ -13,9 +13,9 @@ import {
 
 const STRATEGY_LABELS: Record<string, string> = {
   helm: "Helm",
-  pick_agent_a: "Naive — keep Agent A",
-  pick_agent_b: "Naive — keep Agent B",
-  dual_edit_markers: "Naive — dual edit (markers)",
+  pick_agent_a: "Naive: keep Agent A",
+  pick_agent_b: "Naive: keep Agent B",
+  dual_edit_markers: "Naive: dual edit (markers)",
 };
 
 function scoreClass(score: number, passed: boolean) {
@@ -158,7 +158,7 @@ export default function MergeLab() {
         >
           <h3>Live benchmark (Haiku vs Helm)</h3>
           {live.mock_bedrock && (
-            <p className="demo-hint">Mock Bedrock — costs are estimated from mock usage.</p>
+            <p className="demo-hint">Mock Bedrock. Costs are estimated from mock usage.</p>
           )}
           <p>
             Baseline {live.comparison.baseline_cost_display} (
@@ -170,7 +170,7 @@ export default function MergeLab() {
           </p>
           <p className="demo-hint">
             Tokens: {live.comparison.baseline_tokens} → {live.comparison.helm_tokens}{" "}
-            ({live.comparison.token_savings_pct}%) — Sonnet costs more per token; compare USD.
+            ({live.comparison.token_savings_pct}%). Sonnet costs more per token; compare USD.
           </p>
           {live.comparison.cost_note && (
             <p className="demo-hint">{live.comparison.cost_note}</p>
@@ -205,7 +205,7 @@ export default function MergeLab() {
               Helm {compare.summary.helm_score}% (
               {compare.summary.helm_passed ? "passed" : "failed"}) vs best naive{" "}
               {compare.summary.best_naive_score}% ({compare.summary.best_naive_strategy}
-              ) — delta +{compare.summary.score_delta}
+              ). Delta +{compare.summary.score_delta}
             </p>
             <p className="merge-file">
               File: <code>{compare.file_path}</code>

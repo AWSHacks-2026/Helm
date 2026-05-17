@@ -137,7 +137,7 @@ export function ControlTower({
           <p>
             {finished
               ? (model.completeHint ??
-                "Replay finished — open Incidents for detail or Results for charts.")
+                "Replay finished. Open Incidents for detail or Results for charts.")
               : model.subtitle}
           </p>
         </div>
