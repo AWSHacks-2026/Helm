@@ -25,20 +25,23 @@ This document summarizes live benchmark runs comparing **baseline (no Helm)** vs
 
 ---
 
-## 0. Contention gate — happy path (`commerce_disjoint`)
+## 0. Contention gate — real git on ShopFix (authentic)
 
-**Scenario:** Six agents, six disjoint files — no file clusters ≥2 agents.
+**Scenario:** ShopFix Etsy clone in `helm/fixtures/shopfix` — real git sandboxes, Haiku agent edits, pytest gate.
 
-**Config:** `HELM_GATE_ENABLED=1`, `HELM_MOCK_BEDROCK=1` (mock harness)
+**Config:** `HELM_MOCK_BEDROCK=0`, `HELM_GATE_ENABLED=1` — see **[`SHOPFIX_LIVE_RESULTS.md`](SHOPFIX_LIVE_RESULTS.md)** for full tables and JSON paths.
 
-| Metric | Baseline | Helm (gated) | Notes |
-|--------|----------|--------------|-------|
-| Bedrock dedup calls | N/A | **0** | Gate tier `allow`; `gate_skipped=true` |
-| Coordination | — | Skipped | Agents run without fleet Sonnet dedup |
+| Suite | N | Baseline | Helm (gated) | Sonnet dedup | Gate |
+|-------|---|----------|--------------|--------------|------|
+| **disjoint** | 4 | **$0.012** / 23.3s | **$0.012** / 16.4s | **0** | `allow` |
+| **disjoint** | 6 | **$0.019** / 21.9s | **$0.019** / 22.0s | **0** | `allow` |
+| **contention** | 6 | **$0.028** / 28.6s | **$0.045** / 40.7s | **1** fleet | `arbitrate` |
 
-Run: `HELM_MOCK_BEDROCK=1 HELM_GATE_ENABLED=1 python scripts/run_dedup_benchmark.py` (scenario `commerce_disjoint` via harness API).
+Run: `python scripts/run_shopfix_live_benchmark.py --suite all --agents 4,6` (refuses mock unless `--allow-mock`).
 
-Contention scenarios (`duplicate_work_fleet`, intent overlap) still use full Helm coordination when clusters or contradictions are detected.
+**Harness-only mock** (`commerce_disjoint` string scenario): `HELM_MOCK_BEDROCK=1` — useful for CI, **not** cited as production cost proof.
+
+Contention scenarios still invoke Sonnet fleet dedup when file clusters ≥ `HELM_GATE_MIN_AGENTS`.
 
 ---
 

@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -42,9 +43,9 @@ class GitSandbox:
         )
         return sandbox
 
-    def _run(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    def _run(self, *args: str, check: bool = True, **kwargs: Any) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            args, cwd=self.root, check=check, capture_output=True, text=True
+            args, cwd=self.root, check=check, capture_output=True, text=True, **kwargs
         )
 
     def current_branch(self) -> str:
@@ -55,6 +56,9 @@ class GitSandbox:
 
     def checkout(self, name: str) -> None:
         self._run("git", "checkout", name)
+
+    def show_file(self, branch: str, rel_path: str) -> str:
+        return self._run("git", "show", f"{branch}:{rel_path}").stdout
 
     def apply_patch(self, patch_path: Path) -> None:
         self._run("git", "apply", str(patch_path))
@@ -70,6 +74,7 @@ class GitSandbox:
             "commit",
             "-m",
             message,
+            "--allow-empty",
         )
         return self._run("git", "rev-parse", "HEAD").stdout.strip()
 
@@ -81,6 +86,33 @@ class GitSandbox:
             text=True,
         )
         return proc.returncode == 0
+
+    def abort_merge(self) -> None:
+        subprocess.run(
+            ["git", "merge", "--abort"],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+        )
+
+    def write_file(self, rel_path: str, content: str) -> None:
+        path = self.root / rel_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+
+    def read_file(self, rel_path: str) -> str:
+        return (self.root / rel_path).read_text(encoding="utf-8")
+
+    def conflicted_paths(self) -> list[str]:
+        proc = subprocess.run(
+            ["git", "diff", "--name-only", "--diff-filter=U"],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            return []
+        return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
 
     def has_conflict_markers(self) -> bool:
         for path in self.root.rglob("*"):

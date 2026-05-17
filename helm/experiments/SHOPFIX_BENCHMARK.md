@@ -12,6 +12,15 @@ Compares **baseline** (blind git merges) vs **Helm** (intent API + contention ga
 
 ```bash
 export HELM_MOCK_BEDROCK=1 HELM_GATE_ENABLED=1
+
+## Live (real AWS) benchmarks
+
+```bash
+export HELM_MOCK_BEDROCK=0 HELM_GATE_ENABLED=1 AWS_DEFAULT_REGION=us-east-1
+python scripts/run_shopfix_live_benchmark.py --suite disjoint --agents 4
+```
+
+Results: [`SHOPFIX_LIVE_RESULTS.md`](SHOPFIX_LIVE_RESULTS.md) and `experiments/results/shopfix_live_*.json`.
 python helm/scripts/run_shopfix_benchmark.py --suite all --agents 2,4 --mock
 ```
 
