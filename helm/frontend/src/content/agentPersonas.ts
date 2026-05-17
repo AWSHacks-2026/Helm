@@ -22,7 +22,7 @@ export function formatAgentIdList(agentIds: string[]): string {
 /** Replace agent_a-style IDs in timeline copy with first names. */
 export function humanizeAgentText(text: string): string {
   return Object.entries(AGENT_DISPLAY_NAMES).reduce(
-    (result, [id, name]) => result.replaceAll(id, name),
+    (result, [id, name]) => result.split(id).join(name),
     text,
   );
 }
