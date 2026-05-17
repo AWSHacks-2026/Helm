@@ -6,12 +6,15 @@ Small Etsy-style marketplace fixture for Helm git benchmarks and judge demos.
 
 ```bash
 # Backend API (port 8001)
-cd backend && python -m venv .venv && source .venv/bin/activate
+cd backend &&  # use python3.11
+python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+python scripts/seed.py
 uvicorn app.main:app --reload --port 8001
 
-# Frontend (port 5173) — after Task 7
+# Frontend (port 5173)
 cd frontend && npm ci && npm run dev
+# open http://localhost:5173
 ```
 
 ## Verify
