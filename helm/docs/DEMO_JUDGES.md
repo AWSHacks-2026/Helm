@@ -1,5 +1,7 @@
 # Judge demo script (5 minutes)
 
+**Visual story:** Helm (nav wheel) steers the fleet; **Gratitude** tab shows time/tokens returned — green metrics, calm white UI.
+
 ## Build with Gratitude — open here (30 seconds)
 
 **Theme is the product, not the slide deck.** Our parents spent careers in software engineering watching hours vanish to merge conflicts, agents stepping on each other, and wasted compute. **Overlord** (Helm coordination + Amazon Bedrock) is our thank-you: every blocked write and deduped mission is **time back** for someone still in the chair.

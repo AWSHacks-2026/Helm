@@ -5,6 +5,8 @@ import {
   GRATITUDE_WHY,
   HACKATHON_HOOK,
   HACKATHON_THEME,
+  HELM_MARK_ARIA,
+  HELM_TAGLINE,
   MISSIONS_INTRO,
   PRODUCT_NAME,
   ROADMAP_ITEMS,
@@ -22,5 +24,15 @@ describe("gratitudeMission", () => {
       expect.arrayContaining(["intent", "fleet", "cicd"]),
     );
     expect(MISSIONS_INTRO.title).toMatch(/Mission/i);
+  });
+});
+
+describe("gratitudeMission brand bridge", () => {
+  it("connects Helm navigation to Gratitude payoff", () => {
+    expect(HELM_TAGLINE).toMatch(/steer/i);
+    expect(HELM_TAGLINE).toMatch(/gave back/i);
+    expect(HELM_MARK_ARIA).toContain("Helm");
+    expect(HACKATHON_THEME).toBe("Build with Gratitude");
+    expect(PRODUCT_NAME).toBe("Overlord");
   });
 });
