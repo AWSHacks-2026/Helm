@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import GratitudeLedgerPanel from "./GratitudeLedger";
+import GratitudeLedgerPanel, { GratitudeLedgerEmpty } from "./GratitudeLedger";
 
 vi.mock("./hooks/useConflictStream", () => ({
   useConflictStream: () => undefined,
@@ -17,7 +17,7 @@ vi.mock("./api/gratitude", () => ({
     tokens_saved_display: "~1,200 tokens",
     haiku_calls: 3,
     sonnet_calls: 1,
-    timeline: [{ kind: "yield", message: "Blocked agent_b on auth.py" }],
+    timeline: [],
   }),
 }));
 
@@ -37,5 +37,11 @@ describe("GratitudeLedgerPanel", () => {
     expect(html).toContain("Fleet sessions across machines");
     expect(html).toContain("CI/CD guardrails");
     expect(html).not.toContain(">Intents<");
+  });
+
+  it("renders empty-state illustration markup", () => {
+    const html = renderToStaticMarkup(<GratitudeLedgerEmpty />);
+    expect(html).toContain("gratitude-empty-art");
+    expect(html).toContain("Tokens and time returning");
   });
 });

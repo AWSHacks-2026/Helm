@@ -54,7 +54,8 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    expect(html).toContain("Helm");
+    expect(html).toContain("helm-mark");
+    expect(html).toContain("Steer the fleet");
     expect(html).toContain("Problem Statement");
     expect(html).toContain("Our Solution");
     expect(html).toContain("Technical Workflow");
@@ -101,7 +102,10 @@ describe("AppShell", () => {
       buttons.map((button) => [textContent(button), button]),
     );
 
-    (buttonsByLabel.get("Helm")?.props as ButtonProps).onClick?.();
+    const brandButton =
+      buttons.find((button) => textContent(button).includes("Steer the fleet")) ??
+      buttonsByLabel.get("Helm");
+    (brandButton?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Problem Statement")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Our Solution")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Technical Workflow")?.props as ButtonProps).onClick?.();

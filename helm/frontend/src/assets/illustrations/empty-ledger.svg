@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none" role="img" aria-label="Tokens returning to ledger">
+  <rect x="60" y="50" width="80" height="90" rx="8" stroke="#3A4038" stroke-width="1.75"/>
+  <path d="M100 70 L100 30" stroke="#4A7C59" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M88 42 L100 28 L112 42" stroke="#4A7C59" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="128" y="95" fill="#C9920A" font-size="18" font-family="system-ui">+</text>
+</svg>

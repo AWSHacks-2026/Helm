@@ -1,0 +1,216 @@
+/* Light minimalist overrides — loaded after legacy styles.css */
+
+/* —— Navigation & pills —— */
+.app-nav button,
+.top-nav button,
+.filter-pills button,
+.landing-card button:not(.primary),
+.proof-actions button:not(.primary) {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: 1px solid var(--btn-border);
+  box-shadow: var(--shadow-card);
+  font-weight: 600;
+}
+
+.app-nav button:hover,
+.top-nav button:hover,
+.filter-pills button:hover,
+.landing-card button:not(.primary):hover,
+.proof-actions button:not(.primary):hover {
+  background: var(--btn-bg-hover);
+  border-color: var(--semantic-save-muted);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.app-nav button.active,
+.top-nav button.active,
+.filter-pills button.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  box-shadow: 0 4px 14px rgba(212, 160, 23, 0.28);
+}
+
+.app-nav .brand-button,
+.brand-button {
+  margin-right: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--semantic-save-muted);
+  color: var(--semantic-save);
+  font-weight: 700;
+  letter-spacing: normal;
+  text-transform: none;
+  box-shadow: var(--shadow-card);
+}
+
+.app-nav .brand-button:hover,
+.brand-button:hover {
+  background: var(--semantic-save-bg);
+  border-color: var(--semantic-save);
+  color: var(--semantic-save);
+}
+
+.app-nav .brand-button.active,
+.brand-button.active {
+  background: var(--semantic-save-bg);
+  border-color: var(--semantic-save);
+  color: var(--semantic-save);
+}
+
+/* —— Primary CTAs —— */
+.landing-card button.primary,
+button.primary,
+.landing-card-primary button {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(212, 160, 23, 0.3);
+}
+
+.landing-card button.primary:hover,
+button.primary:hover,
+.landing-card-primary button:hover {
+  background: var(--accent-primary-hover);
+  border-color: var(--accent-primary-hover);
+  color: var(--text-on-accent);
+}
+
+.landing-card button,
+.proof-actions button {
+  width: fit-content;
+}
+
+/* —— Labs & demo actions —— */
+.demo-actions button,
+.merge-toolbar button,
+.demo-smoke-btn {
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--btn-text);
+  box-shadow: var(--shadow-card);
+}
+
+.demo-actions button:hover,
+.merge-toolbar button:hover,
+.demo-smoke-btn:hover {
+  background: var(--btn-bg-hover);
+  border-color: var(--semantic-save-muted);
+  color: var(--text-primary);
+}
+
+/* —— Inputs —— */
+.landing-card input,
+.merge-toolbar select,
+input,
+select,
+textarea {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.landing-card input:focus,
+.merge-toolbar select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--semantic-save);
+  box-shadow: 0 0 0 3px rgba(61, 122, 82, 0.12);
+  outline: none;
+}
+
+/* —— Cards & panels (dark gradient purge) —— */
+.hero-panel,
+.landing-card,
+.presentation-card,
+.presenter-script,
+.demo-lab,
+.merge-lab,
+.panel,
+.agent-card,
+.incident-queue,
+.incident-detail,
+.proof-card,
+.dashboard-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.presentation-card,
+.presenter-script {
+  background: var(--bg-surface);
+}
+
+/* —— Architecture & setup strips —— */
+.aws-architecture-strip,
+.setup-checker,
+.coordination-diagram,
+.proof-strip div {
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.aws-arch-node {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.aws-arch-node strong {
+  color: var(--text-primary);
+}
+
+/* —— Incidents & conflicts —— */
+.conflict-item:hover,
+.conflict-item.active {
+  background: var(--semantic-save-bg);
+  color: var(--text-primary);
+}
+
+.demo-error {
+  background: var(--semantic-danger-bg);
+  border: 1px solid var(--semantic-danger-border);
+  color: var(--semantic-danger-text);
+}
+
+/* —— Eyebrow & headings —— */
+.eyebrow {
+  color: var(--semantic-save);
+}
+
+.hero-panel h1,
+.screen-header h1 {
+  color: var(--text-primary);
+}
+
+/* —— Presentation hero glow (subtle sage) —— */
+.presentation-hero::after {
+  background: radial-gradient(circle, rgba(61, 122, 82, 0.1), transparent 68%);
+}
+
+/* —— Coordination diagram pills —— */
+.coordination-diagram span {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+/* —— Nav scroll on small screens —— */
+.app-nav {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+
+.app-shell-content {
+  padding: 1.5rem 1.25rem 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .app-shell-content {
+    padding: 2rem;
+  }
+}

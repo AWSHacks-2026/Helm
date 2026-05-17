@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
+import { HELM_MARK_ARIA, HELM_TAGLINE } from "../content/gratitudeMission";
 import { readPresenterMode } from "../hooks/usePresenterMode";
+import { HelmMark } from "./HelmMark";
 
 export type AppView =
   | "landing"
@@ -46,9 +48,16 @@ export function AppShell({ view, onViewChange, children }: AppShellProps) {
         <button
           type="button"
           className={`brand-button ${view === "landing" ? "active" : ""}`}
+          aria-label={HELM_MARK_ARIA}
           onClick={() => onViewChange("landing")}
         >
-          Helm
+          <span className="brand-lockup">
+            <HelmMark size={22} />
+            <span className="brand-text">
+              <span className="brand-name">Helm</span>
+              <span className="brand-tagline">{HELM_TAGLINE}</span>
+            </span>
+          </span>
         </button>
         {navItemsFiltered.map((item) => (
           <button

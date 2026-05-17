@@ -1,4 +1,5 @@
 import { AwsArchitectureStrip } from "./AwsArchitectureStrip";
+import { Illustration } from "./Illustration";
 import { SetupChecker } from "./SetupChecker";
 import {
   GRATITUDE_PITCH,
@@ -29,7 +30,9 @@ export function LandingPage({
 
   return (
     <main className={`landing-page ${presenterMode ? "landing-page--presenter" : ""}`}>
-      <section className="hero-panel" aria-labelledby="landing-title">
+      <section className="hero-panel page-enter" aria-labelledby="landing-title">
+        <div className="hero-panel-inner">
+        <div className="hero-copy">
         <p className="eyebrow">
           {HACKATHON_THEME} · {PRODUCT_NAME} · {TECH_NAME} Control Tower
         </p>
@@ -47,6 +50,13 @@ export function LandingPage({
             <a href="?view=recorder">Coordination step-by-step (Under the hood) →</a>
           </p>
         )}
+        </div>
+        <Illustration
+          name="hero-course-lines"
+          alt="Agent paths converging — Helm coordinates the fleet before merge"
+          className="landing-hero-art"
+        />
+        </div>
       </section>
 
       <AwsArchitectureStrip />

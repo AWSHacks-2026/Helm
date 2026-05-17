@@ -12,7 +12,7 @@ export function useConflictStream(
   useEffect(() => {
     if (!sessionId) return;
     let isMounted = true;
-    let reconnectTimer: ReturnType<typeof window.setTimeout> | undefined;
+    let reconnectTimer: number | undefined;
     let ws: WebSocket | undefined;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";

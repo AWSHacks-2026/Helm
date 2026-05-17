@@ -14,7 +14,9 @@ import {
   ROADMAP_EYEBROW,
   ROADMAP_ITEMS,
 } from "./content/gratitudeMission";
+import { Illustration } from "./components/Illustration";
 import { useConflictStream } from "./hooks/useConflictStream";
+import { motionAllowed, useCountUp } from "./hooks/useCountUp";
 
 type Props = {
   sessionId: string;
@@ -34,6 +36,7 @@ export default function GratitudeLedgerPanel({ sessionId, onRefresh }: Props) {
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [newEventKey, setNewEventKey] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!sessionId) {
@@ -61,6 +64,7 @@ export default function GratitudeLedgerPanel({ sessionId, onRefresh }: Props) {
   useConflictStream(
     sessionId,
     useCallback(() => {
+      setNewEventKey(`ws-${Date.now()}`);
       refresh();
     }, [refresh]),
   );
@@ -138,15 +142,21 @@ export default function GratitudeLedgerPanel({ sessionId, onRefresh }: Props) {
 
             {ledger.timeline.length > 0 ? (
               <ol className="gratitude-timeline">
-                {ledger.timeline.map((item, index) => (
-                  <li key={`${item.at ?? index}-${item.message}`}>
-                    <span className="gratitude-kind">{item.kind}</span>
-                    <p>{item.message}</p>
-                  </li>
-                ))}
+                {ledger.timeline.map((item, index) => {
+                  const key = `${item.at ?? index}-${item.message}`;
+                  return (
+                    <li
+                      key={key}
+                      className={key === newEventKey ? "ledger-row--new" : undefined}
+                    >
+                      <span className="gratitude-kind">{item.kind}</span>
+                      <p>{item.message}</p>
+                    </li>
+                  );
+                })}
               </ol>
             ) : (
-              <p className="gratitude-empty">{GRATITUDE_EMPTY_HINT}</p>
+              <GratitudeLedgerEmpty />
             )}
           </>
         ) : (
@@ -170,6 +180,19 @@ export default function GratitudeLedgerPanel({ sessionId, onRefresh }: Props) {
   );
 }
 
+export function GratitudeLedgerEmpty() {
+  return (
+    <div className="gratitude-empty">
+      <Illustration
+        name="empty-ledger"
+        alt="Tokens and time returning to the session ledger"
+        className="gratitude-empty-art"
+      />
+      <p>{GRATITUDE_EMPTY_HINT}</p>
+    </div>
+  );
+}
+
 function Metric({
   label,
   value,
@@ -181,10 +204,16 @@ function Metric({
   hint: string;
   highlight?: boolean;
 }) {
+  const isNumeric = typeof value === "number";
+  const animated = useCountUp(isNumeric ? value : 0, {
+    enabled: isNumeric && motionAllowed(),
+  });
+  const display = isNumeric ? animated : value;
+
   return (
     <article className={`gratitude-card ${highlight ? "gratitude-card-highlight" : ""}`}>
       <span className="gratitude-metric-label">{label}</span>
-      <strong>{value}</strong>
+      <strong>{display}</strong>
       <small>{hint}</small>
     </article>
   );

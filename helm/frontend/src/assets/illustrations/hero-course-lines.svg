@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" role="img" aria-label="Agent paths converging">
+  <path d="M20 160 Q 80 40, 160 100" stroke="#3A4038" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M300 150 Q 240 30, 160 100" stroke="#3A4038" stroke-width="1.75" stroke-linecap="round"/>
+  <path d="M160 20 L 160 180" stroke="#4A7C59" stroke-width="1.75" stroke-linecap="round"/>
+  <circle cx="160" cy="100" r="6" fill="#C9920A"/>
+</svg>

@@ -7,6 +7,12 @@ export const PRODUCT_NAME = "Overlord";
 /** Engineering name for the coordination API and Control Tower. */
 export const TECH_NAME = "Helm";
 
+/** Nav / logo — Helm coordinates; Gratitude is the receipt. */
+export const HELM_TAGLINE = "Steer the fleet. See what you gave back.";
+
+export const HELM_MARK_ARIA =
+  "Helm — coordination control tower for Build with Gratitude";
+
 /**
  * Why we built this — not interchangeable with “kindness” or “wellness.”
  * Parents’ careers → merge conflicts, agent collisions, wasted compute → time back.
