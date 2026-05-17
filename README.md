@@ -18,7 +18,7 @@
 - **Integrations** — MCP server for Cursor/agents, Claude Code pre-write hook path, optional GitHub Issues delegation, multi-laptop shared session demo.
 - **Measured pillars** — Contention gate, fleet dedup, merge fleet, guardrails with JSON + chart provenance under `helm/experiments/`.
 
-### What we did not build
+### What we did not build 
 
 - A hosted multi-tenant SaaS or full production deployment pipeline for Overlord.
 - **AgentCore Gateway** policy ENFORCE at the tool boundary (documented optional path; we use Memory + Policy engine + in-process Cedar bridge).
