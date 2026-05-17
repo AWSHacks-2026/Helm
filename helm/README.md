@@ -53,6 +53,21 @@ Local defaults: `HELM_USE_LOCAL_MEMORY=true` and `HELM_USE_LOCAL_POLICY=true` (n
 
 Helm skips Bedrock coordination when agents do not collide (disjoint files, no intent overlap). Set `HELM_GATE_ENABLED=1` (default). Use `HELM_GATE_FORCE=1` to restore always-on dedup/align for legacy benchmarks. `POST /intents` returns a `contention` block with `gate_tier` (`allow` | `arbitrate`).
 
+### ShopFix demo (Etsy-lite + git benchmark)
+
+Runnable marketplace fixture at [`fixtures/shopfix/`](fixtures/shopfix/) and local-git benchmark harness. See [`experiments/SHOPFIX_BENCHMARK.md`](experiments/SHOPFIX_BENCHMARK.md).
+
+```bash
+# Browse the app
+cd fixtures/shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && python scripts/seed.py && uvicorn app.main:app --port 8001
+cd ../frontend && npm ci && npm run dev
+
+# Benchmark (Helm API on :8000)
+export HELM_MOCK_BEDROCK=1 HELM_GATE_ENABLED=1
+python scripts/run_shopfix_benchmark.py --agents 2,4 --mock
+```
+
 Cloud setup: **[`docs/AWS_SETUP.md`](docs/AWS_SETUP.md)** (full playbook) · [`infra/agentcore/README.md`](infra/agentcore/README.md) (console notes)
 
 ```bash
