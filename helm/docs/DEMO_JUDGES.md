@@ -8,6 +8,8 @@
 
 **Presenter arc:** `?presenter=1` → Begin presentation → Control Tower replay → Incidents → **Gratitude** → Results charts.
 
+**Deep dive (optional):** **Under the hood** (`?view=recorder`) — N=2 agents + Helm with a scrubbable timeline, file snippets, and dedup/merge/guardrail steps.
+
 ---
 
 ## Prerequisites

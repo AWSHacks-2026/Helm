@@ -24,12 +24,14 @@ def record_intent(
         payload.session_id,
         {"type": "intent_declared", "event": event},
     )
+    skip_align = request.headers.get("X-Helm-Live-Matrix") == "1"
     align = maybe_align_on_declare(
         session_store=request.app.state.session_store,
         session_id=payload.session_id,
         agent_id=payload.agent_id,
         file_path=payload.file_path,
         intent=payload.intent,
+        skip_align=skip_align,
     )
     if align["overlap_detected"] and align["alignment"]:
         knowledge_base.append_event(

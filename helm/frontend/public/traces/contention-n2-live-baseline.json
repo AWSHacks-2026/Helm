@@ -1,0 +1,523 @@
+{
+  "id": "contention_n2_live_baseline",
+  "label": "Live \u00b7 N=2 \u00b7 contention (baseline)",
+  "description": "Real Bedrock run from live_matrix_20260517_125735.json \u2014 baseline path, 11 timed phases from log. Measured: 23% cost, 28% tokens vs baseline.",
+  "frames": [
+    {
+      "id": "live-0",
+      "atMs": 0,
+      "title": "agent_a \u2014 t01 (edit)",
+      "narration": "Add email/password register endpoint with validation in auth router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add email/password register endpoint with validation in auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "idle",
+          "taskTitle": "\u2014",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "idle",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/auth.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_a: shorter TTL\n    token = auth_service.create_access_token(..., ttl=900)"
+        }
+      ],
+      "sourceEventId": "log-phase-0"
+    },
+    {
+      "id": "live-1",
+      "atMs": 1400,
+      "title": "agent_a \u2014 t03 (edit)",
+      "narration": "Add add-to-cart and remove-line-item endpoints in cart router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add add-to-cart and remove-line-item endpoints in cart router",
+          "filePath": "backend/app/routers/cart.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "idle",
+          "taskTitle": "\u2014",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "idle",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/cart.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_a: shorter TTL\n    token = auth_service.create_access_token(..., ttl=900)"
+        }
+      ],
+      "sourceEventId": "log-phase-1"
+    },
+    {
+      "id": "live-2",
+      "atMs": 2800,
+      "title": "agent_a \u2014 t05 (edit)",
+      "narration": "Redesign home page hero and category chips; use CSS variable --agent-accent: {agent_accent}",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Redesign home page hero and category chips; use CSS variable --agent-acc",
+          "filePath": "frontend/src/pages/HomePage.tsx"
+        },
+        {
+          "id": "agent_b",
+          "status": "idle",
+          "taskTitle": "\u2014",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "idle",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "frontend/src/pages/HomePage.tsx",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_a: shorter TTL\n    token = auth_service.create_access_token(..., ttl=900)"
+        }
+      ],
+      "sourceEventId": "log-phase-2"
+    },
+    {
+      "id": "live-3",
+      "atMs": 4200,
+      "title": "agent_a \u2014 t07 (edit)",
+      "narration": "Add seller stats cards to dashboard; theme --agent-accent: {agent_accent}",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add seller stats cards to dashboard; theme --agent-accent: {agent_accent",
+          "filePath": "frontend/src/pages/ShopDashboardPage.tsx"
+        },
+        {
+          "id": "agent_b",
+          "status": "idle",
+          "taskTitle": "\u2014",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "idle",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "frontend/src/pages/ShopDashboardPage.tsx",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_a: shorter TTL\n    token = auth_service.create_access_token(..., ttl=900)"
+        }
+      ],
+      "sourceEventId": "log-phase-3"
+    },
+    {
+      "id": "live-4",
+      "atMs": 5600,
+      "title": "agent_a \u2014 t08 (edit)",
+      "narration": "Add JWT access and refresh token endpoints to auth router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add JWT access and refresh token endpoints to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "idle",
+          "taskTitle": "\u2014",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "idle",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/auth.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_a: shorter TTL\n    token = auth_service.create_access_token(..., ttl=900)"
+        }
+      ],
+      "sourceEventId": "log-phase-4"
+    },
+    {
+      "id": "live-5",
+      "atMs": 7000,
+      "title": "agent_a \u2014 t10 (edit)",
+      "narration": "Add OAuth2 callback routes and provider stubs to auth router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add OAuth2 callback routes and provider stubs to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "idle",
+          "taskTitle": "\u2014",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "idle",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/auth.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_a: shorter TTL\n    token = auth_service.create_access_token(..., ttl=900)"
+        }
+      ],
+      "sourceEventId": "log-phase-5"
+    },
+    {
+      "id": "live-6",
+      "atMs": 8400,
+      "title": "agent_b \u2014 t02 (edit)",
+      "narration": "Add paginated listing search with title filter in listings router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add OAuth2 callback routes and provider stubs to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "coding",
+          "taskTitle": "Add paginated listing search with title filter in listings router",
+          "filePath": "backend/app/routers/listings.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "coding",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/listings.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_b: OAuth branch\n    auth_service.validate_oauth_callback(...)"
+        }
+      ],
+      "sourceEventId": "log-phase-6"
+    },
+    {
+      "id": "live-7",
+      "atMs": 9800,
+      "title": "agent_b \u2014 t04 (edit)",
+      "narration": "Add checkout endpoint that creates an order from cart in orders router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add OAuth2 callback routes and provider stubs to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "coding",
+          "taskTitle": "Add checkout endpoint that creates an order from cart in orders router",
+          "filePath": "backend/app/routers/orders.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "coding",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/orders.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_b: OAuth branch\n    auth_service.validate_oauth_callback(...)"
+        }
+      ],
+      "sourceEventId": "log-phase-7"
+    },
+    {
+      "id": "live-8",
+      "atMs": 11200,
+      "title": "agent_b \u2014 t06 (edit)",
+      "narration": "Add cart summary sidebar with line totals; accent color --agent-accent: {agent_accent}",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add OAuth2 callback routes and provider stubs to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "coding",
+          "taskTitle": "Add cart summary sidebar with line totals; accent color --agent-accent: ",
+          "filePath": "frontend/src/pages/CartPage.tsx"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "coding",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "frontend/src/pages/CartPage.tsx",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_b: OAuth branch\n    auth_service.validate_oauth_callback(...)"
+        }
+      ],
+      "sourceEventId": "log-phase-8"
+    },
+    {
+      "id": "live-9",
+      "atMs": 12600,
+      "title": "agent_b \u2014 t09 (edit)",
+      "narration": "Add session cookie login and logout flows to auth router",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "coding",
+          "taskTitle": "Add OAuth2 callback routes and provider stubs to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "coding",
+          "taskTitle": "Add session cookie login and logout flows to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "coding",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "coding",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/auth.py",
+          "status": "editing",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    # agent_b: OAuth branch\n    auth_service.validate_oauth_callback(...)"
+        }
+      ],
+      "sourceEventId": "log-phase-9"
+    },
+    {
+      "id": "live-10",
+      "atMs": 14000,
+      "title": "Helm merge fix",
+      "narration": "Baseline path: git conflict on backend/app/routers/auth.py \u2014 Haiku merge-fix (no Helm API).",
+      "agents": [
+        {
+          "id": "agent_a",
+          "status": "complete",
+          "taskTitle": "Add OAuth2 callback routes and provider stubs to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        },
+        {
+          "id": "agent_b",
+          "status": "complete",
+          "taskTitle": "Add session cookie login and logout flows to auth router",
+          "filePath": "backend/app/routers/auth.py"
+        }
+      ],
+      "helm": {
+        "active": false
+      },
+      "edges": [
+        {
+          "from": "helm",
+          "to": "agent_a",
+          "kind": "complete",
+          "label": null
+        },
+        {
+          "from": "helm",
+          "to": "agent_b",
+          "kind": "complete",
+          "label": null
+        }
+      ],
+      "files": [
+        {
+          "path": "backend/app/routers/auth.py",
+          "status": "merged",
+          "snippet": "@router.post(\"/login\")\nasync def login(...):\n    token = auth_service.create_access_token(...)"
+        }
+      ],
+      "sourceEventId": "log-phase-10"
+    }
+  ],
+  "meta": {
+    "source_log": "/Users/rithv/MergeAI/helm/experiments/results/live_matrix_run.log",
+    "source_matrix": "experiments/results/live_matrix_20260517_125735.json",
+    "phase_count": 11,
+    "path_mode": "baseline",
+    "gate_skipped": null,
+    "guardrails_blocked": null,
+    "continuations": [],
+    "reassignments": [],
+    "dedup_calls": 0,
+    "baseline_cost": "$0.038",
+    "helm_cost": "$0.029",
+    "cost_savings_pct": 23,
+    "token_savings_pct": 28,
+    "time_savings_pct": 21,
+    "baseline_tokens": 12482,
+    "helm_tokens": 8934,
+    "helm_gate_skipped": true,
+    "helm_dedup_calls": 0,
+    "generated_at": "2026-05-17T12:57:35.274817+00:00"
+  }
+}

@@ -9,7 +9,7 @@ from typing import Any
 from arbitration.runner import run_arbitration
 from bedrock.agentcore_client import invoke_arbitrator
 from bedrock.invoke_tracked import invoke_anthropic_messages
-from bedrock.model_ids import resolve_inference_profile_id
+from bedrock.model_ids import DEFAULT_HELM_BEDROCK_MODEL_ID, resolve_inference_profile_id
 from models import BedrockArbitrationResult
 from helm_parse import extract_json_object
 from bedrock.guardrail_routing import (
@@ -32,7 +32,8 @@ from helm_prompt import (
 
 HELM_MODEL = resolve_inference_profile_id(
     os.getenv("HELM_BEDROCK_MODEL_ID")
-    or os.getenv("HELM_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
+    or os.getenv("HELM_BEDROCK_MODEL")
+    or DEFAULT_HELM_BEDROCK_MODEL_ID
 )
 MAX_TOKENS = 1500
 

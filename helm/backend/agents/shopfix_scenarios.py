@@ -25,31 +25,81 @@ def _agent_id(index: int) -> str:
 
 
 def load_work_assignments(suite: str, agent_count: int) -> list[WorkAssignment]:
+    if suite == "intent_opposition":
+        policy = yaml.safe_load(
+            (SCENARIO_DIR / "intent_opposition.yaml").read_text(encoding="utf-8")
+        )
+        return assign_work([], suite, agent_count, policy=policy)
     tasks = load_tasks(SCENARIO_DIR)
-    return assign_work(tasks, suite, agent_count)
+    policy = None
+    policy_path = SCENARIO_DIR / f"{suite}.yaml"
+    if policy_path.is_file():
+        policy = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
+    return assign_work(tasks, suite, agent_count, policy=policy)
+
+
+def load_base_modules() -> list[str]:
+    raw = yaml.safe_load(
+        (SCENARIO_DIR / "intent_opposition.yaml").read_text(encoding="utf-8")
+    )
+    return list(raw.get("fill_modules") or [])
+
+
+def assignment_for_reassign(
+    original: AgentAssignment,
+    new_task: str,
+    *,
+    suite: str,
+    modules: list[str],
+    reserved_files: set[str],
+) -> AgentAssignment:
+    from agents.live_matrix.scenarios import _fill_module_path
+
+    for module in modules:
+        path = _fill_module_path(module)
+        if path not in reserved_files:
+            return AgentAssignment(
+                agent_id=original.agent_id,
+                primary_file=path,
+                intent=new_task,
+                patch_path=original.patch_path,
+                task_id=original.task_id,
+            )
+    return AgentAssignment(
+        agent_id=original.agent_id,
+        primary_file=original.primary_file,
+        intent=new_task,
+        patch_path=original.patch_path,
+        task_id=original.task_id,
+    )
 
 
 def load_assignments(suite: str, agent_count: int) -> list[AgentAssignment]:
-    """Backward-compatible: one assignment per agent (first task only)."""
+    """One assignment per agent; contention prefers hotspot (shared) file tasks."""
     work = load_work_assignments(suite, agent_count)
     by_agent: dict[str, list[WorkAssignment]] = {}
     for item in work:
         by_agent.setdefault(item.agent_id, []).append(item)
+    auth_hotspot = "backend/app/routers/auth.py"
     out: list[AgentAssignment] = []
     for i in range(agent_count):
         aid = _agent_id(i)
         tasks = by_agent.get(aid, [])
         if not tasks:
             continue
-        first = tasks[0]
+        if suite == "contention":
+            shared = [t for t in tasks if t.primary_file == auth_hotspot]
+            pick = shared[-1] if shared else tasks[0]
+        else:
+            pick = tasks[0]
         patch = _patch_path(suite, agent_count, aid)
         out.append(
             AgentAssignment(
                 agent_id=aid,
-                primary_file=first.primary_file,
-                intent=first.intent,
+                primary_file=pick.primary_file,
+                intent=pick.intent,
                 patch_path=patch if patch.exists() else None,
-                task_id=first.task_id,
+                task_id=pick.task_id,
             )
         )
     return out

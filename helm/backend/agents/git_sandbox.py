@@ -100,6 +100,38 @@ class GitSandbox:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
 
+    def stage_file(self, rel_path: str, content: str) -> None:
+        self.write_file(rel_path, content)
+        self._run("git", "add", rel_path)
+
+    def merge_in_progress(self) -> bool:
+        return (self.root / ".git" / "MERGE_HEAD").exists()
+
+    def has_staged_changes(self) -> bool:
+        proc = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+        )
+        return proc.returncode != 0
+
+    def commit_staged(self, message: str) -> bool:
+        """Commit staged resolutions. Returns False if there is nothing to commit."""
+        if not self.has_staged_changes():
+            return False
+        self._run(
+            "git",
+            "-c",
+            "user.email=helm@shopfix.test",
+            "-c",
+            "user.name=Helm",
+            "commit",
+            "-m",
+            message,
+        )
+        return True
+
     def read_file(self, rel_path: str) -> str:
         return (self.root / rel_path).read_text(encoding="utf-8")
 

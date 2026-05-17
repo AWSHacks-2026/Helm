@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+# Default for Helm coordination (dedup, resolve, guardrail Sonnet-tier paths)
+DEFAULT_HELM_BEDROCK_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
 
 def resolve_inference_profile_id(model_id: str) -> str:
     """

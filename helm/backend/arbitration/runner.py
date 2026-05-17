@@ -5,7 +5,7 @@ import os
 from typing import Any
 
 from bedrock.client import get_bedrock_client
-from bedrock.model_ids import resolve_inference_profile_id
+from bedrock.model_ids import DEFAULT_HELM_BEDROCK_MODEL_ID, resolve_inference_profile_id
 from models import BedrockArbitrationResult
 from helm_parse import extract_json_object
 
@@ -13,7 +13,8 @@ from arbitration.prompt import build_merge_conflict_prompt
 
 HELM_MODEL = resolve_inference_profile_id(
     os.getenv("HELM_BEDROCK_MODEL_ID")
-    or os.getenv("HELM_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
+    or os.getenv("HELM_BEDROCK_MODEL")
+    or DEFAULT_HELM_BEDROCK_MODEL_ID
 )
 MAX_TOKENS = 1500
 

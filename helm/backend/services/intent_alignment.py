@@ -7,6 +7,13 @@ from agents.simulator import resolve_intent_conflict
 from bedrock.inference_routing import ComplexityInput, select_inference_tier
 
 
+def _skip_declare_align(session_id: str) -> bool:
+    """Live-matrix runs fleet dedup before tasks; per-declare Bedrock align doubles quota use."""
+    if os.getenv("HELM_SKIP_DECLARE_ALIGN", "0") == "1":
+        return True
+    return "-live-" in session_id
+
+
 def maybe_align_on_declare(
     *,
     session_store: Any,
@@ -14,6 +21,7 @@ def maybe_align_on_declare(
     agent_id: str,
     file_path: str,
     intent: str,
+    skip_align: bool | None = None,
 ) -> dict[str, Any]:
     from bedrock.contention_gate import assess_intent, gate_enabled, log_gate_skip
 
@@ -53,6 +61,24 @@ def maybe_align_on_declare(
     agent_a = {"intent": others[0]["intent"], "code": ""}
     agent_b = {"intent": intent, "code": ""}
     tier = "haiku"
+
+    if skip_align is None:
+        skip_align = _skip_declare_align(session_id)
+    if skip_align:
+        from bedrock.contention_gate import assess_intent
+
+        assessment = assess_intent(
+            session_store,
+            session_id,
+            agent_id=agent_id,
+            file_path=file_path,
+            intent=intent,
+        )
+        return {
+            "overlap_detected": True,
+            "alignment": None,
+            "contention": assessment.to_dict(),
+        }
 
     if os.getenv("HELM_MOCK_BEDROCK") == "1":
         alignment = resolve_intent_conflict(agent_a, agent_b)

@@ -100,6 +100,41 @@ def assign_work(
             )
         return assignments
 
+    if suite == "intent_opposition":
+        if policy is None:
+            raise ValueError("intent_opposition requires suite policy YAML")
+        clusters = policy.get("clusters") or []
+        fill_modules = list(policy.get("fill_modules") or [])
+        aid_iter = iter(aids)
+        for cluster in clusters:
+            for slot in range(2):
+                try:
+                    aid = next(aid_iter)
+                except StopIteration:
+                    break
+                intent = cluster["intents"][slot % len(cluster["intents"])]
+                assignments.append(
+                    WorkAssignment(
+                        agent_id=aid,
+                        task_id=f"opp_{cluster['file'].split('/')[-1]}_{slot}",
+                        primary_file=cluster["file"],
+                        intent=intent,
+                    )
+                )
+        fill_idx = 0
+        for aid in aid_iter:
+            module = fill_modules[fill_idx % len(fill_modules)]
+            fill_idx += 1
+            assignments.append(
+                WorkAssignment(
+                    agent_id=aid,
+                    task_id=f"fill_{module}",
+                    primary_file=_fill_module_path(module),
+                    intent=f"Implement {module} improvements for ShopFix demo",
+                )
+            )
+        return assignments
+
     if suite == "contention":
         hotspot_groups: dict[str, list[TaskDef]] = {}
         non_hotspot: list[TaskDef] = []
@@ -136,6 +171,18 @@ def assign_work(
         return assignments
 
     raise ValueError(f"Unknown suite: {suite}")
+
+
+def _fill_module_path(module: str) -> str:
+    mapping = {
+        "cart": "backend/app/routers/cart.py",
+        "orders": "backend/app/routers/orders.py",
+        "frontend_home": "frontend/src/pages/HomePage.tsx",
+        "frontend_cart": "frontend/src/pages/CartPage.tsx",
+        "frontend_shop": "frontend/src/pages/ShopDashboardPage.tsx",
+        "frontend_listing": "frontend/src/pages/ListingDetailPage.tsx",
+    }
+    return mapping.get(module, f"backend/app/routers/{module}.py")
 
 
 def group_by_agent(assignments: list[WorkAssignment]) -> dict[str, list[WorkAssignment]]:

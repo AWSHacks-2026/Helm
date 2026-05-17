@@ -14,13 +14,14 @@ BACKEND = ROOT / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
-from bedrock.model_ids import resolve_inference_profile_id
+from bedrock.model_ids import DEFAULT_HELM_BEDROCK_MODEL_ID, resolve_inference_profile_id
 
 
 def _bedrock_model_id() -> str:
     return resolve_inference_profile_id(
         os.getenv("HELM_BEDROCK_MODEL_ID")
-        or os.getenv("HELM_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
+        or os.getenv("HELM_BEDROCK_MODEL")
+        or DEFAULT_HELM_BEDROCK_MODEL_ID
     )
 
 
@@ -122,7 +123,7 @@ def _bedrock_hint(msg: str, model_id: str) -> str:
     elif "Legacy" in msg or "ResourceNotFound" in msg or "use case" in msg.lower():
         hint = (
             " Enable Claude Sonnet 4.6 in Bedrock → Model access (us-east-1) and set "
-            "HELM_BEDROCK_MODEL=us.anthropic.claude-sonnet-4-6 in helm/.env. "
+            "HELM_BEDROCK_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0 in helm/.env. "
             f"Tried: {model_id}"
         )
     return hint

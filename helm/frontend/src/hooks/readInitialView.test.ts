@@ -8,6 +8,7 @@ describe("readInitialView", () => {
     expect(readInitialView("?view=problem")).toBe("problem");
     expect(readInitialView("?view=solution")).toBe("solution");
     expect(readInitialView("?view=technical")).toBe("technical");
+    expect(readInitialView("?view=recorder")).toBe("recorder");
     expect(readWalkthroughFlag("?walkthrough=1")).toBe(true);
   });
 });

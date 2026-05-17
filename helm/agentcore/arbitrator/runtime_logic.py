@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 HELM_MODEL = os.getenv(
     "HELM_BEDROCK_MODEL",
-    "us.anthropic.claude-sonnet-4-6",
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
 )
 MAX_TOKENS = 1500
 _REGION = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION", "us-east-1")

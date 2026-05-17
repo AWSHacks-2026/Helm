@@ -43,6 +43,8 @@ export function LandingPage({
         {!presenterMode && (
           <p className="landing-hero-link">
             <a href="?view=gratitude">Session ledger (Gratitude) →</a>
+            {" · "}
+            <a href="?view=recorder">Coordination step-by-step (Under the hood) →</a>
           </p>
         )}
       </section>

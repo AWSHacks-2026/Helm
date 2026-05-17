@@ -59,6 +59,7 @@ describe("AppShell", () => {
     expect(html).toContain("Our Solution");
     expect(html).toContain("Technical Workflow");
     expect(html).toContain("Control Tower");
+    expect(html).toContain("Under the hood");
     expect(html).toContain("Incidents");
     expect(html).not.toContain("Missions");
     expect(html).toContain("Gratitude");
@@ -105,6 +106,7 @@ describe("AppShell", () => {
     (buttonsByLabel.get("Our Solution")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Technical Workflow")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Control Tower")?.props as ButtonProps).onClick?.();
+    (buttonsByLabel.get("Under the hood")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Incidents")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Gratitude")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Results")?.props as ButtonProps).onClick?.();
@@ -115,10 +117,11 @@ describe("AppShell", () => {
     expect(onViewChange).toHaveBeenNthCalledWith(3, "solution" satisfies AppView);
     expect(onViewChange).toHaveBeenNthCalledWith(4, "technical" satisfies AppView);
     expect(onViewChange).toHaveBeenNthCalledWith(5, "control" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(6, "incidents" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(7, "gratitude" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(8, "proof" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(9, "labs" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(6, "recorder" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(7, "incidents" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(8, "gratitude" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(9, "proof" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(10, "labs" satisfies AppView);
     expect((buttonsByLabel.get("Control Tower")?.props as ButtonProps).className).toBe(
       "active",
     );

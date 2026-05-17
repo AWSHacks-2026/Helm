@@ -8,6 +8,7 @@ export type AppView =
   | "solution"
   | "technical"
   | "control"
+  | "recorder"
   | "incidents"
   | "missions"
   | "gratitude"
@@ -25,6 +26,7 @@ const navItems: Array<{ view: AppView; label: string }> = [
   { view: "solution", label: "Our Solution" },
   { view: "technical", label: "Technical Workflow" },
   { view: "control", label: "Control Tower" },
+  { view: "recorder", label: "Under the hood" },
   { view: "incidents", label: "Incidents" },
   { view: "gratitude", label: "Gratitude" },
   { view: "proof", label: "Results" },

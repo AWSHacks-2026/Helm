@@ -65,9 +65,12 @@ def select_inference_tier(inp: ComplexityInput) -> Tier:
 
 
 def sonnet_model_id() -> str:
+    from bedrock.model_ids import DEFAULT_HELM_BEDROCK_MODEL_ID
+
     return resolve_inference_profile_id(
         os.getenv("HELM_BEDROCK_MODEL_ID")
-        or os.getenv("HELM_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
+        or os.getenv("HELM_BEDROCK_MODEL")
+        or DEFAULT_HELM_BEDROCK_MODEL_ID
     )
 
 

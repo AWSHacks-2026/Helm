@@ -41,19 +41,25 @@ def _run_dedup(agents_by_id: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return detect_duplication_fleet(agents_by_id)
 
 
-def _record_dedup_usage(ledger: UsageLedger, raw: dict[str, Any], *, fleet: bool) -> None:
+def _record_dedup_usage(ledger: UsageLedger, raw: dict[str, Any], *, fleet: bool) -> InvokeUsage | None:
     usage_meta = raw.pop("_usage", None)
     if not usage_meta:
-        return
-    ledger.add(
-        InvokeUsage(
-            model_id=usage_meta["model_id"],
-            role="helm-dedup-fleet" if fleet else "helm-dedup",
-            input_tokens=usage_meta["input_tokens"],
-            output_tokens=usage_meta["output_tokens"],
-            latency_ms=usage_meta["latency_ms"],
-        )
+        return None
+    usage = InvokeUsage(
+        model_id=usage_meta["model_id"],
+        role="helm-dedup-fleet" if fleet else "helm-dedup",
+        input_tokens=usage_meta["input_tokens"],
+        output_tokens=usage_meta["output_tokens"],
+        latency_ms=usage_meta["latency_ms"],
     )
+    ledger.add(usage)
+    return usage
+
+
+def _estimate_llm_calls(queues: dict[str, list[WorkAssignment]], *, helm: bool) -> int:
+    """Edits per agent + merge-fix cushion + optional dedup."""
+    edits = sum(len(q) for q in queues.values())
+    return edits + 8 + (1 if helm else 0)
 
 
 def _agents_by_file(assignments: list[WorkAssignment]) -> dict[str, list[WorkAssignment]]:
@@ -97,12 +103,12 @@ def _execute_task_on_branch(
     sandbox.checkout(branch)
     rel = work.primary_file
     if not (sandbox.root / rel).exists():
-        tracker.record_timestep(phase=f"{work.agent_id}:{work.task_id}:skip_missing")
+        tracker.note_phase(phase=f"{work.agent_id}:{work.task_id}:skip_missing")
         return None
     current = sandbox.read_file(rel)
     if helm:
         helm.declare_intent(work.agent_id, rel, work.intent)
-        tracker.record_timestep(phase=f"{work.agent_id}:{work.task_id}:intent", input_tokens=0, output_tokens=0, latency_ms=0)
+        tracker.note_phase(phase=f"{work.agent_id}:{work.task_id}:intent")
     max_tokens = reassign_max_tokens() if reassignment else None
     code, usage = run_agent_edit(
         agent_id=work.agent_id,
@@ -112,20 +118,15 @@ def _execute_task_on_branch(
         max_tokens=max_tokens,
     )
     ledger.add(usage)
-    tracker.record_usage(usage, phase=f"{work.agent_id}:{work.task_id}:edit")
+    tracker.record_llm(usage, phase=f"{work.agent_id}:{work.task_id}:edit")
     if helm:
         check = helm.guardrail_check(work.agent_id, rel, code)
-        tracker.record_timestep(
-            phase=f"{work.agent_id}:{work.task_id}:guardrail",
-            input_tokens=0,
-            output_tokens=0,
-            latency_ms=0,
-        )
+        tracker.note_phase(phase=f"{work.agent_id}:{work.task_id}:guardrail")
         if not check.get("allowed", True):
             return None
     sandbox.write_file(rel, code)
     sandbox.commit_all(f"feat({work.agent_id}): {work.task_id}")
-    tracker.record_timestep(phase=f"{work.agent_id}:{work.task_id}:commit", input_tokens=0, output_tokens=0, latency_ms=0)
+    tracker.note_phase(phase=f"{work.agent_id}:{work.task_id}:commit")
     return code
 
 
@@ -189,39 +190,49 @@ def _merge_all_branches(sandbox: GitSandbox, branch_names: list[str]) -> int:
     return failures
 
 
-def _resolve_file_conflicts(
+def _paths_needing_resolution(
     sandbox: GitSandbox,
-    rel_path: str,
-    agents_on_file: list[WorkAssignment],
+    by_file: dict[str, list[WorkAssignment]],
+) -> list[str]:
+    paths = list(sandbox.conflicted_paths())
+    if not paths and sandbox.has_conflict_markers():
+        paths = sorted(p for p, agents in by_file.items() if len(agents) >= 2)
+    return paths
+
+
+def _resolve_all_conflicts(
+    sandbox: GitSandbox,
+    paths: list[str],
+    by_file: dict[str, list[WorkAssignment]],
     ledger: UsageLedger,
     tracker: TimestepTracker,
 ) -> None:
-    if len(agents_on_file) < 2:
-        return
-    first, second = agents_on_file[0], agents_on_file[1]
-    own = sandbox.show_file(f"agent/{first.agent_id}", rel_path)
-    peer = sandbox.show_file(f"agent/{second.agent_id}", rel_path)
-    merged, usage = run_agent_merge_fix(
-        agent_id=first.agent_id,
-        file_path=rel_path,
-        intent=first.intent,
-        own_code=own,
-        peer_code=peer,
-    )
-    ledger.add(usage)
-    tracker.record_usage(usage, phase=f"merge_fix:{rel_path}")
-    sandbox.write_file(rel_path, merged)
-    sandbox._run("git", "add", rel_path)
-    sandbox._run(
-        "git",
-        "-c",
-        "user.email=helm@shopfix.test",
-        "-c",
-        "user.name=Helm",
-        "commit",
-        "-m",
-        f"resolve {rel_path}",
-    )
+    """Stage LLM merge-fixes for every conflicted path, then one commit (avoids git exit 128)."""
+    staged = False
+    for rel_path in paths:
+        agents_on_file = by_file.get(rel_path, [])
+        if len(agents_on_file) < 2:
+            continue
+        first, second = agents_on_file[0], agents_on_file[1]
+        own = sandbox.show_file(f"agent/{first.agent_id}", rel_path)
+        peer = sandbox.show_file(f"agent/{second.agent_id}", rel_path)
+        merged, usage = run_agent_merge_fix(
+            agent_id=first.agent_id,
+            file_path=rel_path,
+            intent=first.intent,
+            own_code=own,
+            peer_code=peer,
+        )
+        ledger.add(usage)
+        tracker.record_llm(usage, phase=f"merge_fix:{rel_path}")
+        sandbox.stage_file(rel_path, merged)
+        staged = True
+    if staged and not sandbox.commit_staged("resolve merge conflicts"):
+        raise RuntimeError(
+            "merge-fix staged changes but git commit failed "
+            f"(merge_in_progress={sandbox.merge_in_progress()}, "
+            f"conflicted={sandbox.conflicted_paths()})"
+        )
 
 
 def _finish_sandbox(
@@ -235,13 +246,9 @@ def _finish_sandbox(
     helm_stats: dict | None,
 ) -> dict[str, Any]:
     by_file = _agents_by_file(assignments)
-    for rel_path in sandbox.conflicted_paths():
-        _resolve_file_conflicts(sandbox, rel_path, by_file.get(rel_path, []), ledger, tracker)
-
-    if sandbox.has_conflict_markers():
-        for rel_path, agents_on_file in by_file.items():
-            if len(agents_on_file) >= 2:
-                _resolve_file_conflicts(sandbox, rel_path, agents_on_file, ledger, tracker)
+    paths = _paths_needing_resolution(sandbox, by_file)
+    if paths:
+        _resolve_all_conflicts(sandbox, paths, by_file, ledger, tracker)
 
     verify = config.verify(sandbox.root)
     usage = ledger.to_dict()
@@ -290,10 +297,9 @@ def run_baseline_live(
     ledger = UsageLedger()
     assignments = load_assignments_for_run(config, suite, agent_count)
     queues = build_agent_queues(assignments)
-    total_steps = sum(len(q) for q in queues.values()) * 3 + 5
     local_tracker = tracker or TimestepTracker(
         desc=f"{config.app_name} baseline {suite} n{agent_count}",
-        total_timesteps=total_steps,
+        total_llm_calls=_estimate_llm_calls(queues, helm=False),
     )
     own_tracker = tracker is None
 
@@ -324,10 +330,9 @@ def run_helm_live(
     ledger = UsageLedger()
     assignments = load_assignments_for_run(config, suite, agent_count)
     queues = build_agent_queues(assignments)
-    total_steps = sum(len(q) for q in queues.values()) * 5 + 10
     local_tracker = tracker or TimestepTracker(
         desc=f"{config.app_name} helm {suite} n{agent_count}",
-        total_timesteps=total_steps,
+        total_llm_calls=_estimate_llm_calls(queues, helm=True),
     )
     own_tracker = tracker is None
 
@@ -363,8 +368,11 @@ def run_helm_live(
                 continuations = list(agents_by_id.keys())
             else:
                 raw = _run_dedup(agents_by_id)
-                _record_dedup_usage(ledger, raw, fleet=len(agents_by_id) >= 3)
-                local_tracker.record_timestep(phase="dedup", input_tokens=0, output_tokens=0, latency_ms=0)
+                dedup_usage = _record_dedup_usage(ledger, raw, fleet=len(agents_by_id) >= 3)
+                if dedup_usage:
+                    local_tracker.record_llm(dedup_usage, phase="dedup")
+                else:
+                    local_tracker.note_phase(phase="dedup")
                 continuations = list(raw.get("continuations") or [])
                 reassignments = list(raw.get("reassignments") or [])
                 if not continuations and raw.get("duplicate_detected"):
@@ -377,8 +385,11 @@ def run_helm_live(
                     ]
         else:
             raw = _run_dedup(agents_by_id)
-            _record_dedup_usage(ledger, raw, fleet=len(agents_by_id) >= 3)
-            local_tracker.record_timestep(phase="dedup", input_tokens=0, output_tokens=0, latency_ms=0)
+            dedup_usage = _record_dedup_usage(ledger, raw, fleet=len(agents_by_id) >= 3)
+            if dedup_usage:
+                local_tracker.record_llm(dedup_usage, phase="dedup")
+            else:
+                local_tracker.note_phase(phase="dedup")
             continuations = list(raw.get("continuations") or list(agents_by_id.keys()))
             reassignments = list(raw.get("reassignments") or [])
 
@@ -450,6 +461,17 @@ def run_live_pair(
     comparison["baseline_sonnet_calls"] = baseline.get("sonnet_calls", 0)
     comparison["helm_sonnet_calls"] = helm.get("sonnet_calls", 0)
     comparison["helm_dedup_calls"] = helm.get("dedup_calls", 0)
+    comparison["baseline_total_tokens"] = int(baseline.get("usage", {}).get("total_tokens", 0))
+    comparison["helm_total_tokens"] = int(helm.get("usage", {}).get("total_tokens", 0))
+    comparison["baseline_input_tokens"] = int(baseline.get("usage", {}).get("total_input_tokens", 0))
+    comparison["baseline_output_tokens"] = int(baseline.get("usage", {}).get("total_output_tokens", 0))
+    comparison["helm_input_tokens"] = int(helm.get("usage", {}).get("total_input_tokens", 0))
+    comparison["helm_output_tokens"] = int(helm.get("usage", {}).get("total_output_tokens", 0))
+    b_tok = comparison["baseline_total_tokens"]
+    h_tok = comparison["helm_total_tokens"]
+    comparison["token_savings_pct"] = (
+        int(100 * (b_tok - h_tok) / b_tok) if b_tok > 0 else 0
+    )
     return {
         "app": config.app_name,
         "suite": suite,

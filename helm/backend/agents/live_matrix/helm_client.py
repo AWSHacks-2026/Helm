@@ -1,8 +1,19 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 
 import httpx
+
+
+def _retry_after_sec(response: httpx.Response, attempt: int) -> float:
+    raw = response.headers.get("retry-after")
+    if raw:
+        try:
+            return max(1.0, float(raw))
+        except ValueError:
+            pass
+    return min(60.0, 2.0 * (2**attempt))
 
 
 @dataclass
@@ -16,17 +27,32 @@ class HelmClient:
     _client: httpx.Client = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self._client = httpx.Client(base_url=self.base_url, timeout=60.0)
+        self._client = httpx.Client(
+            base_url=self.base_url,
+            timeout=120.0,
+            headers={"X-Helm-Live-Matrix": "1"},
+        )
 
     def close(self) -> None:
         self._client.close()
 
+    def _post_with_retry(self, path: str, payload: dict) -> httpx.Response:
+        last: httpx.Response | None = None
+        for attempt in range(6):
+            response = self._client.post(path, json=payload)
+            last = response
+            if response.status_code < 500:
+                return response
+            time.sleep(_retry_after_sec(response, attempt))
+        assert last is not None
+        return last
+
     def declare_intent(self, agent_id: str, file_path: str, intent: str) -> dict:
         self.api_calls += 1
         self.intents_posted += 1
-        response = self._client.post(
+        response = self._post_with_retry(
             "/intents",
-            json={
+            {
                 "session_id": self.session_id,
                 "agent_id": agent_id,
                 "file_path": file_path,
@@ -44,9 +70,9 @@ class HelmClient:
     ) -> dict:
         self.api_calls += 1
         self.guardrails_checked += 1
-        response = self._client.post(
+        response = self._post_with_retry(
             "/guardrails/check",
-            json={
+            {
                 "session_id": self.session_id,
                 "agent_id": agent_id,
                 "file_path": file_path,

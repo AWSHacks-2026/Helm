@@ -11,6 +11,7 @@ import { ProblemStatementPage } from "./components/ProblemStatementPage";
 import { SolutionPage } from "./components/SolutionPage";
 import { TechnicalWorkflowPage } from "./components/TechnicalWorkflowPage";
 import { JUDGE_WALKTHROUGH } from "./demoWalkthrough";
+import { FlightRecorderPage } from "./components/flightRecorder/FlightRecorderPage";
 import GratitudeLedgerPanel from "./GratitudeLedger";
 import {
   DEFAULT_DEMO_SCENARIO_ID,
@@ -138,6 +139,10 @@ export default function App() {
 
     if (view === "technical") {
       return <TechnicalWorkflowPage />;
+    }
+
+    if (view === "recorder") {
+      return <FlightRecorderPage />;
     }
 
     if (view === "control") {

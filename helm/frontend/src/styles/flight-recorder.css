@@ -1,0 +1,319 @@
+.flight-recorder {
+  --edge-idle: #64748b;
+  --edge-coding: #3b82f6;
+  --edge-blocked: #ef4444;
+  --edge-reassigned: #2dd4bf;
+  --edge-conflicted: #f59e0b;
+  --edge-complete: #22c55e;
+  --edge-dedup: #eab308;
+  --edge-guardrail: #f97316;
+  --edge-merge: #a855f7;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.flight-recorder-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.flight-recorder-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #aebbd0;
+}
+
+.flight-recorder-toolbar select {
+  min-width: 16rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 171, 217, 0.22);
+  background: rgba(19, 27, 44, 0.8);
+  color: #edf4ff;
+}
+
+.live-run-stats {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.06);
+  font-size: 0.88rem;
+  color: #c8d6e8;
+  line-height: 1.5;
+}
+
+.live-run-stats p {
+  margin: 0.2rem 0;
+}
+
+.live-run-stats-detail {
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.trace-graph {
+  position: relative;
+  min-height: 420px;
+  border: 1px solid rgba(139, 171, 217, 0.2);
+  border-radius: 16px;
+  background: rgba(8, 12, 22, 0.55);
+  overflow: hidden;
+}
+
+.trace-graph-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 400px;
+}
+
+.trace-edge-label {
+  fill: #c8d6ea;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.trace-graph-nodes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.trace-graph-node {
+  position: absolute;
+  width: min(280px, 34vw);
+  pointer-events: auto;
+}
+
+.trace-graph-node-a {
+  left: 1.5rem;
+  top: 0.75rem;
+}
+
+.trace-graph-node-b {
+  right: 1.5rem;
+  top: 0.75rem;
+}
+
+.trace-graph-node-helm {
+  left: 50%;
+  bottom: 0.75rem;
+  transform: translateX(-50%);
+  width: min(240px, 40vw);
+}
+
+.trace-agent-node,
+.trace-helm-node {
+  border: 1px solid rgba(139, 171, 217, 0.2);
+  border-radius: 14px;
+  padding: 1rem;
+  background: rgba(20, 30, 49, 0.92);
+}
+
+.trace-agent-node header,
+.trace-helm-node header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.trace-agent-node h3,
+.trace-helm-node h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.trace-agent-node p,
+.trace-helm-node p {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #aebbd0;
+}
+
+.trace-agent-node code,
+.trace-file-panel code {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #a9ddff;
+  word-break: break-all;
+}
+
+.trace-agent-node .status-chip {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 171, 217, 0.25);
+}
+
+.trace-agent-node.status-coding .status-chip {
+  border-color: rgba(125, 184, 255, 0.45);
+  color: #7db8ff;
+}
+
+.trace-agent-node.status-blocked .status-chip,
+.trace-agent-node.status-conflicted .status-chip {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+
+.trace-agent-node.status-reassigned .status-chip {
+  border-color: rgba(101, 232, 209, 0.45);
+  color: #65e8d1;
+}
+
+.trace-agent-node.status-complete .status-chip {
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #4ade80;
+}
+
+.trace-helm-node {
+  min-width: 11rem;
+  text-align: center;
+}
+
+.trace-helm-node.is-active {
+  box-shadow: 0 0 0 2px rgba(101, 232, 209, 0.55);
+  border-color: rgba(101, 232, 209, 0.45);
+}
+
+.trace-helm-node .helm-action {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #65e8d1;
+}
+
+.trace-file-panel {
+  border: 1px solid rgba(139, 171, 217, 0.2);
+  border-radius: 14px;
+  padding: 1rem;
+  background: rgba(12, 18, 31, 0.94);
+}
+
+.trace-file-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.trace-file-panel h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.trace-file-panel .file-status {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9fb0c9;
+}
+
+.trace-file-panel pre {
+  margin: 0;
+  max-height: 14rem;
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(6, 10, 18, 0.85);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #d8e8ff;
+  white-space: pre-wrap;
+}
+
+.trace-file-panel.status-conflict pre {
+  border-left: 3px solid #f59e0b;
+}
+
+.trace-file-panel.status-merged pre {
+  border-left: 3px solid #22c55e;
+}
+
+.trace-file-panel.status-blocked pre {
+  border-left: 3px solid #ef4444;
+}
+
+.trace-narration {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #c8d6ea;
+  line-height: 1.5;
+}
+
+.trace-load-error {
+  margin: 0;
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
+
+.trace-scrubber {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(139, 171, 217, 0.18);
+  background: rgba(19, 27, 44, 0.65);
+}
+
+.trace-scrubber-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.trace-scrubber-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #9fb0c9;
+}
+
+.trace-scrubber input[type="range"] {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .trace-graph-node-a,
+  .trace-graph-node-b {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    width: 100%;
+    margin: 0.5rem 1rem;
+  }
+
+  .trace-graph-node-helm {
+    position: relative;
+    left: auto;
+    transform: none;
+    width: calc(100% - 2rem);
+    margin: 0.5rem 1rem 1rem;
+  }
+
+  .trace-graph-nodes {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-top: 1rem;
+  }
+
+  .trace-graph-svg {
+    min-height: 200px;
+  }
+}
