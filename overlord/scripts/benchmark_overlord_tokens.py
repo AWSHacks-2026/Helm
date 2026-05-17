@@ -19,7 +19,7 @@ if env_path.exists():
     try:
         from dotenv import load_dotenv
 
-        load_dotenv(env_path, override=True)
+        load_dotenv(env_path, override=False)
     except ImportError:
         pass
 
