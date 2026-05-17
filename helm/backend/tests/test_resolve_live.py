@@ -52,3 +52,31 @@ def test_resolve_live_passes_session_id_to_arbitrate(mock_arbitrate):
 
     _, kwargs = mock_arbitrate.call_args
     assert kwargs.get("session_id") == "sess_live_99"
+
+
+@patch("routes.resolve.arbitrate")
+def test_resolve_live_passes_intent_conflict_kind_to_arbitrate(mock_arbitrate):
+    mock_arbitrate.return_value = {
+        "conflict_type": "intent_conflict",
+        "reasoning": "Agents want incompatible behavior",
+        "unified_intent": "Preserve existing cache semantics before adding new API shape.",
+        "priority_order": ["a1", "a2"],
+        "agent_updates": {"a1": "Keep cache", "a2": "Adapt to cache"},
+        "resolved_code": "Directive: coordinate intent before editing.",
+        "tokens_saved_estimate": "~12",
+    }
+
+    body = {
+        "session_id": "sess_live_intent",
+        "file_path": "src/user.py",
+        "conflict_kind": "intent",
+        "agent_a": {"agent_id": "a1", "intent": "cache users", "code": "cache()"},
+        "agent_b": {"agent_id": "a2", "intent": "remove cache", "code": "no_cache()"},
+    }
+    response = client.post("/resolve", json=body)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["resolution"]["conflict_type"] == "intent_conflict"
+    _, kwargs = mock_arbitrate.call_args
+    assert kwargs.get("conflict_kind") == "intent"

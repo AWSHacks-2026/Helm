@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helm / MergeAI Architecture</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f9f9f7;color:#1a1a18;padding:2rem}
+.wrap{max-width:960px;margin:0 auto;background:#fff;border:1px solid #e2e0d8;border-radius:12px;overflow:hidden}
+.lane{display:grid;grid-template-columns:72px 1fr;border-bottom:1px solid #e2e0d8}
+.lane-label{display:flex;align-items:center;justify-content:center;padding:1rem 0.5rem;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);font-size:11px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;border-right:1px solid #e2e0d8;background:#f4f2eb}
+.lane-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.node{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;border:1px solid #ccc;padding:7px 12px;cursor:default;text-align:center;min-width:108px}
+.node .t{font-size:13px;font-weight:600}
+.node .s{font-size:11px;margin-top:2px;opacity:.75}
+.diamond{width:90px;height:52px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.diamond svg{position:absolute;inset:0;width:100%;height:100%}
+.diamond span{position:relative;font-size:11px;font-weight:600;text-align:center;line-height:1.2;padding:0 10px}
+.arr{display:flex;align-items:center;gap:0;font-size:11px;color:#aaa}
+.arr-line{height:1px;background:#ccc;flex:1;min-width:16px}
+.arr-label{font-size:10px;color:#aaa;white-space:nowrap}
+.n-teal{background:#E1F5EE;border-color:#0F6E56}.n-teal .t{color:#085041}.n-teal .s{color:#0F6E56}
+.n-purple{background:#EEEDFE;border-color:#534AB7}.n-purple .t{color:#26215C}.n-purple .s{color:#534AB7}
+.n-coral{background:#FAECE7;border-color:#993C1D}.n-coral .t{color:#4A1B0C}.n-coral .s{color:#993C1D}
+.n-amber{background:#FAEEDA;border-color:#854F0B}.n-amber .t{color:#412402}.n-amber .s{color:#854F0B}
+.n-blue{background:#E6F1FB;border-color:#185FA5}.n-blue .t{color:#042C53}.n-blue .s{color:#185FA5}
+.n-gray{background:#f4f2eb;border-color:#ccc}.n-gray .t{color:#1a1a18}.n-gray .s{color:#5a5a58}
+.n-green{background:#EAF3DE;border-color:#3B6D11}.n-green .t{color:#173404}.n-green .s{color:#3B6D11}
+.n-red{background:#FCEBEB;border-color:#A32D2D}.n-red .t{color:#501313}.n-red .s{color:#A32D2D}
+.d-teal polygon{fill:#E1F5EE;stroke:#0F6E56;stroke-width:1}
+.d-amber polygon{fill:#FAEEDA;stroke:#854F0B;stroke-width:1}
+.d-purple polygon{fill:#EEEDFE;stroke:#534AB7;stroke-width:1}
+.d-teal span{color:#085041}
+.d-amber span{color:#412402}
+.d-purple span{color:#26215C}
+.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.badge-teal{background:#E1F5EE;color:#0F6E56;border:1px solid #5DCAA5}
+.badge-amber{background:#FAEEDA;color:#854F0B;border:1px solid #EF9F27}
+.sub-row{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.flow-block{border:1px dashed #ccc;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.flow-block-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.section-note{font-size:11px;color:#aaa;font-style:italic}
+.env-table{font-size:11px;color:#666;border-collapse:collapse;width:100%}
+.env-table td{padding:3px 8px 3px 0}
+.env-table td:last-child{font-family:monospace;color:#1a1a18}
+@media(prefers-color-scheme:dark){
+body{background:#1a1a18;color:#e0ddd4}
+.wrap{background:#222220;border-color:#3a3a38}
+.lane{border-bottom-color:#3a3a38}
+.lane-label{background:#2a2a28;color:#888780;border-right-color:#3a3a38}
+.n-teal{background:#04342C;border-color:#5DCAA5}.n-teal .t{color:#9FE1CB}.n-teal .s{color:#5DCAA5}
+.n-purple{background:#26215C;border-color:#7F77DD}.n-purple .t{color:#CECBF6}.n-purple .s{color:#7F77DD}
+.n-coral{background:#4A1B0C;border-color:#D85A30}.n-coral .t{color:#F5C4B3}.n-coral .s{color:#D85A30}
+.n-amber{background:#412402;border-color:#BA7517}.n-amber .t{color:#FAC775}.n-amber .s{color:#BA7517}
+.n-blue{background:#042C53;border-color:#378ADD}.n-blue .t{color:#B5D4F4}.n-blue .s{color:#378ADD}
+.n-gray{background:#2a2a28;border-color:#4a4a48}.n-gray .t{color:#e0ddd4}.n-gray .s{color:#888780}
+.n-green{background:#173404;border-color:#639922}.n-green .t{color:#C0DD97}.n-green .s{color:#639922}
+.n-red{background:#501313;border-color:#E24B4A}.n-red .t{color:#F7C1C1}.n-red .s{color:#E24B4A}
+.d-teal polygon{fill:#04342C;stroke:#5DCAA5}.d-teal span{color:#9FE1CB}
+.d-amber polygon{fill:#412402;stroke:#BA7517}.d-amber span{color:#FAC775}
+.d-purple polygon{fill:#26215C;stroke:#7F77DD}.d-purple span{color:#CECBF6}
+.flow-block{border-color:#4a4a48}
+.env-table{color:#888780}
+.env-table td:last-child{color:#e0ddd4}
+.section-note{color:#666}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="padding:14px 16px 10px;border-bottom:1px solid #e2e0d8;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
+  <div>
+    <span style="font-size:16px;font-weight:700">Helm / MergeAI</span>
+    <span style="font-size:12px;color:#888;margin-left:10px">system architecture</span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <span class="badge badge-teal">Bedrock Haiku 4.5</span>
+    <span class="badge badge-teal">Bedrock Sonnet 4.6</span>
+    <span class="badge badge-amber">AgentCore Memory / Policy / Runtime</span>
+  </div>
+</div>
+
+<div class="lane">
+  <div class="lane-label">agents</div>
+  <div class="lane-body">
+    <div class="row">
+      <div class="node n-teal"><span class="t">Coding agents</span><span class="s">Cursor · Claude Code · MCP</span></div>
+      <div class="arr"><div class="arr-line" style="min-width:8px"></div></div>
+      <div class="node n-teal"><span class="t">ShopFix harness</span><span class="s">git benchmark :8001</span></div>
+      <div style="flex:1"></div>
+      <div class="node n-blue"><span class="t">Control Tower</span><span class="s">React/Vite :5173</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="lane">
+  <div class="lane-label">helm api</div>
+  <div class="lane-body">
+    <div class="row">
+      <div class="node n-gray"><span class="t">POST /intents</span><span class="s">declare work</span></div>
+      <div class="arr"><div class="arr-line"></div><span class="arr-label">before write</span><div class="arr-line"></div></div>
+      <div class="node n-gray"><span class="t">POST /guardrails</span><span class="s">/check + /guardrail/check</span></div>
+      <div class="arr"><div class="arr-line"></div></div>
+      <div class="node n-gray"><span class="t">POST /resolve</span><span class="s">merge conflict</span></div>
+      <div class="arr"><div class="arr-line"></div></div>
+      <div class="node n-gray"><span class="t">POST /missions</span><span class="s">fleet dedup</span></div>
+    </div>
+    <div class="row">
+      <div class="node n-gray"><span class="t">POST /history/event</span><span class="s">persist event</span></div>
+      <div class="arr"><div class="arr-line"></div></div>
+      <div class="node n-green"><span class="t">GET /gratitude</span><span class="s">ledger endpoint</span></div>
+      <div class="arr"><div class="arr-line"></div></div>
+      <div class="node n-gray"><span class="t">WS /ws/conflicts</span><span class="s">live broadcast</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="lane">
+  <div class="lane-label">coordination</div>
+  <div class="lane-body">
+    <div class="sub-row">
+      <div class="flow-block" style="flex:1;min-width:220px">
+        <div class="flow-block-label">contention gate <span style="font-style:italic;font-weight:400">(coordination cost)</span></div>
+        <div class="row" style="flex-wrap:nowrap">
+          <div class="diamond d-amber">
+            <svg viewBox="0 0 90 52"><polygon points="45,2 88,26 45,50 2,26"/></svg>
+            <span>gate tier?</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="arr"><div class="arr-line" style="min-width:20px"></div><span class="arr-label" style="color:#3B6D11;font-weight:700">allow</span></div>
+            <div class="arr"><div class="arr-line" style="min-width:20px"></div><span class="arr-label" style="color:#854F0B;font-weight:700">arbitrate</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="node n-green" style="min-width:90px"><span class="t">skip Bedrock</span><span class="s">0 coord. calls</span></div>
+            <div class="node n-amber" style="min-width:90px"><span class="t">align intents</span><span class="s">inference tier →</span></div>
+          </div>
+        </div>
+        <div class="section-note">HELM_GATE_ENABLED · assess_intent · assess_dedup</div>
+      </div>
+      <div class="flow-block" style="flex:1;min-width:220px">
+        <div class="flow-block-label">guardrails <span style="font-style:italic;font-weight:400">(write safety — always runs)</span></div>
+        <div class="row" style="flex-wrap:nowrap">
+          <div class="diamond d-teal">
+            <svg viewBox="0 0 90 52"><polygon points="45,2 88,26 45,50 2,26"/></svg>
+            <span>preflight?</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="arr"><div class="arr-line" style="min-width:20px"></div><span class="arr-label" style="color:#3B6D11;font-weight:700">allow</span></div>
+            <div class="arr"><div class="arr-line" style="min-width:20px"></div><span class="arr-label" style="color:#A32D2D;font-weight:700">block</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="diamond d-purple" style="width:100px">
+              <svg viewBox="0 0 100 52"><polygon points="50,2 98,26 50,50 2,26"/></svg>
+              <span>peer conflict?</span>
+            </div>
+            <div class="node n-red" style="min-width:90px"><span class="t">blocked</span><span class="s">log + WS broadcast</span></div>
+          </div>
+        </div>
+        <div class="section-note">AgentCore Policy · Cedar bridge · check_action · preflight_check</div>
+      </div>
+    </div>
+    <div class="sub-row">
+      <div class="flow-block" style="flex:1;min-width:200px">
+        <div class="flow-block-label">inference routing</div>
+        <div class="row">
+          <div class="node n-gray"><span class="t">select_inference_tier</span><span class="s">complexity score</span></div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="arr"><div class="arr-line" style="min-width:14px"></div><span class="arr-label">haiku</span></div>
+            <div class="arr"><div class="arr-line" style="min-width:14px"></div><span class="arr-label">sonnet</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="node n-teal" style="min-width:80px"><span class="t">Haiku 4.5</span><span class="s">light tasks</span></div>
+            <div class="node n-coral" style="min-width:80px"><span class="t">Sonnet 4.6</span><span class="s">hard merges</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="flow-block" style="flex:1;min-width:200px">
+        <div class="flow-block-label">fleet dedup</div>
+        <div class="row">
+          <div class="node n-gray"><span class="t">detect_duplication</span><span class="s">delegation.py</span></div>
+          <div class="arr"><div class="arr-line"></div></div>
+          <div class="node n-green"><span class="t">gratitude_ledger</span><span class="s">Deduped · Yielded · Tokens</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lane">
+  <div class="lane-label">aws bedrock</div>
+  <div class="lane-body">
+    <div class="row">
+      <div class="node n-teal"><span class="t">Claude Haiku 4.5</span><span class="s">agents · guardrails · merge fleet</span></div>
+      <div class="node n-coral"><span class="t">Claude Sonnet 4.6</span><span class="s">fleet dedup · hard merges</span></div>
+      <div class="node n-purple"><span class="t">AgentCore Memory</span><span class="s">session log · local JSON fallback</span></div>
+      <div class="node n-purple"><span class="t">AgentCore Policy</span><span class="s">Cedar preflight on writes</span></div>
+      <div class="node n-amber"><span class="t">AgentCore Runtime</span><span class="s">packaged merge arb · optional</span></div>
+    </div>
+    <div class="section-note">HELM_MOCK_BEDROCK=1 swaps all Bedrock calls for local simulators during the judge demo</div>
+  </div>
+</div>
+
+<div class="lane">
+  <div class="lane-label">judge ui</div>
+  <div class="lane-body">
+    <div class="sub-row">
+      <div class="flow-block" style="flex:2;min-width:280px">
+        <div class="flow-block-label">demo replay path (no live agents)</div>
+        <div class="row">
+          <div class="node n-gray"><span class="t">Landing</span><span class="s">?presenter=1</span></div>
+          <div class="arr"><div class="arr-line"></div><span class="arr-label">begin</span></div>
+          <div class="node n-gray"><span class="t">useDemoReplay</span><span class="s">scripted timeline</span></div>
+          <div class="arr"><div class="arr-line"></div></div>
+          <div class="node n-gray"><span class="t">syncReplayToLedger</span><span class="s">POST /history/event</span></div>
+          <div class="arr"><div class="arr-line"></div></div>
+          <div class="node n-blue"><span class="t">ControlTower</span><span class="s">timeline + incidents</span></div>
+        </div>
+        <div class="section-note">event.kind maps: duplicate_detected · guardrail_blocked · merge_resolved → /history/event</div>
+      </div>
+      <div class="flow-block" style="flex:1;min-width:160px">
+        <div class="flow-block-label">results</div>
+        <div class="node n-gray" style="align-items:flex-start"><span class="t">BenchmarkProof</span><span class="s">static charts · DEMO_PILLARS</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lane">
+  <div class="lane-label">stores</div>
+  <div class="lane-body">
+    <div class="row">
+      <div class="node n-gray"><span class="t">SessionStore</span><span class="s">intents per file · RAM</span></div>
+      <div class="node n-gray"><span class="t">ConflictStore</span><span class="s">active conflicts · RAM</span></div>
+      <div class="node n-gray"><span class="t">MissionStore</span><span class="s">fleet assignments · RAM</span></div>
+      <div class="node n-purple"><span class="t">agentcore_memory.py</span><span class="s">cloud or .helm/session.json</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="lane" style="border-bottom:none">
+  <div class="lane-label">gratitude</div>
+  <div class="lane-body">
+    <div class="row">
+      <div class="node n-green"><span class="t">GratitudeLedger</span><span class="s">build_gratitude_ledger()</span></div>
+      <div class="arr"><div class="arr-line"></div></div>
+      <div class="node n-green"><span class="t">Blocked · Deduped · Tokens</span><span class="s">GET /gratitude</span></div>
+      <div style="flex:1"></div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-self:center">
+        <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em">env switches</div>
+        <table class="env-table">
+          <tr><td>HELM_MOCK_BEDROCK</td><td>1 (demo) / 0 (bench)</td></tr>
+          <tr><td>HELM_USE_LOCAL_MEMORY</td><td>true / false</td></tr>
+          <tr><td>HELM_USE_LOCAL_POLICY</td><td>true / false</td></tr>
+          <tr><td>HELM_GATE_ENABLED</td><td>1</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

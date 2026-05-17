@@ -1,4 +1,6 @@
 .venv/
+.overlord/
+.superpowers/
 .helm/
 .env
 .worktrees/
@@ -6,6 +8,7 @@ agent_docs/*
 !agent_docs/
 !agent_docs/feature-2-demo.md
 docs/superpowers/plans
+helm/STACK_PRIVATE.md
 *.env.local
 helm/data/sessions/
 backend/.venv/
@@ -14,6 +17,7 @@ __pycache__/
 *.py[cod]
 *.pyc
 node_modules/
+helm/frontend/dist/
 helm/experiments/results/
 shopfix/.git/
 shopfix/backend/.venv/

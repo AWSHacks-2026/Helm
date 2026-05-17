@@ -48,11 +48,17 @@ def resolve_live(
         session_id=payload.session_id,
     )
 
+    arbitrate_kwargs = {
+        "kb_context": kb_context or None,
+        "session_id": payload.session_id,
+    }
+    if payload.conflict_kind is not None:
+        arbitrate_kwargs["conflict_kind"] = payload.conflict_kind
+
     raw = arbitrate(
         agent_a.model_dump(),
         agent_b.model_dump(),
-        kb_context=kb_context or None,
-        session_id=payload.session_id,
+        **arbitrate_kwargs,
     )
     resolution = ResolutionPayload.model_validate(raw)
 

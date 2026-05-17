@@ -159,6 +159,48 @@ _EVENT_TYPE_BY_RECORD = {
     "decision": "conflict_resolved",
 }
 
+_DECISION_EVENT_TYPES = {
+    "conflict_resolved",
+    "conflict_approved",
+    "intent_aligned",
+}
+
+
+def _parse_json_object(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _infer_decision_event_type(payload: dict[str, Any]) -> str | None:
+    if "conflict_id" not in payload:
+        return None
+    if "status" in payload:
+        return "conflict_approved"
+    if "resolution" in payload:
+        return "conflict_resolved"
+    return None
+
+
+def _decision_event_from_payload(payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    event_type = "conflict_resolved"
+    reasoning_payload = _parse_json_object(payload.get("reasoning"))
+    if reasoning_payload is None:
+        inferred = _infer_decision_event_type(payload)
+        return inferred or event_type, payload
+
+    envelope_event_type = reasoning_payload.get("event_type")
+    envelope_payload = reasoning_payload.get("payload")
+    if envelope_event_type in _DECISION_EVENT_TYPES and isinstance(envelope_payload, dict):
+        return envelope_event_type, envelope_payload
+
+    inferred = _infer_decision_event_type(reasoning_payload)
+    return inferred or event_type, reasoning_payload
+
 
 def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
     """Bridge agentic workflow events into AgentCore Memory."""
@@ -178,12 +220,26 @@ def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
             agent_id=payload.get("agent_id", "unknown"),
             action_type="guardrail_blocked",
             file_path=payload.get("file_path", ""),
-            description=payload.get("reason", "blocked"),
+            description=payload.get("reason", payload.get("message", "blocked")),
+            session_id=session_id,
+        )
+    elif event_type == "mission_delegated":
+        record = log_action(
+            agent_id=payload.get("agent_id", "helm"),
+            action_type="mission_delegated",
+            file_path=payload.get("file_path", ""),
+            description=json.dumps(payload),
+            session_id=session_id,
+        )
+    elif event_type == "intent_aligned":
+        record = log_decision(
+            reasoning=json.dumps({"event_type": "intent_aligned", "payload": payload}),
+            affected_agents=payload.get("affected_agents", []),
             session_id=session_id,
         )
     elif event_type in {"conflict_resolved", "conflict_approved"}:
         record = log_decision(
-            reasoning=json.dumps(payload),
+            reasoning=json.dumps({"event_type": event_type, "payload": payload}),
             affected_agents=payload.get("affected_agents", []),
             session_id=session_id,
         )
@@ -218,14 +274,27 @@ def list_history(session_id: str) -> list[dict[str, Any]]:
             action_type = payload.get("action_type", "")
             if action_type == "guardrail_blocked":
                 event_type = "guardrail_blocked"
+            elif action_type == "mission_delegated":
+                event_type = "mission_delegated"
+                parsed = _parse_json_object(payload.get("description"))
+                if parsed:
+                    payload = parsed
             elif action_type == "contention_gate":
                 event_type = "contention_gate"
+        elif record_type == "decision":
+            event_type, payload = _decision_event_from_payload(payload)
+            if event_type == "conflict_resolved" and isinstance(payload, dict):
+                nested = _parse_json_object(payload.get("reasoning"))
+                if nested and nested.get("event_type") == "intent_aligned":
+                    event_type = "intent_aligned"
+                    payload = nested.get("payload", payload)
         events.append(
             {
                 "event_id": record["id"],
                 "session_id": record["session_id"],
                 "timestamp": record["timestamp"],
                 "event_type": event_type,
+                "agent_id": record.get("agent_id"),
                 "payload": payload,
             }
         )
