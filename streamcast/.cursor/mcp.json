@@ -3,7 +3,7 @@
     "helm": {
       "command": "python",
       "args": ["mcp/server.py"],
-      "cwd": "../../..",
+      "cwd": "../helm",
       "env": {
         "HELM_API_BASE": "http://127.0.0.1:8000",
         "HELM_TEAM_SESSION": "streamcast-benchmark"

@@ -9,8 +9,9 @@ if [ -z "$SUITE" ] || { [ "$SUITE" != "independent" ] && [ "$SUITE" != "conflict
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+MERGEAI_ROOT="$(cd "$ROOT/.." && pwd)"
 BENCHMARKS="$ROOT/benchmarks"
-STREAMCAST="$BENCHMARKS/streamcast"
+STREAMCAST="$MERGEAI_ROOT/streamcast"
 MANIFEST="$BENCHMARKS/suites/$SUITE/manifest.yaml"
 HELM_ENABLED="${HELM_ENABLED:-1}"
 HELM_API_BASE="${HELM_API_BASE:-http://127.0.0.1:8000}"

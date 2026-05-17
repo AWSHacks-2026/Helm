@@ -50,10 +50,10 @@ export HELM_ENABLED=1
 
 ## MCP & hooks
 
-Configured under `benchmarks/streamcast/.cursor/`:
+Configured under `streamcast/.cursor/` (repo root, sibling of `helm/`):
 
 - `mcp.json` → `helm` server (`mcp/server.py`)
-- `hooks.json` → `integrations/claude-code/pre-write.sh`
+- `hooks.json` → `helm/integrations/claude-code/pre-write.sh`
 
 Set `HELM_ENABLED=0` to bypass guardrails for baseline runs.
 
