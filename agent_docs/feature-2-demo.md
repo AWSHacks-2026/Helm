@@ -2,7 +2,7 @@
 
 ## Scenario
 
-This demo uses the Performance vs Minimalism scenario to show Overlord resolving an intent conflict before either agent writes contradictory code.
+This demo uses the Performance vs Minimalism scenario to show Helm resolving an intent conflict before either agent writes contradictory code.
 
 Agent A intent:
 
@@ -12,7 +12,7 @@ Agent B intent:
 
 > I am refactoring this module to minimize external dependencies and keep the deployment artifact small.
 
-These intents conflict before code is written because Agent A wants to add performance dependencies while Agent B wants to remove or minimize dependencies. Without Overlord, one agent could add specialized parsing or caching libraries while the other removes those same dependencies to keep the deployment artifact small.
+These intents conflict before code is written because Agent A wants to add performance dependencies while Agent B wants to remove or minimize dependencies. Without Helm, one agent could add specialized parsing or caching libraries while the other removes those same dependencies to keep the deployment artifact small.
 
 ## Run The API
 
@@ -25,7 +25,7 @@ source "$HOME/.bashrc" && activatevenv
 Then start the FastAPI app with the backend directory on `PYTHONPATH`:
 
 ```bash
-PYTHONPATH=overlord/backend uvicorn main:app --reload
+PYTHONPATH=helm/backend uvicorn main:app --reload
 ```
 
 Expected startup line:
@@ -34,7 +34,7 @@ Expected startup line:
 Uvicorn running on http://127.0.0.1:8000
 ```
 
-Alternatively, from `overlord/backend`, run:
+Alternatively, from `helm/backend`, run:
 
 ```bash
 uvicorn main:app --reload
@@ -91,4 +91,4 @@ The response may include additional context fields such as `agent_a`, `agent_b`,
 
 ## Judge Narrative
 
-Overlord catches the conflict before either agent writes contradictory code. It aligns them on native Python first, benchmarks the demo path, and allows a dependency only if it saves at least 20% latency.
+Helm catches the conflict before either agent writes contradictory code. It aligns them on native Python first, benchmarks the demo path, and allows a dependency only if it saves at least 20% latency.

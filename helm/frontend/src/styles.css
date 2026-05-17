@@ -1,0 +1,297 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #e8e8e8;
+  background: #0f1115;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 1rem;
+  padding: 1rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.panel {
+  background: #1a1d24;
+  border: 1px solid #2a2f3a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.conflict-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+}
+
+.conflict-item:hover,
+.conflict-item.active {
+  background: #2a3140;
+}
+
+pre {
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  background: #0f1115;
+  padding: 0.75rem;
+  border-radius: 4px;
+}
+
+button {
+  margin-right: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.4rem;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0;
+}
+
+.app-nav button {
+  background: #1a1d24;
+  border: 1px solid #2a2f3a;
+  color: #e8e8e8;
+  border-radius: 6px;
+}
+
+.app-nav button.active {
+  background: #2a4a7a;
+  border-color: #3d6eb5;
+}
+
+.app-demo {
+  display: block;
+  max-width: 960px;
+}
+
+.demo-lab {
+  background: #1a1d24;
+  border: 1px solid #2a2f3a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.demo-hint {
+  color: #9aa3b2;
+  font-size: 0.9rem;
+}
+
+.demo-error {
+  color: #f88;
+}
+
+.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.demo-smoke-btn {
+  border-color: #3d6eb5;
+}
+
+.demo-smoke.pass {
+  border-left: 4px solid #4caf50;
+  padding-left: 0.75rem;
+}
+
+.demo-smoke.fail {
+  border-left: 4px solid #f44336;
+  padding-left: 0.75rem;
+}
+
+.demo-result {
+  margin-top: 1rem;
+}
+
+.app-merge {
+  display: block;
+  max-width: 1200px;
+}
+
+.merge-lab {
+  background: #1a1d24;
+  border: 1px solid #2a2f3a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.merge-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  align-items: center;
+}
+
+.merge-toolbar select {
+  flex: 1;
+  max-width: 420px;
+}
+
+.merge-summary {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #0f1115;
+}
+
+.merge-summary.pass {
+  border-left: 4px solid #4caf50;
+}
+
+.merge-summary.fail {
+  border-left: 4px solid #f44336;
+}
+
+.merge-file {
+  color: #9aa3b2;
+  font-size: 0.85rem;
+}
+
+.merge-conflict-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.merge-panel {
+  background: #0f1115;
+  padding: 0.75rem;
+  border-radius: 6px;
+}
+
+.merge-strategies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.merge-strategy-card {
+  background: #0f1115;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #2a2f3a;
+}
+
+.merge-strategy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.merge-strategy-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.merge-score {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.score-pass {
+  color: #4caf50;
+}
+
+.score-partial {
+  color: #ffb74d;
+}
+
+.score-fail {
+  color: #f44336;
+}
+
+.merge-timing {
+  color: #9aa3b2;
+  font-size: 0.8rem;
+  margin: 0.25rem 0;
+}
+
+.merge-helm-block {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #1e2a3d;
+  border-radius: 6px;
+}
+
+.merge-mcp-hint {
+  margin-top: 1rem;
+  color: #9aa3b2;
+}
+
+.live-benchmark-summary {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #1e2a3d;
+  border-left: 4px solid #3d6eb5;
+}
+
+.live-benchmark-summary.pass {
+  border-left-color: #4caf50;
+}
+
+.live-benchmark-summary.fail {
+  border-left-color: #f44336;
+}
+
+.gratitude-panel {
+  margin-bottom: 1rem;
+}
+
+.gratitude-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.gratitude-card {
+  background: #0f1115;
+  border: 1px solid #2a2f3a;
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gratitude-metric-label {
+  font-size: 0.75rem;
+  color: #9aa3b2;
+}
+
+.gratitude-timeline {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.gratitude-kind {
+  color: #7eb8ff;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}

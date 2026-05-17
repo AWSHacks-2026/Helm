@@ -1,5 +1,5 @@
 .venv/
-.overlord/
+.helm/
 .env
 .worktrees/
 agent_docs/*
@@ -7,11 +7,11 @@ agent_docs/*
 !agent_docs/feature-2-demo.md
 docs/superpowers/plans
 *.env.local
-overlord/data/sessions/
+helm/data/sessions/
 backend/.venv/
-overlord/.venv/
+helm/.venv/
 __pycache__/
 *.py[cod]
 *.pyc
 node_modules/
-overlord/experiments/results/
+helm/experiments/results/

@@ -1,0 +1,16 @@
+{
+  "targets": {
+    "default": {
+      "resources": {
+        "runtimes": {
+          "HelmArbitrator": {
+            "runtimeId": "Helm_HelmArbitrator-oJGj1u7F3z",
+            "runtimeArn": "arn:aws:bedrock-agentcore:us-east-1:094869897653:runtime/Helm_HelmArbitrator-oJGj1u7F3z",
+            "roleArn": "arn:aws:iam::094869897653:role/AgentCore-Helm-defaul-ApplicationAgentHelmA-8tX1k4eu6gkf"
+          }
+        },
+        "stackName": "AgentCore-Helm-default"
+      }
+    }
+  }
+}

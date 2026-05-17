@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship three PRD hardcoded scenarios (merge conflict, intent conflict, guardrail prevention) with one-shot API paths and a `/demo/smoke` health check so the team can verify all three acts work locally with `OVERLORD_MOCK_BEDROCK=1`.
+**Goal:** Ship three PRD hardcoded scenarios (merge conflict, intent conflict, guardrail prevention) with one-shot API paths and a `/demo/smoke` health check so the team can verify all three acts work locally with `HELM_MOCK_BEDROCK=1`.
 
-**Architecture:** Extend `overlord/backend/agents/scenarios.py` with a typed scenario registry (`kind`: `merge` | `intent` | `guardrail`). Merge and intent scenarios use `POST /resolve/{name}` with scenario-specific prompts in `overlord_prompt.py`. Guardrail uses existing `POST /guardrail/check` (seeds KB, runs preflight, routes to Overlord). Add `GET /demo/smoke` that runs all three paths and returns pass/fail JSON for Swagger and curl. No frontend required.
+**Architecture:** Extend `helm/backend/agents/scenarios.py` with a typed scenario registry (`kind`: `merge` | `intent` | `guardrail`). Merge and intent scenarios use `POST /resolve/{name}` with scenario-specific prompts in `helm_prompt.py`. Guardrail uses existing `POST /guardrail/check` (seeds KB, runs preflight, routes to Helm). Add `GET /demo/smoke` that runs all three paths and returns pass/fail JSON for Swagger and curl. No frontend required.
 
-**Tech Stack:** Python 3.11, FastAPI, pytest, httpx TestClient, existing `overlord.py` + `guardrails.py` + `knowledge_base.py`
+**Tech Stack:** Python 3.11, FastAPI, pytest, httpx TestClient, existing `helm.py` + `guardrails.py` + `knowledge_base.py`
 
 **PRD references:** Feature 1–3 demo scenarios (§4), API contract (§5.3), three-act demo (§7.1)
 
@@ -16,13 +16,13 @@
 
 | File | Responsibility |
 |------|----------------|
-| `overlord/backend/agents/scenarios.py` | All hardcoded scenario payloads + `SCENARIO_META` |
-| `overlord/backend/overlord_prompt.py` | `build_intent_conflict_prompt`, `build_guardrail_resolution_prompt` |
-| `overlord/backend/overlord.py` | Route `arbitrate()` to correct prompt by `conflict_type` or scenario name |
-| `overlord/backend/main.py` | `GET /`, `GET /demo/smoke`, wire resolve with scenario kind |
-| `overlord/backend/tests/test_scenarios.py` | Assert all three scenarios exist |
-| `overlord/backend/tests/test_demo_smoke.py` | HTTP smoke for `/demo/smoke` |
-| `overlord/README.md` | How to run demo smoke + per-act curl commands |
+| `helm/backend/agents/scenarios.py` | All hardcoded scenario payloads + `SCENARIO_META` |
+| `helm/backend/helm_prompt.py` | `build_intent_conflict_prompt`, `build_guardrail_resolution_prompt` |
+| `helm/backend/helm.py` | Route `arbitrate()` to correct prompt by `conflict_type` or scenario name |
+| `helm/backend/main.py` | `GET /`, `GET /demo/smoke`, wire resolve with scenario kind |
+| `helm/backend/tests/test_scenarios.py` | Assert all three scenarios exist |
+| `helm/backend/tests/test_demo_smoke.py` | HTTP smoke for `/demo/smoke` |
+| `helm/README.md` | How to run demo smoke + per-act curl commands |
 
 **Already exists (do not rewrite):**
 
@@ -35,13 +35,13 @@
 ### Task 1: Scenario registry + intent_conflict payload
 
 **Files:**
-- Modify: `overlord/backend/agents/scenarios.py`
-- Modify: `overlord/backend/tests/test_scenarios.py`
+- Modify: `helm/backend/agents/scenarios.py`
+- Modify: `helm/backend/tests/test_scenarios.py`
 
 - [ ] **Step 1: Write failing tests**
 
 ```python
-# overlord/backend/tests/test_scenarios.py
+# helm/backend/tests/test_scenarios.py
 from agents.scenarios import SCENARIOS, SCENARIO_META
 
 
@@ -69,18 +69,18 @@ def test_intent_conflict_scenario_from_prd():
 
 - [ ] **Step 2: Run test — expect FAIL**
 
-Run: `cd overlord && source .venv/bin/activate && pytest backend/tests/test_scenarios.py -v`
+Run: `cd helm && source .venv/bin/activate && pytest backend/tests/test_scenarios.py -v`
 
 Expected: `KeyError: 'intent_conflict'` or missing `SCENARIO_META`
 
 - [ ] **Step 3: Implement scenarios**
 
-Replace `overlord/backend/agents/scenarios.py` with:
+Replace `helm/backend/agents/scenarios.py` with:
 
 ```python
 from bedrock.guardrails import GUARDRAIL_DEMO_SCENARIO
 
-# kind drives prompt selection in overlord.arbitrate()
+# kind drives prompt selection in helm.arbitrate()
 SCENARIO_META: dict[str, dict[str, str]] = {
     "merge_conflict": {
         "kind": "merge",
@@ -166,7 +166,7 @@ Expected: `4 passed` (including existing merge test if updated)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/agents/scenarios.py overlord/backend/tests/test_scenarios.py
+git add helm/backend/agents/scenarios.py helm/backend/tests/test_scenarios.py
 git commit -m "feat(scenarios): register merge, intent, and guardrail demo scenarios"
 ```
 
@@ -175,14 +175,14 @@ git commit -m "feat(scenarios): register merge, intent, and guardrail demo scena
 ### Task 2: Intent + guardrail arbitration prompts
 
 **Files:**
-- Modify: `overlord/backend/overlord_prompt.py`
-- Create: `overlord/backend/tests/test_overlord_prompt_intent.py`
+- Modify: `helm/backend/helm_prompt.py`
+- Create: `helm/backend/tests/test_helm_prompt_intent.py`
 
 - [ ] **Step 1: Write failing tests**
 
 ```python
-# overlord/backend/tests/test_overlord_prompt_intent.py
-from overlord_prompt import (
+# helm/backend/tests/test_helm_prompt_intent.py
+from helm_prompt import (
     build_guardrail_resolution_prompt,
     build_intent_conflict_prompt,
 )
@@ -211,9 +211,9 @@ def test_build_guardrail_resolution_prompt_mentions_block():
 
 - [ ] **Step 2: Run — expect FAIL**
 
-Run: `pytest backend/tests/test_overlord_prompt_intent.py -v`
+Run: `pytest backend/tests/test_helm_prompt_intent.py -v`
 
-- [ ] **Step 3: Append to overlord_prompt.py**
+- [ ] **Step 3: Append to helm_prompt.py**
 
 ```python
 def build_intent_conflict_prompt(agent_a: dict, agent_b: dict) -> str:
@@ -223,7 +223,7 @@ def build_intent_conflict_prompt(agent_a: dict, agent_b: dict) -> str:
         "resolved_code": "string — unified intent directive BOTH agents should follow (2-4 sentences); may include short code sketch",
         "tokens_saved_estimate": "string — e.g. '~1800 tokens saved vs agents looping on goals'",
     }
-    return f"""You are Overlord, resolving INTENT CONFLICTS between two AI coding agents.
+    return f"""You are Helm, resolving INTENT CONFLICTS between two AI coding agents.
 
 The agents have NOT necessarily edited the same lines yet, but their stated goals contradict.
 Your job:
@@ -261,7 +261,7 @@ def build_guardrail_resolution_prompt(
         "tokens_saved_estimate": "string",
         "verdict": "modify | block | allow_with_changes",
     }
-    return f"""You are Overlord. A proactive guardrail BLOCKED an agent action before execution.
+    return f"""You are Helm. A proactive guardrail BLOCKED an agent action before execution.
 
 Guardrail rule: {rule}
 Guardrail message: {message}
@@ -282,13 +282,13 @@ Respond ONLY with JSON matching:
 
 - [ ] **Step 4: Run tests — expect PASS**
 
-Run: `pytest backend/tests/test_overlord_prompt_intent.py -v`
+Run: `pytest backend/tests/test_helm_prompt_intent.py -v`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/overlord_prompt.py overlord/backend/tests/test_overlord_prompt_intent.py
-git commit -m "feat(overlord): intent and guardrail arbitration prompts"
+git add helm/backend/helm_prompt.py helm/backend/tests/test_helm_prompt_intent.py
+git commit -m "feat(helm): intent and guardrail arbitration prompts"
 ```
 
 ---
@@ -296,17 +296,17 @@ git commit -m "feat(overlord): intent and guardrail arbitration prompts"
 ### Task 3: Route `arbitrate()` by scenario kind + mock responses
 
 **Files:**
-- Modify: `overlord/backend/overlord.py`
-- Modify: `overlord/backend/tests/test_overlord.py`
+- Modify: `helm/backend/helm.py`
+- Modify: `helm/backend/tests/test_helm.py`
 
 - [ ] **Step 1: Write failing test**
 
 ```python
-# Append to overlord/backend/tests/test_overlord.py
+# Append to helm/backend/tests/test_helm.py
 def test_arbitrate_intent_conflict_mock():
     import os
-    os.environ["OVERLORD_MOCK_BEDROCK"] = "1"
-    from overlord import arbitrate
+    os.environ["HELM_MOCK_BEDROCK"] = "1"
+    from helm import arbitrate
 
     result = arbitrate(
         {"intent": "max performance", "code": "# a"},
@@ -318,13 +318,13 @@ def test_arbitrate_intent_conflict_mock():
 
 - [ ] **Step 2: Run — expect FAIL**
 
-Run: `pytest backend/tests/test_overlord.py::test_arbitrate_intent_conflict_mock -v`
+Run: `pytest backend/tests/test_helm.py::test_arbitrate_intent_conflict_mock -v`
 
-- [ ] **Step 3: Update overlord.py**
+- [ ] **Step 3: Update helm.py**
 
 Add parameter `conflict_kind: str = "merge"` to `arbitrate()`.
 
-When `OVERLORD_MOCK_BEDROCK=1`:
+When `HELM_MOCK_BEDROCK=1`:
 - `merge` → existing `_mock_merge_resolution()`
 - `intent` → return `conflict_type: intent_conflict`, reasoning mentions performance + dependencies
 - `guardrail` → return `conflict_type: proactive_guardrail`, `verdict: modify`, resolved_code about refactoring around cache
@@ -336,15 +336,15 @@ When live Bedrock:
 
 Parse with `BedrockArbitrationResult` but allow extra keys (`verdict`) via `model_validate` then `model_dump()` merged with raw dict for guardrail.
 
-- [ ] **Step 4: Run overlord tests — expect PASS**
+- [ ] **Step 4: Run helm tests — expect PASS**
 
-Run: `pytest backend/tests/test_overlord.py -v`
+Run: `pytest backend/tests/test_helm.py -v`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/overlord.py overlord/backend/tests/test_overlord.py
-git commit -m "feat(overlord): arbitrate by scenario kind with mock paths"
+git add helm/backend/helm.py helm/backend/tests/test_helm.py
+git commit -m "feat(helm): arbitrate by scenario kind with mock paths"
 ```
 
 ---
@@ -352,18 +352,18 @@ git commit -m "feat(overlord): arbitrate by scenario kind with mock paths"
 ### Task 4: Wire resolve route + guardrail handler to scenario kinds
 
 **Files:**
-- Modify: `overlord/backend/main.py`
-- Modify: `overlord/backend/bedrock/guardrails.py`
-- Create: `overlord/backend/tests/test_resolve_intent.py`
+- Modify: `helm/backend/main.py`
+- Modify: `helm/backend/bedrock/guardrails.py`
+- Create: `helm/backend/tests/test_resolve_intent.py`
 
 - [ ] **Step 1: Write failing HTTP test**
 
 ```python
-# overlord/backend/tests/test_resolve_intent.py
+# helm/backend/tests/test_resolve_intent.py
 import os
 from fastapi.testclient import TestClient
 
-os.environ["OVERLORD_MOCK_BEDROCK"] = "1"
+os.environ["HELM_MOCK_BEDROCK"] = "1"
 from main import app  # noqa: E402
 
 client = TestClient(app)
@@ -427,7 +427,7 @@ Run: `pytest backend/tests/test_resolve_intent.py backend/tests/test_guardrails.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add overlord/backend/main.py overlord/backend/bedrock/guardrails.py overlord/backend/tests/test_resolve_intent.py
+git add helm/backend/main.py helm/backend/bedrock/guardrails.py helm/backend/tests/test_resolve_intent.py
 git commit -m "feat(api): resolve intent scenario; guardrail uses guardrail prompt"
 ```
 
@@ -436,17 +436,17 @@ git commit -m "feat(api): resolve intent scenario; guardrail uses guardrail prom
 ### Task 5: `GET /demo/smoke` — one endpoint to verify all three acts
 
 **Files:**
-- Modify: `overlord/backend/main.py`
-- Create: `overlord/backend/tests/test_demo_smoke.py`
+- Modify: `helm/backend/main.py`
+- Create: `helm/backend/tests/test_demo_smoke.py`
 
 - [ ] **Step 1: Write failing test**
 
 ```python
-# overlord/backend/tests/test_demo_smoke.py
+# helm/backend/tests/test_demo_smoke.py
 import os
 from fastapi.testclient import TestClient
 
-os.environ["OVERLORD_MOCK_BEDROCK"] = "1"
+os.environ["HELM_MOCK_BEDROCK"] = "1"
 from main import app  # noqa: E402
 
 client = TestClient(app)
@@ -473,7 +473,7 @@ Run: `pytest backend/tests/test_demo_smoke.py -v`
 @app.get("/")
 def root():
     return {
-        "service": "Overlord",
+        "service": "Helm",
         "docs": "/docs",
         "scenarios": "/scenarios",
         "demo_smoke": "/demo/smoke",
@@ -484,7 +484,7 @@ def root():
 def demo_smoke():
     """Run all three PRD demo paths with mock Bedrock; returns pass/fail checklist."""
     import os
-    os.environ["OVERLORD_MOCK_BEDROCK"] = "1"
+    os.environ["HELM_MOCK_BEDROCK"] = "1"
     checks = []
 
     # Act 1 — merge
@@ -548,7 +548,7 @@ def demo_smoke():
         import tempfile
 
         session = Path(tempfile.mkdtemp()) / "smoke-session.json"
-        os.environ["OVERLORD_SESSION_PATH"] = str(session)
+        os.environ["HELM_SESSION_PATH"] = str(session)
         result = guardrail_check()
         ok = (
             result["preflight"]["allowed"] is False
@@ -588,7 +588,7 @@ Run: `pytest backend/tests/test_demo_smoke.py -v`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/main.py overlord/backend/tests/test_demo_smoke.py
+git add helm/backend/main.py helm/backend/tests/test_demo_smoke.py
 git commit -m "feat(api): GET /demo/smoke checklist for all three acts"
 ```
 
@@ -597,7 +597,7 @@ git commit -m "feat(api): GET /demo/smoke checklist for all three acts"
 ### Task 6: README + manual verification script
 
 **Files:**
-- Modify: `overlord/README.md`
+- Modify: `helm/README.md`
 
 - [ ] **Step 1: Add Demo section to README**
 
@@ -613,7 +613,7 @@ git commit -m "feat(api): GET /demo/smoke checklist for all three acts"
 ### Quick verify (mock Bedrock)
 
 ```bash
-export OVERLORD_MOCK_BEDROCK=1
+export HELM_MOCK_BEDROCK=1
 cd backend && uvicorn main:app --reload --port 8000
 ```
 
@@ -633,7 +633,7 @@ Run server + `curl http://localhost:8000/demo/smoke` — confirm `all_passed: tr
 - [ ] **Step 3: Commit**
 
 ```bash
-git add overlord/README.md
+git add helm/README.md
 git commit -m "docs: three-act demo scenarios and smoke endpoint"
 ```
 
@@ -643,7 +643,7 @@ git commit -m "docs: three-act demo scenarios and smoke endpoint"
 
 - [ ] **Step 1: Run all tests**
 
-Run: `cd overlord && pytest backend/tests -v`
+Run: `cd helm && pytest backend/tests -v`
 
 Expected: all passed (count increases by ~8–10 from new files)
 
@@ -681,8 +681,8 @@ No TBD steps. Code blocks are complete.
 ## Manual test cheatsheet (after implementation)
 
 ```bash
-cd overlord && source .venv/bin/activate
-export OVERLORD_MOCK_BEDROCK=1
+cd helm && source .venv/bin/activate
+export HELM_MOCK_BEDROCK=1
 cd backend && uvicorn main:app --reload --port 8000
 ```
 
