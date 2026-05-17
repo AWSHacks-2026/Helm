@@ -238,7 +238,7 @@ cd frontend && npm install && npm run dev
 
 Open http://localhost:5173 — proxies `/api` and `/ws` to the backend. Use **Merge lab** for heuristic compare and live Haiku vs Overlord benchmarks.
 
-Requires Bedrock access to `us.anthropic.claude-sonnet-4-20250514-v1:0` in `us-east-1` when `OVERLORD_MOCK_BEDROCK` is unset.
+Requires Bedrock access to `us.anthropic.claude-sonnet-4-6` in `us-east-1` when `OVERLORD_MOCK_BEDROCK` is unset.
 
 ## MCP (Cursor / Claude Code)
 

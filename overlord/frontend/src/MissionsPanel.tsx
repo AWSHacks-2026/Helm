@@ -62,7 +62,7 @@ export default function MissionsPanel({ sessionId, onRefresh }: Props) {
 
   return (
     <section className="missions-panel">
-      <h2>Missions (Jira)</h2>
+      <h2>Missions (GitHub)</h2>
       <p className="missions-meta">
         This laptop: <strong>{AGENT_ID}</strong>
       </p>
@@ -73,7 +73,7 @@ export default function MissionsPanel({ sessionId, onRefresh }: Props) {
       <table className="missions-table">
         <thead>
           <tr>
-            <th>Key</th>
+            <th>Issue</th>
             <th>Title</th>
             <th>File</th>
             <th>Agent</th>

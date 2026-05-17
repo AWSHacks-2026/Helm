@@ -19,10 +19,8 @@ from bedrock.model_ids import resolve_inference_profile_id
 
 def _bedrock_model_id() -> str:
     return resolve_inference_profile_id(
-        os.getenv(
-            "OVERLORD_BEDROCK_MODEL_ID",
-            "us.anthropic.claude-sonnet-4-20250514-v1:0",
-        )
+        os.getenv("OVERLORD_BEDROCK_MODEL_ID")
+        or os.getenv("OVERLORD_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
     )
 
 
@@ -123,7 +121,8 @@ def _bedrock_hint(msg: str, model_id: str) -> str:
         )
     elif "Legacy" in msg or "ResourceNotFound" in msg or "use case" in msg.lower():
         hint = (
-            " Enable the model in Bedrock console → Model access (us-east-1). "
+            " Enable Claude Sonnet 4.6 in Bedrock → Model access (us-east-1) and set "
+            "OVERLORD_BEDROCK_MODEL=us.anthropic.claude-sonnet-4-6 in overlord/.env. "
             f"Tried: {model_id}"
         )
     return hint

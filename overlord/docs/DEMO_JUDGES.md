@@ -72,34 +72,34 @@ cd frontend && npm run dev
 
 Open http://localhost:5173 — session `mergeai-hackathon-demo` shows history from Acts A/B.
 
-## Act D — Jira delegation (missions)
+## Act D — GitHub Issues delegation (missions)
 
 **Server / one terminal:**
 
 ```bash
 export OVERLORD_MOCK_BEDROCK=1   # or 0 for live Sonnet dedup
-./scripts/demo_jira_delegation.sh
+./scripts/demo_github_delegation.sh
 ```
 
-**Talking point:** Two Jira tickets on the same file → Overlord delegates: one agent continues, one gets a reassigned task (token savings).
+**Talking point:** Two GitHub issues on the same file → Overlord delegates: one agent continues, one gets a reassigned task (token savings).
 
 **Laptop A** (`OVERLORD_AGENT_ID=agent_a`):
 
 ```bash
 export OVERLORD_AGENT_ID=agent_a
-./scripts/demo_jira_multi_machine.sh
+./scripts/demo_github_multi_machine.sh
 ```
 
 **Laptop B** (`OVERLORD_AGENT_ID=agent_b`) — after A started:
 
 ```bash
 export OVERLORD_AGENT_ID=agent_b
-./scripts/demo_jira_multi_machine.sh
+./scripts/demo_github_multi_machine.sh
 ```
 
-**Dashboard:** Missions table shows `PROJ-101` / `PROJ-102`, assigned agents, **Delegate all** / **Start**.
+**Dashboard:** Missions table shows `owner/repo#101` / `#102`, assigned agents, **Delegate all** / **Start**.
 
-**Real Jira (optional):** Label issue `overlord-ready` → webhook `POST /integrations/jira/webhook` with header `X-Overlord-Secret`, or `POST /integrations/jira/sync/PROJ-123`.
+**Real GitHub (optional):** Label issue `overlord-ready` → webhook `POST /integrations/github/webhook` with `X-Hub-Signature-256`, or `POST /integrations/github/sync/42`.
 
 ## Architecture one-liner
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from integrations.jira.component_map import resolve_file_path
+from integrations.path_map import resolve_file_path
 
 
 @dataclass(frozen=True)
@@ -15,31 +15,30 @@ class WorkItem:
     labels: list[str]
 
 
-def work_item_from_jira_issue(
+def work_item_from_github_issue(
     issue: dict,
     *,
-    project_key: str,
-    component_mapping: dict[str, str],
+    repo: str,
+    label_mapping: dict[str, str],
 ) -> WorkItem:
-    _ = project_key
-    key = issue.get("key", "")
-    fields = issue.get("fields") or {}
-    components = [c.get("name", "") for c in (fields.get("components") or []) if c.get("name")]
-    labels = list(fields.get("labels") or [])
-    description = fields.get("description") or ""
-    if isinstance(description, dict):
-        description = str(description)
-    file_path = resolve_file_path(
-        components=components,
-        labels=labels,
-        mapping=component_mapping,
-        description=str(description),
-    )
+    number = issue.get("number", 0)
+    labels = [lb.get("name", "") for lb in (issue.get("labels") or []) if lb.get("name")]
+    body = str(issue.get("body") or "")
     return WorkItem(
-        external_id=key,
-        source="jira",
-        title=str(fields.get("summary") or key),
-        description=str(description),
-        file_path=file_path,
+        external_id=f"{repo}#{number}",
+        source="github",
+        title=str(issue.get("title") or f"Issue {number}"),
+        description=body,
+        file_path=resolve_file_path(
+            components=[],
+            labels=labels,
+            mapping=label_mapping,
+            description=body,
+        ),
         labels=labels,
     )
+
+
+def github_issue_has_ready_label(issue: dict, ready_label: str) -> bool:
+    names = {lb.get("name", "") for lb in (issue.get("labels") or [])}
+    return ready_label in names
