@@ -72,6 +72,35 @@ cd frontend && npm run dev
 
 Open http://localhost:5173 — session `mergeai-hackathon-demo` shows history from Acts A/B.
 
+## Act D — Jira delegation (missions)
+
+**Server / one terminal:**
+
+```bash
+export OVERLORD_MOCK_BEDROCK=1   # or 0 for live Sonnet dedup
+./scripts/demo_jira_delegation.sh
+```
+
+**Talking point:** Two Jira tickets on the same file → Overlord delegates: one agent continues, one gets a reassigned task (token savings).
+
+**Laptop A** (`OVERLORD_AGENT_ID=agent_a`):
+
+```bash
+export OVERLORD_AGENT_ID=agent_a
+./scripts/demo_jira_multi_machine.sh
+```
+
+**Laptop B** (`OVERLORD_AGENT_ID=agent_b`) — after A started:
+
+```bash
+export OVERLORD_AGENT_ID=agent_b
+./scripts/demo_jira_multi_machine.sh
+```
+
+**Dashboard:** Missions table shows `PROJ-101` / `PROJ-102`, assigned agents, **Delegate all** / **Start**.
+
+**Real Jira (optional):** Label issue `overlord-ready` → webhook `POST /integrations/jira/webhook` with header `X-Overlord-Secret`, or `POST /integrations/jira/sync/PROJ-123`.
+
 ## Architecture one-liner
 
 > Shared **Overlord API** is the clerk; **AgentCore Runtime** is the judge. Every laptop’s subagent talks to the same clerk so guardrails and history stay in sync.

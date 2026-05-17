@@ -16,7 +16,10 @@ from routes.live_benchmark import router as live_benchmark_router
 from routes.merge_fleet_benchmark import router as merge_fleet_benchmark_router
 from routes.merge_lab import router as merge_lab_router
 from routes.resolve import router as resolve_router
+from routes.jira_integration import router as jira_integration_router
+from routes.missions import router as missions_router
 from store.conflicts import ConflictStore
+from store.missions import MissionStore
 from store.sessions import SessionStore
 from ws.hub import ConnectionManager
 
@@ -24,6 +27,7 @@ from ws.hub import ConnectionManager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.conflict_store = ConflictStore()
+    app.state.mission_store = MissionStore()
     app.state.session_store = SessionStore()
     app.state.ws_hub = ConnectionManager()
     yield
@@ -50,3 +54,5 @@ app.include_router(guardrail_demo_router)
 app.include_router(demo_smoke_router)
 app.include_router(conflicts_router)
 app.include_router(history_router)
+app.include_router(missions_router)
+app.include_router(jira_integration_router)

@@ -102,6 +102,10 @@ class HistoryEvent(BaseModel):
         "guardrail_blocked",
         "conflict_resolved",
         "conflict_approved",
+        "mission_created",
+        "mission_assigned",
+        "mission_delegated",
+        "mission_started",
     ]
     payload: dict
 
@@ -150,3 +154,51 @@ class GitMergeConflictResponse(BaseModel):
     session_id: str
     file_path: str
     resolution: ResolutionPayload
+
+
+MissionStatus = Literal["queued", "assigned", "in_progress", "blocked", "done", "cancelled"]
+
+
+class MissionCreateRequest(BaseModel):
+    session_id: str = Field(default_factory=resolve_team_session_id)
+    external_id: str | None = None
+    source: Literal["manual", "jira"] = "manual"
+    title: str
+    description: str = ""
+    file_path: str = ""
+    preferred_agent_id: str | None = None
+
+
+class MissionSummary(BaseModel):
+    mission_id: str
+    session_id: str
+    external_id: str | None
+    source: str
+    title: str
+    file_path: str
+    status: MissionStatus
+    assigned_agent_id: str | None
+    suggested_task: str | None = None
+    created_at: str
+    updated_at: str
+
+
+class MissionDelegateRequest(BaseModel):
+    session_id: str = Field(default_factory=resolve_team_session_id)
+    use_llm_dedup: bool = True
+
+
+class MissionDelegateResponse(BaseModel):
+    session_id: str
+    assignments: list[dict]
+    duplicate_detected: bool
+    reasoning: str = ""
+
+
+class MissionStartRequest(BaseModel):
+    agent_id: str | None = None
+
+
+class JiraWebhookPayload(BaseModel):
+    issue: dict
+    webhookEvent: str | None = None

@@ -9,6 +9,7 @@ import {
 } from "./api/client";
 import DemoLab from "./DemoLab";
 import MergeLab from "./MergeLab";
+import MissionsPanel from "./MissionsPanel";
 import { useConflictStream } from "./hooks/useConflictStream";
 
 const SESSION_KEY = "overlord_session_id";
@@ -76,6 +77,7 @@ function Dashboard() {
           placeholder="session_id"
         />
         <p>Tokens saved (latest): {tokensSaved}</p>
+        <MissionsPanel sessionId={sessionId} onRefresh={refresh} />
         <h2>Conflicts</h2>
         {error && <p style={{ color: "#f88" }}>{error}</p>}
         {conflicts.map((c) => (
