@@ -14,6 +14,7 @@ const trace: FlightTrace = {
       narration: "a",
       agents: [],
       helm: { active: false },
+      edges: [],
       files: [],
     },
     {
@@ -23,6 +24,7 @@ const trace: FlightTrace = {
       narration: "b",
       agents: [],
       helm: { active: true, action: "dedup" },
+      edges: [],
       files: [],
     },
   ],
