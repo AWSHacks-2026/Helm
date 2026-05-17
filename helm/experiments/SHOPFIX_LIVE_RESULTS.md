@@ -3,7 +3,7 @@
 **Last updated:** 2026-05-17  
 **Account:** `137792805243` (us-east-1)  
 **Config:** `HELM_MOCK_BEDROCK=0`, `HELM_GATE_ENABLED=1`, `LIVE_AGENT_MAX_TOKENS=2048`, `LIVE_AGENT_REASSIGN_MAX_TOKENS=1024`  
-**Fixture:** `helm/fixtures/shopfix` (Etsy-style FastAPI + React, copied into temp git repos per run)  
+**Fixture:** `shopfix/` at repo root (Etsy-style FastAPI + React, copied into temp git repos per run)  
 **Raw JSON:** `results/shopfix_live_20260517_070051.json`, `shopfix_live_20260517_070205.json`, `shopfix_live_20260517_070543.json`
 
 These numbers come from **`python scripts/run_shopfix_live_benchmark.py`** — Haiku agent edits on branches, git merge, pytest quality gate, Sonnet fleet dedup when the contention gate tier is `arbitrate`. No mock Bedrock.
@@ -63,8 +63,8 @@ python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # ShopFix backend tests (once)
-cd fixtures/shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt && pytest -q && cd ../../..
+cd shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && pytest -q && cd ../../helm
 
 export HELM_MOCK_BEDROCK=0 HELM_GATE_ENABLED=1 AWS_DEFAULT_REGION=us-east-1
 export LIVE_AGENT_MAX_TOKENS=2048 LIVE_AGENT_REASSIGN_MAX_TOKENS=1024

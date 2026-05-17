@@ -5,7 +5,8 @@ from pathlib import Path
 
 import yaml
 
-FIXTURE_ROOT = Path(__file__).resolve().parents[2] / "fixtures" / "shopfix"
+# Repo root is three levels up from helm/backend/agents/
+FIXTURE_ROOT = Path(__file__).resolve().parents[3] / "shopfix"
 SCENARIO_DIR = FIXTURE_ROOT / "scenarios"
 
 

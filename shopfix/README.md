@@ -1,6 +1,8 @@
 # ShopFix
 
-Small Etsy-style marketplace fixture for Helm git benchmarks and judge demos.
+Small Etsy-style marketplace app (repo root, outside `helm/`) for Helm git benchmarks and judge demos.
+
+Helm harness: `helm/scripts/run_shopfix_benchmark.py`, `helm/scripts/run_shopfix_live_benchmark.py`. See `helm/experiments/SHOPFIX_BENCHMARK.md`.
 
 ## Quick start
 

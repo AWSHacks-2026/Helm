@@ -27,7 +27,7 @@ This document summarizes live benchmark runs comparing **baseline (no Helm)** vs
 
 ## 0. Contention gate — real git on ShopFix (authentic)
 
-**Scenario:** ShopFix Etsy clone in `helm/fixtures/shopfix` — real git sandboxes, Haiku agent edits, pytest gate.
+**Scenario:** ShopFix Etsy clone in repo-root `shopfix/` — real git sandboxes, Haiku agent edits, pytest gate.
 
 **Config:** `HELM_MOCK_BEDROCK=0`, `HELM_GATE_ENABLED=1` — see **[`SHOPFIX_LIVE_RESULTS.md`](SHOPFIX_LIVE_RESULTS.md)** for full tables and JSON paths.
 

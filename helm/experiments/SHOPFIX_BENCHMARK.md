@@ -1,6 +1,6 @@
 # ShopFix Git Benchmark
 
-Compares **baseline** (blind git merges) vs **Helm** (intent API + contention gate) on the ShopFix Etsy-lite fixture.
+Compares **baseline** (blind git merges) vs **Helm** (intent API + contention gate) on the ShopFix Etsy-lite app at **[`../../shopfix/`](../../shopfix/)** (repo root).
 
 ## Prerequisites
 
@@ -10,10 +10,16 @@ Compares **baseline** (blind git merges) vs **Helm** (intent API + contention ga
 
 ## Run
 
+From `helm/`:
+
 ```bash
 export HELM_MOCK_BEDROCK=1 HELM_GATE_ENABLED=1
+python scripts/run_shopfix_benchmark.py --suite all --agents 2,4 --mock
+```
 
-## Live (real AWS) benchmarks
+Results: `helm/experiments/results/shopfix_<timestamp>.json`
+
+### Live (real AWS) benchmarks
 
 ```bash
 export HELM_MOCK_BEDROCK=0 HELM_GATE_ENABLED=1 AWS_DEFAULT_REGION=us-east-1
@@ -21,19 +27,19 @@ python scripts/run_shopfix_live_benchmark.py --suite disjoint --agents 4
 ```
 
 Results: [`SHOPFIX_LIVE_RESULTS.md`](SHOPFIX_LIVE_RESULTS.md) and `experiments/results/shopfix_live_*.json`.
-python helm/scripts/run_shopfix_benchmark.py --suite all --agents 2,4 --mock
-```
 
-Results: `helm/experiments/results/shopfix_<timestamp>.json`
+Override fixture path: `SHOPFIX_FIXTURE_DIR=/path/to/shopfix` (default resolves to repo-root `shopfix/`).
 
 ## Judge demo (browse the app)
 
+From repo root:
+
 ```bash
-cd helm/fixtures/shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
+cd shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && python scripts/seed.py
 uvicorn app.main:app --port 8001
 
-cd helm/fixtures/shopfix/frontend && npm ci && npm run dev
+cd shopfix/frontend && npm ci && npm run dev
 # http://localhost:5173 — login weaver@shopfix.test / demo1234
 ```
 

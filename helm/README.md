@@ -57,11 +57,11 @@ Helm skips Bedrock coordination when agents do not collide (disjoint files, no i
 
 ### ShopFix demo (Etsy-lite + git benchmark)
 
-Runnable marketplace fixture at [`fixtures/shopfix/`](fixtures/shopfix/) and local-git benchmark harness. See [`experiments/SHOPFIX_BENCHMARK.md`](experiments/SHOPFIX_BENCHMARK.md).
+Runnable marketplace app at [`../shopfix/`](../shopfix/) (repo root, outside `helm/`). Benchmark harness lives under `helm/scripts/`. See [`experiments/SHOPFIX_BENCHMARK.md`](experiments/SHOPFIX_BENCHMARK.md).
 
 ```bash
-# Browse the app
-cd fixtures/shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
+# Browse the app (from repo root)
+cd shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && python scripts/seed.py && uvicorn app.main:app --port 8001
 cd ../frontend && npm ci && npm run dev
 

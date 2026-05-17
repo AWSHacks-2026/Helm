@@ -125,8 +125,8 @@ Etsy-lite fixture for **real git + optional real Bedrock** metrics:
 Docs: `experiments/SHOPFIX_BENCHMARK.md`, `experiments/SHOPFIX_LIVE_RESULTS.md`.
 
 ```bash
-# ShopFix app alone (teammate demo can use another port)
-cd fixtures/shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
+# ShopFix app alone (repo root — sibling of helm/)
+cd shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && python scripts/seed.py
 uvicorn app.main:app --port 8001
 ```
@@ -157,7 +157,7 @@ backend/bedrock/intent_overlap.py    # overlap + contradiction helpers
 backend/services/intent_alignment.py # POST /intents alignment + contention payload
 backend/agents/dedup_harness.py      # fleet dedup benchmark + gate
 backend/store/sessions.py            # file_clusters(), intents_on_file()
-fixtures/shopfix/                    # Etsy clone benchmark repo
+../shopfix/                          # Etsy clone app (repo root)
 backend/tests/bedrock/test_contention_gate.py
 ```
 
@@ -179,4 +179,4 @@ See `docs/AWS_SETUP.md` and `docs/DEMO_JUDGES.md` for multi-machine demos.
 - Use the **same branch** after `git pull origin feature/contention-gated-coordination`.
 - Coordinate **session_id** if testing guardrails + intents together on shared Helm API.
 - Contention gate tests do not require ShopFix; guardrail tests do not require ShopFix.
-- Avoid committing `helm/experiments/results/`, `.venv`, `fixtures/shopfix/**/.venv`, `node_modules/`.
+- Avoid committing `helm/experiments/results/`, `.venv`, `shopfix/**/.venv`, `node_modules/`.
