@@ -1,4 +1,9 @@
+import os
+
 import pytest
+
+os.environ.setdefault("OVERLORD_USE_LOCAL_MEMORY", "true")
+os.environ.setdefault("OVERLORD_USE_LOCAL_POLICY", "true")
 
 from main import app
 from store.conflicts import ConflictStore

@@ -53,6 +53,43 @@ curl -s -X POST "$OVERLORD_API_BASE/guardrails/check" -H 'Content-Type: applicat
 
 **Expected:** `"allowed": false` — Agent B blocked because Agent A already owns the file.
 
+## Act A2 — Gratitude handoff (blocked write)
+
+After Act A, inspect the same guardrail response (or re-run the curl). Expect a `handoff` object:
+
+```json
+{
+  "allowed": false,
+  "handoff": {
+    "owner_agent_id": "agent_a",
+    "owner_intent": "...",
+    "message": "Thanks for coordinating — agent_a is carrying `src/user.py` ...",
+    "suggested_file_path": "app/billing/invoices.py"
+  }
+}
+```
+
+**Talking point:** Instead of a dead end, the blocked agent gets a polite redirect and optional backlog file.
+
+## Act A3 — Auto intent alignment
+
+```bash
+curl -s -X POST "$OVERLORD_API_BASE/intents" -H 'Content-Type: application/json' -d '{
+  "session_id": "mergeai-hackathon-demo",
+  "agent_id": "agent_a",
+  "file_path": "src/user.py",
+  "intent": "maximum performance caching"
+}'
+curl -s -X POST "$OVERLORD_API_BASE/intents" -H 'Content-Type: application/json' -d '{
+  "session_id": "mergeai-hackathon-demo",
+  "agent_id": "agent_b",
+  "file_path": "src/user.py",
+  "intent": "minimize external dependencies"
+}' | python3 -m json.tool
+```
+
+**Expected:** Second response has `"overlap_detected": true` and `alignment.unified_intent`. Check `inference_tier` when `OVERLORD_MOCK_BEDROCK=0`.
+
 ## Act B — Git merge conflict
 
 ```bash
@@ -72,6 +109,10 @@ cd frontend && npm run dev
 
 Open http://localhost:5173 — session `mergeai-hackathon-demo` shows history from Acts A/B.
 
+## Act C2 — Gratitude Ledger panel
+
+Above **Missions (Jira)**, the dashboard shows coordination stats: intents declared, guardrails blocked, alignments, dedup yields, tokens saved, and Haiku/Sonnet call counts. Run Acts A/A3/D to watch counters move.
+
 ## Act D — Jira delegation (missions)
 
 **Server / one terminal:**
@@ -81,7 +122,7 @@ export OVERLORD_MOCK_BEDROCK=1   # or 0 for live Sonnet dedup
 ./scripts/demo_jira_delegation.sh
 ```
 
-**Talking point:** Two Jira tickets on the same file → Overlord delegates: one agent continues, one gets a reassigned task (token savings).
+**Talking point:** Two Jira tickets on the same file → Overlord delegates: one agent continues, one gets **PROJ-103** on `app/billing/invoices.py` via the Thanksgiving queue (not vague LLM text).
 
 **Laptop A** (`OVERLORD_AGENT_ID=agent_a`):
 

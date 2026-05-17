@@ -9,6 +9,7 @@ import {
 } from "./api/client";
 import DemoLab from "./DemoLab";
 import MergeLab from "./MergeLab";
+import GratitudeLedgerPanel from "./GratitudeLedger";
 import MissionsPanel from "./MissionsPanel";
 import { useConflictStream } from "./hooks/useConflictStream";
 
@@ -77,6 +78,7 @@ function Dashboard() {
           placeholder="session_id"
         />
         <p>Tokens saved (latest): {tokensSaved}</p>
+        <GratitudeLedgerPanel sessionId={sessionId} onRefresh={refresh} />
         <MissionsPanel sessionId={sessionId} onRefresh={refresh} />
         <h2>Conflicts</h2>
         {error && <p style={{ color: "#f88" }}>{error}</p>}

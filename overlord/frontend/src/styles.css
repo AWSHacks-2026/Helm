@@ -257,3 +257,41 @@ input {
 .live-benchmark-summary.fail {
   border-left-color: #f44336;
 }
+
+.gratitude-panel {
+  margin-bottom: 1rem;
+}
+
+.gratitude-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.gratitude-card {
+  background: #0f1115;
+  border: 1px solid #2a2f3a;
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gratitude-metric-label {
+  font-size: 0.75rem;
+  color: #9aa3b2;
+}
+
+.gratitude-timeline {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.gratitude-kind {
+  color: #7eb8ff;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}

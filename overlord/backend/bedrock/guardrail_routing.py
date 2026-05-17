@@ -5,31 +5,21 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from agents.haiku_agent import agent_model_id
-from bedrock.model_ids import resolve_inference_profile_id
+from bedrock.inference_routing import (
+    ComplexityInput,
+    max_tokens_for_tier,
+    model_id_for_tier,
+    select_inference_tier,
+    sonnet_min_agents as inference_sonnet_min_agents,
+)
 
 
 def guardrail_strategy() -> str:
     return os.getenv("GUARDRAIL_STRATEGY", "tiered").strip().lower()
 
 
-def sonnet_model_id() -> str:
-    return resolve_inference_profile_id(
-        os.getenv("OVERLORD_BEDROCK_MODEL_ID")
-        or os.getenv("OVERLORD_BEDROCK_MODEL", "us.anthropic.claude-sonnet-4-6")
-    )
-
-
-def haiku_max_tokens() -> int:
-    return int(os.getenv("GUARDRAIL_HAIKU_MAX_TOKENS", "1024"))
-
-
-def sonnet_max_tokens() -> int:
-    return int(os.getenv("GUARDRAIL_SONNET_MAX_TOKENS", "1500"))
-
-
 def sonnet_min_agents() -> int:
-    return int(os.getenv("GUARDRAIL_SONNET_MIN_AGENTS", "3"))
+    return inference_sonnet_min_agents()
 
 
 def sonnet_min_files() -> int:
@@ -93,16 +83,25 @@ def select_guardrail_tier(
     if kb_context and len(kb_context) >= sonnet_kb_event_threshold():
         return "sonnet"
 
-    return "haiku"
+    file_count = count_distinct_files(proposed_action, kb_context)
+    inp = ComplexityInput(
+        operation="guardrail",
+        agent_count=agent_count,
+        file_count=file_count,
+        kb_event_count=len(kb_context or []),
+        total_text_chars=len(str(proposed_action or {})),
+        preflight_rule=preflight_rule,
+        has_substantive_code=False,
+    )
+    return select_inference_tier(inp)
 
 
-def model_id_for_tier(tier: str) -> str:
-    if tier == "haiku":
-        return agent_model_id()
-    return sonnet_model_id()
-
-
-def max_tokens_for_tier(tier: str) -> int:
-    if tier == "haiku":
-        return haiku_max_tokens()
-    return sonnet_max_tokens()
+__all__ = [
+    "count_distinct_files",
+    "escalate_sonnet_enabled",
+    "guardrail_strategy",
+    "max_tokens_for_tier",
+    "model_id_for_tier",
+    "select_guardrail_tier",
+    "sonnet_min_agents",
+]

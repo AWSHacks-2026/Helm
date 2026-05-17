@@ -19,6 +19,7 @@ from bedrock.guardrail_routing import (
     select_guardrail_tier,
     sonnet_min_agents,
 )
+from bedrock.inference_routing import ComplexityInput, select_inference_tier
 from overlord_prompt import (
     build_guardrail_resolution_prompt,
     build_intent_conflict_prompt,
@@ -125,10 +126,26 @@ def _arbitrate_file_group(file_path: str, agents_on_file: dict[str, dict[str, An
             agents_on_file[ids[0]],
             agents_on_file[ids[1]],
         )
+        total_chars = sum(
+            len(agents_on_file[aid].get("intent", "")) + len(agents_on_file[aid].get("code", ""))
+            for aid in ids
+        )
+        merge_inp = ComplexityInput(
+            operation="merge",
+            agent_count=2,
+            file_count=1,
+            kb_event_count=0,
+            total_text_chars=total_chars,
+            preflight_rule=None,
+            has_substantive_code=True,
+        )
+        tier = select_inference_tier(merge_inp)
+        merge_model = model_id_for_tier(tier)
+        merge_max_tokens = max(max_tokens_for_tier(tier), max_tokens)
         text, usage = invoke_anthropic_messages(
-            model_id=OVERLORD_MODEL,
+            model_id=merge_model,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens,
+            max_tokens=merge_max_tokens,
             role=f"overlord-merge-{file_path.replace('/', '-')}",
         )
         parsed = _parse_arbitration_response(text)
@@ -443,6 +460,39 @@ def resolve_guardrail(
     return result
 
 
+def align_intents_tracked(
+    agent_a: dict,
+    agent_b: dict,
+    *,
+    kb_context: str | list[dict[str, Any]] | None = None,
+    tier: str = "haiku",
+) -> dict[str, Any]:
+    """Tiered intent alignment for overlapping declares on the same file."""
+    if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
+        return _mock_intent_resolution()
+
+    prompt = build_intent_conflict_prompt(agent_a, agent_b)
+    prompt = _append_kb_context(prompt, kb_context)
+    text, usage = invoke_anthropic_messages(
+        model_id=model_id_for_tier(tier),
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=max_tokens_for_tier(tier),
+        role=f"overlord-intent-{tier}",
+    )
+    raw = extract_json_object(text)
+    result = dict(raw)
+    result.setdefault("conflict_type", "intent_conflict")
+    result.setdefault("tokens_saved_estimate", raw.get("tokens_saved_estimate", "~500"))
+    result["inference_tier"] = tier
+    result["_usage"] = {
+        "model_id": usage.model_id,
+        "input_tokens": usage.input_tokens,
+        "output_tokens": usage.output_tokens,
+        "latency_ms": usage.latency_ms,
+    }
+    return result
+
+
 def _arbitrate_tracked(
     agent_a: dict,
     agent_b: dict,
@@ -500,19 +550,32 @@ def _parse_arbitration_response(text: str) -> dict[str, Any]:
 
 
 def detect_duplication(agent_a: dict, agent_b: dict) -> dict[str, Any]:
-    """Call Sonnet via Bedrock to detect duplicate semantic work between agents."""
+    """Detect duplicate semantic work between agents with tiered Haiku/Sonnet routing."""
     if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
-        return _mock_duplication_resolution()
+        result = _mock_duplication_resolution()
+        result["inference_tier"] = "haiku"
+        return result
 
+    inp = ComplexityInput(
+        operation="dedup",
+        agent_count=2,
+        file_count=1,
+        kb_event_count=0,
+        total_text_chars=len(agent_a.get("intent", "")) + len(agent_b.get("intent", "")),
+        preflight_rule=None,
+        has_substantive_code=bool(agent_a.get("code") or agent_b.get("code")),
+    )
+    tier = select_inference_tier(inp)
     prompt = build_task_deduplication_prompt(agent_a, agent_b)
     text, usage = invoke_anthropic_messages(
-        model_id=OVERLORD_MODEL,
+        model_id=model_id_for_tier(tier),
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=1000,
-        role="overlord-dedup",
+        max_tokens=max_tokens_for_tier(tier),
+        role=f"overlord-dedup-{tier}",
     )
     raw = extract_json_object(text)
     result = _normalize_duplication_resolution(raw)
+    result["inference_tier"] = tier
     result["_usage"] = {
         "model_id": usage.model_id,
         "input_tokens": usage.input_tokens,
