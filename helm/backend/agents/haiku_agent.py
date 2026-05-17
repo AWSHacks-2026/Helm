@@ -30,6 +30,14 @@ def reassign_max_tokens() -> int:
 MAX_TOKENS = continuation_max_tokens()
 
 
+def _language_hint(file_path: str) -> str:
+    if file_path.endswith((".tsx", ".ts")):
+        return "valid TypeScript/React for this file"
+    if file_path.endswith(".py"):
+        return "valid Python for this file"
+    return "valid source code for this file"
+
+
 def build_initial_edit_prompt(
     *,
     agent_id: str,
@@ -40,11 +48,13 @@ def build_initial_edit_prompt(
     peer_block = ""
     if peer_code:
         peer_block = f"\nThe other agent already wrote:\n```\n{peer_code}\n```\n"
+    lang = _language_hint(file_path)
     return (
         f"You are {agent_id}, an AI coding agent editing `{file_path}`.\n"
         f"Your intent: {intent}\n"
         f"{peer_block}"
-        "Output ONLY valid Python for this file section (no markdown fences, no explanation)."
+        f"Output ONLY {lang} (no markdown fences, no explanation). "
+        "Keep existing imports and structure; make a focused change."
     )
 
 
@@ -61,7 +71,7 @@ def build_merge_fix_prompt(
         f"Your intent: {intent}\n\n"
         f"Your last version:\n```\n{own_code}\n```\n\n"
         f"The other agent's version:\n```\n{peer_code}\n```\n\n"
-        "Produce ONE merged Python implementation that satisfies your intent where possible. "
+        f"Produce ONE merged {_language_hint(file_path)} that satisfies your intent where possible. "
         "Do NOT leave git conflict markers. Output ONLY code."
     )
 

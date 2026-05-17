@@ -82,6 +82,13 @@ def test_get_scenario_returns_deep_copy():
     )
 
 
+def test_commerce_disjoint_scenario_exists():
+    assert "commerce_disjoint" in SCENARIOS
+    assert SCENARIO_META["commerce_disjoint"]["kind"] == "duplicate_work"
+    paths = set(SCENARIOS["commerce_disjoint"]["file_paths"].values())
+    assert len(paths) == 6
+
+
 def test_get_scenario_names_includes_existing_and_prd_scenarios():
     names = get_scenario_names()
 

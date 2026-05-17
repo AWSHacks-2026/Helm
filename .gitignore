@@ -15,3 +15,7 @@ __pycache__/
 *.pyc
 node_modules/
 helm/experiments/results/
+shopfix/.git/
+shopfix/backend/.venv/
+shopfix/frontend/node_modules/
+shopfix/frontend/dist/

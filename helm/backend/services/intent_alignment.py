@@ -15,9 +15,40 @@ def maybe_align_on_declare(
     file_path: str,
     intent: str,
 ) -> dict[str, Any]:
+    from bedrock.contention_gate import assess_intent, gate_enabled, log_gate_skip
+
     others = session_store.intents_on_file(session_id, file_path, exclude=agent_id)
+
+    if gate_enabled():
+        assessment = assess_intent(
+            session_store,
+            session_id,
+            agent_id=agent_id,
+            file_path=file_path,
+            intent=intent,
+        )
+        log_gate_skip(session_id, assessment)
+        if assessment.gate_tier == "allow" and not others:
+            return {
+                "overlap_detected": False,
+                "alignment": None,
+                "contention": assessment.to_dict(),
+            }
     if not others:
-        return {"overlap_detected": False, "alignment": None}
+        from bedrock.contention_gate import assess_intent
+
+        assessment = assess_intent(
+            session_store,
+            session_id,
+            agent_id=agent_id,
+            file_path=file_path,
+            intent=intent,
+        )
+        return {
+            "overlap_detected": False,
+            "alignment": None,
+            "contention": assessment.to_dict(),
+        }
 
     agent_a = {"intent": others[0]["intent"], "code": ""}
     agent_b = {"intent": intent, "code": ""}
@@ -52,4 +83,17 @@ def maybe_align_on_declare(
             tier=tier,
         )
 
-    return {"overlap_detected": True, "alignment": alignment}
+    from bedrock.contention_gate import assess_intent
+
+    assessment = assess_intent(
+        session_store,
+        session_id,
+        agent_id=agent_id,
+        file_path=file_path,
+        intent=intent,
+    )
+    return {
+        "overlap_detected": True,
+        "alignment": alignment,
+        "contention": assessment.to_dict(),
+    }

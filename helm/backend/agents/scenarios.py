@@ -21,6 +21,11 @@ SCENARIO_META: dict[str, dict[str, str]] = {
         "title": "Six-agent commerce platform duplication",
         "description": "Multiple agents overlap on auth and catalog; one Helm call coordinates all.",
     },
+    "commerce_disjoint": {
+        "kind": "duplicate_work",
+        "title": "Happy path — six agents, disjoint files",
+        "description": "No file clusters; contention gate should skip Bedrock dedup.",
+    },
     "dependency_conflict": {
         "kind": "dependency",
         "title": "Redis vs in-memory cache",
@@ -154,6 +159,50 @@ SCENARIOS: dict[str, dict[str, Any]] = {
                 "intent": "I am implementing invoice creation, line items, and tax in billing.",
                 "code": "# Agent F: invoice CRUD and tax calculation.",
                 "proposed_action": "Build invoice creation with line items and tax totals.",
+            },
+        },
+        "history": [],
+    },
+    "commerce_disjoint": {
+        "title": "Commerce Platform — No Overlap",
+        "file_paths": {
+            "agent_a": "app/auth/handlers.py",
+            "agent_b": "app/auth/middleware.py",
+            "agent_c": "app/catalog/products.py",
+            "agent_d": "app/catalog/search.py",
+            "agent_e": "app/billing/invoices.py",
+            "agent_f": "app/billing/tax.py",
+        },
+        "agents": {
+            "agent_a": {
+                "intent": "I am implementing JWT-based user authentication for the API login flow.",
+                "code": "# Agent A: login endpoints.",
+                "proposed_action": "Build API authentication endpoints for login and token issuance.",
+            },
+            "agent_b": {
+                "intent": "I am adding auth middleware and request guards for protected routes.",
+                "code": "# Agent B: middleware.",
+                "proposed_action": "Add middleware for session validation on protected routes.",
+            },
+            "agent_c": {
+                "intent": "I am implementing product search, filtering, and pagination in the catalog.",
+                "code": "# Agent C: catalog search.",
+                "proposed_action": "Add product search with filters and pagination.",
+            },
+            "agent_d": {
+                "intent": "I am building catalog search indexing and query tuning.",
+                "code": "# Agent D: search index.",
+                "proposed_action": "Implement search index helpers for the catalog module.",
+            },
+            "agent_e": {
+                "intent": "I am implementing invoice creation, line items, and tax in billing.",
+                "code": "# Agent E: invoices.",
+                "proposed_action": "Build invoice creation with line items and tax totals.",
+            },
+            "agent_f": {
+                "intent": "I am adding billing tax rules and jurisdiction tables.",
+                "code": "# Agent F: tax rules.",
+                "proposed_action": "Implement tax rule configuration for invoices.",
             },
         },
         "history": [],

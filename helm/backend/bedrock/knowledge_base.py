@@ -187,6 +187,14 @@ def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
             affected_agents=payload.get("affected_agents", []),
             session_id=session_id,
         )
+    elif event_type == "contention_gate":
+        record = log_action(
+            agent_id=payload.get("agent_id", "helm"),
+            action_type="contention_gate",
+            file_path=payload.get("file_path", ""),
+            description=json.dumps(payload),
+            session_id=session_id,
+        )
     else:
         record = log_action(
             agent_id=payload.get("agent_id", "unknown"),
@@ -206,8 +214,12 @@ def list_history(session_id: str) -> list[dict[str, Any]]:
         record_type = record["record_type"]
         payload = record.get("payload", {})
         event_type = _EVENT_TYPE_BY_RECORD.get(record_type, record_type)
-        if record_type == "action" and payload.get("action_type") == "guardrail_blocked":
-            event_type = "guardrail_blocked"
+        if record_type == "action":
+            action_type = payload.get("action_type", "")
+            if action_type == "guardrail_blocked":
+                event_type = "guardrail_blocked"
+            elif action_type == "contention_gate":
+                event_type = "contention_gate"
         events.append(
             {
                 "event_id": record["id"],

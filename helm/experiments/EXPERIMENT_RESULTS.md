@@ -25,6 +25,26 @@ This document summarizes live benchmark runs comparing **baseline (no Helm)** vs
 
 ---
 
+## 0. Contention gate — real git on ShopFix (authentic)
+
+**Scenario:** ShopFix Etsy clone in repo-root `shopfix/` — real git sandboxes, Haiku agent edits, pytest gate.
+
+**Config:** `HELM_MOCK_BEDROCK=0`, `HELM_GATE_ENABLED=1` — see **[`SHOPFIX_LIVE_RESULTS.md`](SHOPFIX_LIVE_RESULTS.md)** for full tables and JSON paths.
+
+| Suite | N | Baseline | Helm (gated) | Sonnet dedup | Gate |
+|-------|---|----------|--------------|--------------|------|
+| **disjoint** | 4 | **$0.012** / 23.3s | **$0.012** / 16.4s | **0** | `allow` |
+| **disjoint** | 6 | **$0.019** / 21.9s | **$0.019** / 22.0s | **0** | `allow` |
+| **contention** | 6 | **$0.028** / 28.6s | **$0.045** / 40.7s | **1** fleet | `arbitrate` |
+
+Run: `python scripts/run_shopfix_live_benchmark.py --suite all --agents 4,6` (refuses mock unless `--allow-mock`).
+
+**Harness-only mock** (`commerce_disjoint` string scenario): `HELM_MOCK_BEDROCK=1` — useful for CI, **not** cited as production cost proof.
+
+Contention scenarios still invoke Sonnet fleet dedup when file clusters ≥ `HELM_GATE_MIN_AGENTS`.
+
+---
+
 ## 1. Fleet deduplication (6 agents) — headline result
 
 **Scenario:** `duplicate_work_fleet` on the commerce platform — overlapping auth (agents a/b/c), catalog (d/e), billing (f).

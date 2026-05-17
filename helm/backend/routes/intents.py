@@ -43,7 +43,9 @@ def record_intent(payload: IntentRecordRequest, request: Request) -> IntentRecor
                 "payload": align["alignment"],
             },
         )
+    contention = align["contention"]
     return IntentRecordResponse(
         overlap_detected=align["overlap_detected"],
         alignment=align["alignment"],
+        contention=contention,
     )

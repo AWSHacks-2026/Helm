@@ -1,0 +1,11 @@
+suite: disjoint
+agent_counts: [2, 4, 6, 8]
+module_order:
+  - auth
+  - listings
+  - cart
+  - orders
+  - frontend_home
+  - frontend_cart
+  - frontend_shop
+  - frontend_listing

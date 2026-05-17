@@ -3,9 +3,11 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
+from bedrock.contention_gate import assess_dedup, gate_enabled, skipped_dedup_result
 from helm import detect_duplication, detect_duplication_fleet
 from services.thanksgiving_queue import pick_backlog_mission
 from store.missions import MissionRecord, MissionStore
+from store.sessions import SessionStore
 
 
 def _agent_payload(m: MissionRecord, agent_id: str) -> dict[str, Any]:
@@ -63,6 +65,35 @@ def delegate_missions(
                 store.assign(m.mission_id, agent_id)
                 assignments.append({"mission_id": m.mission_id, "assigned_agent_id": agent_id})
             continue
+
+        agents_map: dict[str, dict[str, Any]] = {}
+        file_paths_map: dict[str, str] = {}
+        for i, m in enumerate(group):
+            agent_id = m.assigned_agent_id or f"agent_{chr(ord('a') + i)}"
+            agents_map[agent_id] = _agent_payload(m, agent_id)
+            file_paths_map[agent_id] = file_path
+
+        if gate_enabled():
+            assessment = assess_dedup(
+                SessionStore(),
+                session_id,
+                agents=agents_map,
+                file_paths=file_paths_map,
+            )
+            if assessment.gate_tier == "allow":
+                for i, m in enumerate(group):
+                    agent_id = m.assigned_agent_id or f"agent_{chr(ord('a') + i)}"
+                    store.assign(m.mission_id, agent_id)
+                    assignments.append(
+                        {
+                            "mission_id": m.mission_id,
+                            "assigned_agent_id": agent_id,
+                            "file_path": file_path,
+                            "gate_skipped": True,
+                        }
+                    )
+                reasoning_parts.append(skipped_dedup_result(list(agents_map))["reasoning"])
+                continue
 
         if len(group) == 2:
             first, second = group[0], group[1]

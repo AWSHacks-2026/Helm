@@ -16,7 +16,9 @@ from agents.scenarios import get_scenario
 from agents.usage_ledger import UsageLedger
 from bedrock.cost_estimate import build_cost_comparison
 from bedrock.invoke_tracked import InvokeUsage
+from bedrock.contention_gate import assess_dedup, gate_enabled, skipped_dedup_result
 from helm import detect_duplication, detect_duplication_fleet
+from store.sessions import SessionStore
 
 DEFAULT_SCENARIO = "duplicate_work_fleet"
 DEFAULT_FILE = "app/auth/handlers.py"
@@ -28,7 +30,7 @@ def _live_disabled() -> bool:
 
 
 def get_dedup_scenario_names() -> list[str]:
-    return ["duplicate_work", "duplicate_work_fleet"]
+    return ["duplicate_work", "duplicate_work_fleet", "commerce_disjoint"]
 
 
 def _scenario_agents(scenario: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
@@ -198,12 +200,37 @@ def run_helm_path(
     agents_by_id = dict(agents)
     agent_ids = list(agents_by_id.keys())
 
-    if scenario_name in PAIRWISE_SCENARIOS:
+    gate_store = SessionStore()
+    session_id = os.getenv("HELM_BENCHMARK_SESSION", f"dedup-harness-{scenario_name}")
+    for aid, agent in agents_by_id.items():
+        gate_store.record_intent(
+            session_id=session_id,
+            agent_id=aid,
+            file_path=file_paths[aid],
+            intent=agent.get("intent", ""),
+        )
+
+    gate_skipped = False
+    gate_assessment: dict[str, Any] | None = None
+    if gate_enabled():
+        assessment = assess_dedup(
+            gate_store, session_id, agents=agents_by_id, file_paths=file_paths
+        )
+        gate_assessment = assessment.to_dict()
+        if assessment.gate_tier == "allow":
+            raw = skipped_dedup_result(agent_ids)
+            raw["gate_assessment"] = gate_assessment
+            gate_skipped = True
+        elif scenario_name in PAIRWISE_SCENARIOS:
+            raw = detect_duplication(agents_by_id["agent_a"], agents_by_id["agent_b"])
+        else:
+            raw = detect_duplication_fleet(agents_by_id)
+    elif scenario_name in PAIRWISE_SCENARIOS:
         raw = detect_duplication(agents_by_id["agent_a"], agents_by_id["agent_b"])
     else:
         raw = detect_duplication_fleet(agents_by_id)
 
-    usage_meta = raw.pop("_usage", None)
+    usage_meta = raw.pop("_usage", None) if not gate_skipped else None
     if usage_meta:
         role = (
             "helm-dedup-fleet"
@@ -277,6 +304,8 @@ def run_helm_path(
         "implementations": implementations,
         "dedup_resolution": raw,
         "reasoning": raw.get("reasoning"),
+        "gate_skipped": gate_skipped,
+        "gate_assessment": gate_assessment,
         **fleet_meta,
         "usage": ledger.to_dict(),
     }

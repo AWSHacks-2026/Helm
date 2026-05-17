@@ -2,6 +2,8 @@
 
 Supervisor service for multi-agent coding workflows. Resolves merge conflicts via Bedrock Sonnet, exposes APIs for IDE hooks (MCP / Claude Code), and includes a React dashboard.
 
+**Teammates / Cursor:** read **[`AGENTS.md`](AGENTS.md)** for contention gate vs guardrails, env vars, tests, and ShopFix benchmarks on branch `feature/contention-gated-coordination`.
+
 ## Setup
 
 ```bash
@@ -48,6 +50,25 @@ cd backend && uvicorn main:app --reload --port 8000
 | Arbitration | **Bedrock Sonnet** (`invoke_model`) | Helm resolves blocked actions |
 
 Local defaults: `HELM_USE_LOCAL_MEMORY=true` and `HELM_USE_LOCAL_POLICY=true` (no AWS resources required for demo).
+
+### Contention gate
+
+Helm skips Bedrock coordination when agents do not collide (disjoint files, no intent overlap). Set `HELM_GATE_ENABLED=1` (default). Use `HELM_GATE_FORCE=1` to restore always-on dedup/align for legacy benchmarks. `POST /intents` returns a `contention` block with `gate_tier` (`allow` | `arbitrate`).
+
+### ShopFix demo (Etsy-lite + git benchmark)
+
+Runnable marketplace app at [`../shopfix/`](../shopfix/) (repo root, outside `helm/`). Benchmark harness lives under `helm/scripts/`. See [`experiments/SHOPFIX_BENCHMARK.md`](experiments/SHOPFIX_BENCHMARK.md).
+
+```bash
+# Browse the app (from repo root)
+cd shopfix/backend && python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && python scripts/seed.py && uvicorn app.main:app --port 8001
+cd ../frontend && npm ci && npm run dev
+
+# Benchmark (Helm API on :8000)
+export HELM_MOCK_BEDROCK=1 HELM_GATE_ENABLED=1
+python scripts/run_shopfix_benchmark.py --agents 2,4 --mock
+```
 
 Cloud setup: **[`docs/AWS_SETUP.md`](docs/AWS_SETUP.md)** (full playbook) · [`infra/agentcore/README.md`](infra/agentcore/README.md) (console notes)
 
