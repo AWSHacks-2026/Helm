@@ -1,0 +1,16 @@
+suite: independent
+session_id_prefix: streamcast-ind
+repo_subdir: streamcast
+assignments:
+  - id: agent_auth
+    branch: agent/auth
+    feature: Implement JWT register/login in app/auth/handlers.py
+    files: [app/auth/handlers.py, app/auth/models.py]
+  - id: agent_chat
+    branch: agent/chat
+    feature: Implement live chat HTTP API in app/chat/room.py
+    files: [app/chat/room.py]
+  - id: agent_player
+    branch: agent/player
+    feature: Implement pause/resume in app/player/session.py
+    files: [app/player/session.py]

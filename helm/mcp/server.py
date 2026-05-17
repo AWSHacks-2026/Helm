@@ -109,5 +109,27 @@ def helm_get_history(session_id: str) -> list:
         return response.json()
 
 
+@mcp.tool()
+def helm_record_checkpoint(
+    session_id: str,
+    agent_id: str,
+    event: str,
+    detail: str = "",
+) -> dict:
+    """Record agent lifecycle events (started, committed, merge_conflict) for benchmarks."""
+    with _client() as client:
+        response = client.post(
+            "/history/checkpoint",
+            json={
+                "session_id": session_id,
+                "agent_id": agent_id,
+                "event": event,
+                "detail": detail,
+            },
+        )
+        response.raise_for_status()
+        return response.json()
+
+
 if __name__ == "__main__":
     mcp.run()

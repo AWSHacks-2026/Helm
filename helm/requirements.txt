@@ -13,4 +13,5 @@ moto[s3]>=5.0.0
 bedrock-agentcore>=0.1.0
 matplotlib>=3.8.0
 tqdm>=4.66.0
+PyYAML>=6.0
 # Optional IDE integration: pip install mcp

@@ -2,6 +2,10 @@
 # Claude Code PreToolUse hook — call Helm guardrails before Write/Edit
 set -euo pipefail
 
+if [ "${HELM_ENABLED:-1}" = "0" ]; then
+  exit 0
+fi
+
 FILE_PATH="${FILE_PATH:-}"
 AGENT_ID="${CLAUDE_AGENT_ID:-claude-code}"
 SESSION_ID="${HELM_SESSION_ID:-default}"

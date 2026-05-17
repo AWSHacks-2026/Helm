@@ -240,6 +240,10 @@ Open http://localhost:5173 — proxies `/api` and `/ws` to the backend. Use **Me
 
 Requires Bedrock access to `us.anthropic.claude-sonnet-4-6` in `us-east-1` when `HELM_MOCK_BEDROCK` is unset.
 
+## Real-agent benchmark (Streamcast)
+
+See [docs/REAL_AGENT_BENCHMARK.md](docs/REAL_AGENT_BENCHMARK.md) for the Twitch-like demo app and git worktree harness (`HELM_ENABLED=0` vs `1` comparison).
+
 ## MCP (Cursor / Claude Code)
 
 ```bash
