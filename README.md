@@ -2,7 +2,7 @@
 
 **AWS Hackathon theme:** *Build with Gratitude* — not a generic “help people” app. Our parents spent careers in software engineering losing hours to merge conflicts, agents colliding on the same files, and compute burned on rework. **We built Overlord for them** — and for every engineer still grinding through the same chaos.
 
-**Overlord** (coordination engine: **Helm**) sits between your agents and your repo. Every conflict it resolves is **time back in someone’s day**; every token the **Gratitude ledger** records is compute that did not get wasted. Amazon Bedrock runs **only when coordination actually matters** — contention gate, tiered Haiku/Sonnet, AgentCore Memory & Policy.
+**Overlord** (coordination engine: **Helm**) sits between your agents and your repo. Every conflict it resolves is **time back in someone’s day**; every token the **Gratitude ledger** records is compute that did not get wasted. Amazon Bedrock runs **only when coordination actually matters** — contention gate, tiered Haiku/Sonnet, AgentCore Memory & Policy. 
 
 | Field | Details |
 |-------|---------|
