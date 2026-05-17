@@ -4,6 +4,56 @@
 
 **Overlord** (coordination engine: **Helm**) sits between your agents and your repo. Every conflict it resolves is **time back in someone’s day**; every token the **Gratitude ledger** records is compute that did not get wasted. Amazon Bedrock runs **only when coordination actually matters** — contention gate, tiered Haiku/Sonnet, AgentCore Memory & Policy.
 
+| Field | Details |
+|-------|---------|
+| **Team** | **Sameer**, **Rithvik**, **Caden** |
+| **Track** | **Build with Gratitude** (AWS Hackathon 2026) — coordination that returns time and tokens to engineers; Bedrock used where coordination actually needs intelligence |
+
+### What we built
+
+- **Helm API** (`helm/backend/`) — FastAPI supervisor for multi-agent coding: intent registration, contention gate, fleet dedup, merge arbitration, tiered guardrails, session history, Gratitude ledger, WebSocket live updates.
+- **Control Tower UI** (`helm/frontend/`) — React dashboard: presenter walkthrough, Control Tower replay, Incidents, **Gratitude** ledger (theme load-bearing), Results charts, presentation pages (problem / solution / technical workflow), **Under the hood** flight recorder for N=2 coordination traces.
+- **ShopFix** (`shopfix/`) — Etsy-lite sample app with **real git sandboxes** for authentic baseline vs Helm benchmarks (contention, disjoint, opposition, merge-fleet, guardrails).
+- **Live matrix benchmark** — Unified ShopFix + Streamcast harness with real Bedrock (`helm/scripts/run_live_matrix_benchmark.py`) and live trace export for the flight recorder.
+- **Integrations** — MCP server for Cursor/agents, Claude Code pre-write hook path, optional GitHub Issues delegation, multi-laptop shared session demo.
+- **Measured pillars** — Contention gate, fleet dedup, merge fleet, guardrails with JSON + chart provenance under `helm/experiments/`.
+
+### What we did not build
+
+- A hosted multi-tenant SaaS or full production deployment pipeline for Overlord.
+- **AgentCore Gateway** policy ENFORCE at the tool boundary (documented optional path; we use Memory + Policy engine + in-process Cedar bridge).
+- **Amazon Bedrock Knowledge Base** or S3-backed RAG for session history (we use **AgentCore Memory** or local `.helm/session.json`).
+- End-to-end **CI/CD guardrails** on customer repos (roadmap item; API and demo paths exist).
+- Full **intent-declaration UI** for every agent workflow (API + gate live; not all IDE flows wired in-product).
+- Regenerated marketing/demo chart PNGs for the new light UI theme (Results tab still uses measured benchmark images).
+- **Streamcast** as a polished judge-facing product (scenarios + harness hooks exist; primary demo is Helm + ShopFix).
+- Mobile clients, billing, or non-engineering “wellness” features unrelated to agent coordination.
+
+### AWS services used
+
+| Service | How we use it |
+|---------|----------------|
+| **Amazon Bedrock** | Claude Haiku 4.5 for agents, guardrails, light coordination; Claude Sonnet 4.6 for fleet dedup and hard merges; inference profiles in `us-east-1`; mock mode for offline demo. |
+| **Amazon Bedrock AgentCore — Memory** | Per-session agent actions, intents, and coordination events (cloud or local fallback). |
+| **Amazon Bedrock AgentCore — Policy** | Cedar coordination rules (file overlap, intent clash, destructive writes); local rule engine mirrors semantics when Gateway is not attached. |
+| **Amazon Bedrock AgentCore — Runtime** (optional) | Merge arbitration via `HELM_ARBITRATOR_ARN` when configured (default path is `bedrock:InvokeModel`). |
+| **AWS IAM** | Credentials via `aws login` / SSO; `bedrock:InvokeModel` and AgentCore APIs for live runs. |
+
+*Not used in the submitted demo path:* Bedrock Knowledge Bases, SageMaker, Lambda@Edge, etc. Legacy env vars for S3/KB remain for experiments only.
+
+### Pre-existing code and starting points
+
+| Source | Role |
+|--------|------|
+| **[AWSHacks-2026/MergeAI](https://github.com/AWSHacks-2026/MergeAI)** | Team hackathon monorepo; we developed on feature branches and merged to `main`. |
+| **Vite + React + TypeScript** | Standard `npm create vite@latest` style frontend scaffold (React 19, Vitest). |
+| **FastAPI + Uvicorn** | Conventional Python API layout; no proprietary framework. |
+| **Anthropic / Cursor MCP patterns** | MCP tool server shape (`helm/mcp/server.py`) following common MCP HTTP tool conventions. |
+| **ShopFix & Streamcast fixtures** | Original sample apps and YAML scenarios **authored for this project** to stress multi-agent git contention (not third-party production apps). |
+| **Hackathon starter / org templates** | AWS event boilerplate where applicable; all coordination logic, benchmarks, UI, and Bedrock integration are **our implementation**. |
+
+---
+
 This repo is the **MergeAI** hackathon monorepo:
 
 | Path | What it is |
