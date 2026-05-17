@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""Compare baseline dual-agent implementation vs Helm intent coordination."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+BACKEND = ROOT / "backend"
+
+env_path = ROOT / ".env"
+if env_path.exists():
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv(env_path, override=True)
+    except ImportError:
+        pass
+
+for p in (BACKEND, ROOT):
+    s = str(p)
+    if s not in sys.path:
+        sys.path.insert(0, s)
+
+from agents.intent_harness import run_intent_benchmark  # noqa: E402
+from agents.intent_report import write_report  # noqa: E402
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Helm intent conflict benchmark")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "experiments" / "results")
+    parser.add_argument("--json", action="store_true", help="Print full JSON to stdout")
+    parser.add_argument("--mock", action="store_true", help="Use mock Bedrock")
+    args = parser.parse_args()
+
+    if args.mock:
+        os.environ["HELM_MOCK_BEDROCK"] = "1"
+
+    result = run_intent_benchmark()
+    md_path, json_path = write_report(result, args.output_dir)
+
+    c = result["comparison"]
+    print(f"Wrote {md_path}")
+    print(f"Wrote {json_path}")
+    print(
+        f"[intent_conflict] baseline {c['baseline_cost_display']} / "
+        f"{c['baseline_resolution_time_ms']} ms | "
+        f"helm {c['helm_cost_display']} / "
+        f"{c['helm_resolution_time_ms']} ms | "
+        f"saved {c['cost_savings_pct']}% cost"
+    )
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

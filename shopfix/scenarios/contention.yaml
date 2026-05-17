@@ -1,0 +1,19 @@
+suite: contention
+agent_counts: [2, 4, 6, 8]
+clusters:
+  - file: backend/app/routers/auth.py
+    intents:
+      - "Add JWT access and refresh token endpoints to auth router"
+      - "Add session cookie login and logout to auth router"
+      - "Add OAuth2 callback routes to auth router"
+  - file: backend/app/services/listings.py
+    intents:
+      - "Add full-text search with ranking in listings service"
+      - "Add faceted filter queries in listings service"
+fill_modules:
+  - frontend_home
+  - frontend_cart
+  - frontend_shop
+  - frontend_listing
+  - cart
+  - orders

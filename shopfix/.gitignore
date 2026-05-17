@@ -1,0 +1,6 @@
+node_modules/
+backend/.venv/
+backend/shopfix.db
+backend/__pycache__/
+frontend/dist/
+.git/

@@ -1,0 +1,16 @@
+suite: conflicting
+session_id_prefix: streamcast-conf
+repo_subdir: streamcast
+assignments:
+  - id: agent_a
+    branch: agent/stream-a
+    feature: Add RTMP ingest hooks and stream lifecycle to app/streams/live.py
+    files: [app/streams/live.py]
+  - id: agent_b
+    branch: agent/stream-b
+    feature: Add WebRTC-style signaling stubs to the same live module
+    files: [app/streams/live.py]
+  - id: agent_c
+    branch: agent/stream-c
+    feature: Add VOD fallback recording to app/streams/live.py
+    files: [app/streams/live.py]

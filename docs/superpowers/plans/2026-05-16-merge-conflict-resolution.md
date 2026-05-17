@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement Overlord’s merge-conflict arbitration path — Bedrock client, `arbitrate()` with merge-specific prompting, JSON response shaping, and an end-to-end `POST /resolve/merge_conflict` demo using the PRD’s cache-vs-readability scenario.
+**Goal:** Implement Helm’s merge-conflict arbitration path — Bedrock client, `arbitrate()` with merge-specific prompting, JSON response shaping, and an end-to-end `POST /resolve/merge_conflict` demo using the PRD’s cache-vs-readability scenario.
 
-**Architecture:** Python 3.11 FastAPI backend under `overlord/backend/`. Person 1 owns `bedrock/client.py` and `overlord.py` (Bedrock `invoke_model` + merge prompt). Minimal `agents/scenarios.py` and `main.py` stubs are included only so this slice is demoable before Person 2 finishes the full scenario/simulator work. Bedrock Sonnet 4 performs one-shot structural merge; Haiku is out of scope for this plan. Knowledge Base reads are optional hooks (Person 3); merge resolution works without KB for hackathon critical path.
+**Architecture:** Python 3.11 FastAPI backend under `helm/backend/`. Person 1 owns `bedrock/client.py` and `helm.py` (Bedrock `invoke_model` + merge prompt). Minimal `agents/scenarios.py` and `main.py` stubs are included only so this slice is demoable before Person 2 finishes the full scenario/simulator work. Bedrock Sonnet 4 performs one-shot structural merge; Haiku is out of scope for this plan. Knowledge Base reads are optional hooks (Person 3); merge resolution works without KB for hackathon critical path.
 
 **Tech Stack:** Python 3.11, FastAPI, uvicorn, boto3, python-dotenv, pytest, pytest-asyncio, httpx (TestClient)
 
@@ -16,19 +16,19 @@
 
 | File | Responsibility |
 |------|----------------|
-| `overlord/backend/bedrock/client.py` | boto3 `bedrock-runtime` + `bedrock-agent-runtime` factories |
-| `overlord/backend/bedrock/__init__.py` | Package marker |
-| `overlord/backend/overlord.py` | `arbitrate()`, merge prompt, JSON parse/validate |
-| `overlord/backend/models.py` | Pydantic types for agent payloads and resolution |
-| `overlord/backend/agents/scenarios.py` | `merge_conflict` scenario data (minimal; Person 2 expands later) |
-| `overlord/backend/agents/__init__.py` | Package marker |
-| `overlord/backend/main.py` | FastAPI routes: `GET /scenarios`, `POST /resolve/{name}` |
-| `overlord/backend/tests/test_client.py` | Client factory tests |
-| `overlord/backend/tests/test_overlord.py` | `arbitrate()` unit tests (mocked Bedrock) |
-| `overlord/backend/tests/test_resolve_merge.py` | HTTP integration test for merge scenario |
-| `overlord/requirements.txt` | Runtime + dev dependencies |
-| `overlord/.env.example` | Document required env vars (no secrets) |
-| `overlord/pytest.ini` | pytest pythonpath |
+| `helm/backend/bedrock/client.py` | boto3 `bedrock-runtime` + `bedrock-agent-runtime` factories |
+| `helm/backend/bedrock/__init__.py` | Package marker |
+| `helm/backend/helm.py` | `arbitrate()`, merge prompt, JSON parse/validate |
+| `helm/backend/models.py` | Pydantic types for agent payloads and resolution |
+| `helm/backend/agents/scenarios.py` | `merge_conflict` scenario data (minimal; Person 2 expands later) |
+| `helm/backend/agents/__init__.py` | Package marker |
+| `helm/backend/main.py` | FastAPI routes: `GET /scenarios`, `POST /resolve/{name}` |
+| `helm/backend/tests/test_client.py` | Client factory tests |
+| `helm/backend/tests/test_helm.py` | `arbitrate()` unit tests (mocked Bedrock) |
+| `helm/backend/tests/test_resolve_merge.py` | HTTP integration test for merge scenario |
+| `helm/requirements.txt` | Runtime + dev dependencies |
+| `helm/.env.example` | Document required env vars (no secrets) |
+| `helm/pytest.ini` | pytest pythonpath |
 
 **Out of scope (other owners):** `bedrock/knowledge_base.py`, `bedrock/guardrails.py`, `agents/simulator.py`, intent/dependency scenarios, frontend, token counter UI.
 
@@ -37,10 +37,10 @@
 ### Task 1: Project scaffolding
 
 **Files:**
-- Create: `overlord/requirements.txt`
-- Create: `overlord/pytest.ini`
-- Create: `overlord/.env.example`
-- Create: `overlord/backend/__init__.py`
+- Create: `helm/requirements.txt`
+- Create: `helm/pytest.ini`
+- Create: `helm/.env.example`
+- Create: `helm/backend/__init__.py`
 
 - [ ] **Step 1: Create requirements**
 
@@ -67,12 +67,12 @@ asyncio_mode = auto
 - [ ] **Step 3: Create env example**
 
 ```bash
-# Copy to overlord/.env and fill in after AWS setup (PRD §9)
+# Copy to helm/.env and fill in after AWS setup (PRD §9)
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_DEFAULT_REGION=us-east-1
 # Optional: skip real Bedrock in manual smoke tests
-OVERLORD_MOCK_BEDROCK=0
+HELM_MOCK_BEDROCK=0
 ```
 
 - [ ] **Step 4: Install and verify**
@@ -80,7 +80,7 @@ OVERLORD_MOCK_BEDROCK=0
 Run from repo root:
 
 ```bash
-cd overlord
+cd helm
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -92,8 +92,8 @@ Expected: prints `ok`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/requirements.txt overlord/pytest.ini overlord/.env.example overlord/backend/__init__.py
-git commit -m "chore: scaffold overlord backend for merge conflict slice"
+git add helm/requirements.txt helm/pytest.ini helm/.env.example helm/backend/__init__.py
+git commit -m "chore: scaffold helm backend for merge conflict slice"
 ```
 
 ---
@@ -101,12 +101,12 @@ git commit -m "chore: scaffold overlord backend for merge conflict slice"
 ### Task 2: Response models
 
 **Files:**
-- Create: `overlord/backend/models.py`
-- Test: `overlord/backend/tests/test_models.py`
+- Create: `helm/backend/models.py`
+- Test: `helm/backend/tests/test_models.py`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `overlord/backend/tests/test_models.py`:
+Create `helm/backend/tests/test_models.py`:
 
 ```python
 from models import AgentPayload, ResolutionPayload, ResolveResponse
@@ -139,7 +139,7 @@ def test_resolve_response_shape():
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd overlord && source .venv/bin/activate
+cd helm && source .venv/bin/activate
 pytest backend/tests/test_models.py -v
 ```
 
@@ -147,7 +147,7 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'models'`
 
 - [ ] **Step 3: Implement models**
 
-Create `overlord/backend/models.py`:
+Create `helm/backend/models.py`:
 
 ```python
 from typing import Literal
@@ -195,7 +195,7 @@ Expected: 2 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/models.py overlord/backend/tests/test_models.py
+git add helm/backend/models.py helm/backend/tests/test_models.py
 git commit -m "feat: add pydantic models for merge conflict API contract"
 ```
 
@@ -204,13 +204,13 @@ git commit -m "feat: add pydantic models for merge conflict API contract"
 ### Task 3: Bedrock client factory
 
 **Files:**
-- Create: `overlord/backend/bedrock/__init__.py`
-- Create: `overlord/backend/bedrock/client.py`
-- Test: `overlord/backend/tests/test_client.py`
+- Create: `helm/backend/bedrock/__init__.py`
+- Create: `helm/backend/bedrock/client.py`
+- Test: `helm/backend/tests/test_client.py`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `overlord/backend/tests/test_client.py`:
+Create `helm/backend/tests/test_client.py`:
 
 ```python
 from unittest.mock import MagicMock, patch
@@ -250,9 +250,9 @@ Expected: FAIL — cannot import `bedrock.client`
 
 - [ ] **Step 3: Implement client**
 
-Create `overlord/backend/bedrock/__init__.py` (empty).
+Create `helm/backend/bedrock/__init__.py` (empty).
 
-Create `overlord/backend/bedrock/client.py`:
+Create `helm/backend/bedrock/client.py`:
 
 ```python
 import os
@@ -290,7 +290,7 @@ Expected: 2 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/bedrock/ overlord/backend/tests/test_client.py
+git add helm/backend/bedrock/ helm/backend/tests/test_client.py
 git commit -m "feat: add Bedrock boto3 client factories"
 ```
 
@@ -299,19 +299,19 @@ git commit -m "feat: add Bedrock boto3 client factories"
 ### Task 4: JSON extraction helper
 
 **Files:**
-- Create: `overlord/backend/overlord_parse.py`
-- Test: `overlord/backend/tests/test_overlord_parse.py`
+- Create: `helm/backend/helm_parse.py`
+- Test: `helm/backend/tests/test_helm_parse.py`
 
 Models sometimes wrap JSON in markdown fences. Isolate parsing for testability.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `overlord/backend/tests/test_overlord_parse.py`:
+Create `helm/backend/tests/test_helm_parse.py`:
 
 ```python
 import pytest
 
-from overlord_parse import extract_json_object
+from helm_parse import extract_json_object
 
 
 def test_extract_json_object_plain():
@@ -336,14 +336,14 @@ def test_extract_json_object_raises_on_garbage():
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-pytest backend/tests/test_overlord_parse.py -v
+pytest backend/tests/test_helm_parse.py -v
 ```
 
-Expected: FAIL — `No module named 'overlord_parse'`
+Expected: FAIL — `No module named 'helm_parse'`
 
 - [ ] **Step 3: Implement parser**
 
-Create `overlord/backend/overlord_parse.py`:
+Create `helm/backend/helm_parse.py`:
 
 ```python
 import json
@@ -371,7 +371,7 @@ def extract_json_object(text: str) -> dict[str, Any]:
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-pytest backend/tests/test_overlord_parse.py -v
+pytest backend/tests/test_helm_parse.py -v
 ```
 
 Expected: 3 passed
@@ -379,7 +379,7 @@ Expected: 3 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/overlord_parse.py overlord/backend/tests/test_overlord_parse.py
+git add helm/backend/helm_parse.py helm/backend/tests/test_helm_parse.py
 git commit -m "feat: parse Sonnet JSON from plain or fenced output"
 ```
 
@@ -388,15 +388,15 @@ git commit -m "feat: parse Sonnet JSON from plain or fenced output"
 ### Task 5: Merge-conflict prompt builder
 
 **Files:**
-- Create: `overlord/backend/overlord_prompt.py`
-- Test: `overlord/backend/tests/test_overlord_prompt.py`
+- Create: `helm/backend/helm_prompt.py`
+- Test: `helm/backend/tests/test_helm_prompt.py`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `overlord/backend/tests/test_overlord_prompt.py`:
+Create `helm/backend/tests/test_helm_prompt.py`:
 
 ```python
-from overlord_prompt import build_merge_conflict_prompt
+from helm_prompt import build_merge_conflict_prompt
 
 
 def test_build_merge_conflict_prompt_includes_both_intents_and_code():
@@ -415,14 +415,14 @@ def test_build_merge_conflict_prompt_includes_both_intents_and_code():
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-pytest backend/tests/test_overlord_prompt.py -v
+pytest backend/tests/test_helm_prompt.py -v
 ```
 
 Expected: FAIL — import error
 
 - [ ] **Step 3: Implement prompt builder**
 
-Create `overlord/backend/overlord_prompt.py`:
+Create `helm/backend/helm_prompt.py`:
 
 ```python
 import json
@@ -436,7 +436,7 @@ def build_merge_conflict_prompt(agent_a: dict, agent_b: dict) -> str:
         "tokens_saved_estimate": "string — e.g. '~2400 tokens saved vs two agents fixing independently'",
     }
 
-    return f"""You are Overlord, a supervisor agent resolving MERGE CONFLICTS between two AI coding agents.
+    return f"""You are Helm, a supervisor agent resolving MERGE CONFLICTS between two AI coding agents.
 
 Both agents edited the same function or file in incompatible ways. Your job:
 1. Compare the structural differences (signatures, control flow, imports, side effects).
@@ -463,7 +463,7 @@ Respond ONLY with a single JSON object matching this schema (no markdown, no pre
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-pytest backend/tests/test_overlord_prompt.py -v
+pytest backend/tests/test_helm_prompt.py -v
 ```
 
 Expected: 1 passed
@@ -471,7 +471,7 @@ Expected: 1 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/overlord_prompt.py overlord/backend/tests/test_overlord_prompt.py
+git add helm/backend/helm_prompt.py helm/backend/tests/test_helm_prompt.py
 git commit -m "feat: add merge-conflict arbitration prompt builder"
 ```
 
@@ -480,18 +480,18 @@ git commit -m "feat: add merge-conflict arbitration prompt builder"
 ### Task 6: `arbitrate()` with mocked Bedrock
 
 **Files:**
-- Create: `overlord/backend/overlord.py`
-- Test: `overlord/backend/tests/test_overlord.py`
+- Create: `helm/backend/helm.py`
+- Test: `helm/backend/tests/test_helm.py`
 
 - [ ] **Step 1: Write the failing test**
 
-Create `overlord/backend/tests/test_overlord.py`:
+Create `helm/backend/tests/test_helm.py`:
 
 ```python
 import json
 from unittest.mock import MagicMock, patch
 
-from overlord import OVERLORD_MODEL, arbitrate
+from helm import HELM_MODEL, arbitrate
 
 
 def _bedrock_body(text: str) -> dict:
@@ -500,7 +500,7 @@ def _bedrock_body(text: str) -> dict:
     }
 
 
-@patch("overlord.get_bedrock_client")
+@patch("helm.get_bedrock_client")
 def test_arbitrate_returns_parsed_resolution(mock_get_client):
     mock_client = MagicMock()
     mock_get_client.return_value = mock_client
@@ -532,7 +532,7 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
 
     mock_client.invoke_model.assert_called_once()
     call_kwargs = mock_client.invoke_model.call_args.kwargs
-    assert call_kwargs["modelId"] == OVERLORD_MODEL
+    assert call_kwargs["modelId"] == HELM_MODEL
     body = json.loads(call_kwargs["body"])
     assert body["anthropic_version"] == "bedrock-2023-05-31"
     assert body["max_tokens"] >= 1000
@@ -541,14 +541,14 @@ def test_arbitrate_returns_parsed_resolution(mock_get_client):
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-pytest backend/tests/test_overlord.py -v
+pytest backend/tests/test_helm.py -v
 ```
 
-Expected: FAIL — cannot import `overlord`
+Expected: FAIL — cannot import `helm`
 
 - [ ] **Step 3: Implement `arbitrate()`**
 
-Create `overlord/backend/overlord.py`:
+Create `helm/backend/helm.py`:
 
 ```python
 import json
@@ -557,10 +557,10 @@ from typing import Any
 
 from bedrock.client import get_bedrock_client
 from models import BedrockArbitrationResult
-from overlord_parse import extract_json_object
-from overlord_prompt import build_merge_conflict_prompt
+from helm_parse import extract_json_object
+from helm_prompt import build_merge_conflict_prompt
 
-OVERLORD_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+HELM_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 MAX_TOKENS = 1500
 
 
@@ -571,11 +571,11 @@ def arbitrate(agent_a: dict, agent_b: dict, kb_context: str | None = None) -> di
     if kb_context:
         prompt += f"\n\nRelevant history from Knowledge Base:\n{kb_context}"
 
-    if os.getenv("OVERLORD_MOCK_BEDROCK") == "1":
+    if os.getenv("HELM_MOCK_BEDROCK") == "1":
         return _mock_merge_resolution()
 
     response = client.invoke_model(
-        modelId=OVERLORD_MODEL,
+        modelId=HELM_MODEL,
         body=json.dumps(
             {
                 "anthropic_version": "bedrock-2023-05-31",
@@ -611,7 +611,7 @@ def _mock_merge_resolution() -> dict[str, Any]:
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-pytest backend/tests/test_overlord.py -v
+pytest backend/tests/test_helm.py -v
 ```
 
 Expected: 1 passed
@@ -619,7 +619,7 @@ Expected: 1 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/overlord.py overlord/backend/tests/test_overlord.py
+git add helm/backend/helm.py helm/backend/tests/test_helm.py
 git commit -m "feat: implement arbitrate() for merge conflicts via Bedrock Sonnet"
 ```
 
@@ -628,15 +628,15 @@ git commit -m "feat: implement arbitrate() for merge conflicts via Bedrock Sonne
 ### Task 7: Merge conflict scenario data
 
 **Files:**
-- Create: `overlord/backend/agents/__init__.py`
-- Create: `overlord/backend/agents/scenarios.py`
-- Test: `overlord/backend/tests/test_scenarios.py`
+- Create: `helm/backend/agents/__init__.py`
+- Create: `helm/backend/agents/scenarios.py`
+- Test: `helm/backend/tests/test_scenarios.py`
 
 Person 2 will add `intent_conflict` and `dependency_conflict` later. This task only defines `merge_conflict`.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `overlord/backend/tests/test_scenarios.py`:
+Create `helm/backend/tests/test_scenarios.py`:
 
 ```python
 from agents.scenarios import SCENARIOS
@@ -662,9 +662,9 @@ Expected: FAIL — import error
 
 - [ ] **Step 3: Add scenario**
 
-Create `overlord/backend/agents/__init__.py` (empty).
+Create `helm/backend/agents/__init__.py` (empty).
 
-Create `overlord/backend/agents/scenarios.py`:
+Create `helm/backend/agents/scenarios.py`:
 
 ```python
 SCENARIOS = {
@@ -702,7 +702,7 @@ Expected: 1 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/agents/ overlord/backend/tests/test_scenarios.py
+git add helm/backend/agents/ helm/backend/tests/test_scenarios.py
 git commit -m "feat: add merge_conflict demo scenario from PRD"
 ```
 
@@ -711,12 +711,12 @@ git commit -m "feat: add merge_conflict demo scenario from PRD"
 ### Task 8: FastAPI resolve route
 
 **Files:**
-- Create: `overlord/backend/main.py`
-- Test: `overlord/backend/tests/test_resolve_merge.py`
+- Create: `helm/backend/main.py`
+- Test: `helm/backend/tests/test_resolve_merge.py`
 
 - [ ] **Step 1: Write the failing integration test**
 
-Create `overlord/backend/tests/test_resolve_merge.py`:
+Create `helm/backend/tests/test_resolve_merge.py`:
 
 ```python
 import os
@@ -724,7 +724,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-os.environ["OVERLORD_MOCK_BEDROCK"] = "1"
+os.environ["HELM_MOCK_BEDROCK"] = "1"
 
 from main import app  # noqa: E402
 
@@ -767,7 +767,7 @@ Expected: FAIL — cannot import `main`
 
 - [ ] **Step 3: Implement FastAPI app**
 
-Create `overlord/backend/main.py`:
+Create `helm/backend/main.py`:
 
 ```python
 from fastapi import FastAPI, HTTPException
@@ -775,9 +775,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from agents.scenarios import SCENARIOS
 from models import AgentPayload, ResolutionPayload, ResolveResponse
-from overlord import arbitrate
+from helm import arbitrate
 
-app = FastAPI(title="Overlord", version="0.1.0")
+app = FastAPI(title="Helm", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -824,7 +824,7 @@ Expected: 2 passed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add overlord/backend/main.py overlord/backend/tests/test_resolve_merge.py
+git add helm/backend/main.py helm/backend/tests/test_resolve_merge.py
 git commit -m "feat: expose POST /resolve/merge_conflict and GET /scenarios"
 ```
 
@@ -836,13 +836,13 @@ git commit -m "feat: expose POST /resolve/merge_conflict and GET /scenarios"
 
 - [ ] **Step 1: Configure AWS**
 
-Follow PRD §9: Bedrock model access for Sonnet 4, `aws configure`, copy `overlord/.env.example` → `overlord/.env`.
+Follow PRD §9: Bedrock model access for Sonnet 4, `aws configure`, copy `helm/.env.example` → `helm/.env`.
 
 - [ ] **Step 2: Run server without mock**
 
 ```bash
-cd overlord && source .venv/bin/activate
-unset OVERLORD_MOCK_BEDROCK
+cd helm && source .venv/bin/activate
+unset HELM_MOCK_BEDROCK
 cd backend && uvicorn main:app --reload --port 8000
 ```
 
@@ -863,15 +863,15 @@ Expected:
 
 Note `max_tokens` and actual usage from CloudWatch or response metadata if available; update demo copy per PRD §7.2 (prefer real counts over guesses).
 
-- [ ] **Step 5: Commit** (only if you add a small `overlord/README.md` with run instructions — optional)
+- [ ] **Step 5: Commit** (only if you add a small `helm/README.md` with run instructions — optional)
 
 ---
 
 ### Task 10: Optional KB context hook (integration point for Person 3)
 
 **Files:**
-- Modify: `overlord/backend/overlord.py`
-- Modify: `overlord/backend/main.py`
+- Modify: `helm/backend/helm.py`
+- Modify: `helm/backend/main.py`
 
 Skip if Person 3’s KB is not ready. Merge resolution must work with `kb_context=None`.
 
@@ -908,13 +908,13 @@ git commit -m "feat: optional KB context passthrough for merge arbitration"
 | PRD requirement | Plan task |
 |-----------------|-----------|
 | Two agents produce incompatible diffs | Task 7 — `merge_conflict` scenario |
-| Overlord receives versions + intents | Task 5–6 — prompt + `arbitrate()` |
+| Helm receives versions + intents | Task 5–6 — prompt + `arbitrate()` |
 | Sonnet analyzes structural diff, unified resolution | Task 5–6 — merge-specific prompt |
 | JSON: `conflict_type`, `reasoning`, `resolved_code`, `tokens_saved_estimate` | Tasks 2, 6 |
 | `invoke_model` to Sonnet | Task 6 |
 | Demo: cache vs readability | Tasks 7–9 |
 | `bedrock/client.py` | Task 3 |
-| `overlord.py` / `arbitrate()` | Task 6 |
+| `helm.py` / `arbitrate()` | Task 6 |
 | API `POST /resolve/{scenario}` | Task 8 |
 | KB informs resolution | Task 10 (optional hook) |
 
@@ -934,7 +934,7 @@ No TBD steps. All code blocks are complete. Commands and expected outputs specif
 
 ## Merge order note (team)
 
-Per PRD §6: Person 1 lands first (`bedrock/client.py`, `overlord.py`). Person 3 adds `bedrock/knowledge_base.py` and `guardrails.py` without touching `overlord_prompt.py`. Person 2 expands `scenarios.py`, adds `simulator.py`, token counter — coordinate on `main.py` imports to avoid conflicts.
+Per PRD §6: Person 1 lands first (`bedrock/client.py`, `helm.py`). Person 3 adds `bedrock/knowledge_base.py` and `guardrails.py` without touching `helm_prompt.py`. Person 2 expands `scenarios.py`, adds `simulator.py`, token counter — coordinate on `main.py` imports to avoid conflicts.
 
 ---
 

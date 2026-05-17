@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship Feature 3 — a proactive guardrails layer plus session memory (Knowledge Base) that intercepts conflicting agent actions before execution and supplies context to Overlord arbitration.
+**Goal:** Ship Feature 3 — a proactive guardrails layer plus session memory (Knowledge Base) that intercepts conflicting agent actions before execution and supplies context to Helm arbitration.
 
-**Architecture:** Person 3 owns only `backend/bedrock/knowledge_base.py` and `backend/bedrock/guardrails.py`. Both modules expose a **dual-mode** design: local JSON + in-process rules work out of the box for the hackathon demo; when `BEDROCK_KB_ID` / `BEDROCK_GUARDRAIL_ID` env vars are set, the same APIs call `bedrock-agent-runtime.retrieve()` and `bedrock-runtime.apply_guardrail()`. Guardrails query KB history, return structured `PreflightResult`, and on trip call `overlord.arbitrate()` (from Person 1) with KB context injected. Person 2 wires `GET /history` and `POST /guardrail/check` in `main.py` using snippets in Task 12.
+**Architecture:** Person 3 owns only `backend/bedrock/knowledge_base.py` and `backend/bedrock/guardrails.py`. Both modules expose a **dual-mode** design: local JSON + in-process rules work out of the box for the hackathon demo; when `BEDROCK_KB_ID` / `BEDROCK_GUARDRAIL_ID` env vars are set, the same APIs call `bedrock-agent-runtime.retrieve()` and `bedrock-runtime.apply_guardrail()`. Guardrails query KB history, return structured `PreflightResult`, and on trip call `helm.arbitrate()` (from Person 1) with KB context injected. Person 2 wires `GET /history` and `POST /guardrail/check` in `main.py` using snippets in Task 12.
 
 **Tech Stack:** Python 3.11, FastAPI (integration only), boto3 (`bedrock-agent-runtime`, `bedrock-runtime`, `s3`), pytest, python-dotenv, optional `moto` for S3 tests
 
@@ -25,7 +25,7 @@
 **Depends on (Person 1 — merge first):**
 
 - `backend/bedrock/client.py` — `get_bedrock_agent_client()`, `get_bedrock_runtime_client()`
-- `backend/overlord.py` — `arbitrate(agent_a, agent_b, kb_context: list[dict] | None = None)`
+- `backend/helm.py` — `arbitrate(agent_a, agent_b, kb_context: list[dict] | None = None)`
 
 **Hands off to (Person 2 — merge last):**
 
@@ -39,9 +39,9 @@
 ```bash
 # .env.example (Person 3 adds)
 AWS_REGION=us-east-1
-OVERLORD_USE_LOCAL_KB=true          # default true for hackathon
-OVERLORD_SESSION_PATH=.overlord/session.json
-OVERLORD_S3_BUCKET=                 # optional: s3://bucket/prefix/logs/
+HELM_USE_LOCAL_KB=true          # default true for hackathon
+HELM_SESSION_PATH=.helm/session.json
+HELM_S3_BUCKET=                 # optional: s3://bucket/prefix/logs/
 BEDROCK_KB_ID=                      # when set, enable retrieve()
 BEDROCK_GUARDRAIL_ID=               # optional Bedrock Guardrails resource
 BEDROCK_GUARDRAIL_VERSION=DRAFT     # or published version ARN suffix
@@ -96,8 +96,8 @@ import pytest
 @pytest.fixture(autouse=True)
 def isolated_kb_session(tmp_path, monkeypatch):
     session_file = tmp_path / "session.json"
-    monkeypatch.setenv("OVERLORD_USE_LOCAL_KB", "true")
-    monkeypatch.setenv("OVERLORD_SESSION_PATH", str(session_file))
+    monkeypatch.setenv("HELM_USE_LOCAL_KB", "true")
+    monkeypatch.setenv("HELM_SESSION_PATH", str(session_file))
     monkeypatch.delenv("BEDROCK_KB_ID", raising=False)
     monkeypatch.delenv("BEDROCK_GUARDRAIL_ID", raising=False)
     yield session_file
@@ -193,11 +193,11 @@ class KnowledgeRecord:
 
 
 def _session_path() -> Path:
-    return Path(os.getenv("OVERLORD_SESSION_PATH", ".overlord/session.json"))
+    return Path(os.getenv("HELM_SESSION_PATH", ".helm/session.json"))
 
 
 def _use_local_kb() -> bool:
-    return os.getenv("OVERLORD_USE_LOCAL_KB", "true").lower() == "true"
+    return os.getenv("HELM_USE_LOCAL_KB", "true").lower() == "true"
 
 
 def _read_all() -> list[dict[str, Any]]:
@@ -271,7 +271,7 @@ def log_decision(
         "reasoning": reasoning,
         "affected_agents": affected_agents,
     }
-    record = _make_record(RecordType.DECISION, "overlord", payload, session_id)
+    record = _make_record(RecordType.DECISION, "helm", payload, session_id)
     return _append(record)
 
 
@@ -421,8 +421,8 @@ from bedrock import knowledge_base as kb
 
 @mock_aws
 def test_sync_session_to_s3(monkeypatch):
-    bucket = "overlord-demo-logs"
-    monkeypatch.setenv("OVERLORD_S3_BUCKET", bucket)
+    bucket = "helm-demo-logs"
+    monkeypatch.setenv("HELM_S3_BUCKET", bucket)
     conn = boto3.client("s3", region_name="us-east-1")
     conn.create_bucket(Bucket=bucket)
 
@@ -448,9 +448,9 @@ import boto3
 
 
 def sync_to_s3(session_id: str = "default") -> str:
-    bucket = os.getenv("OVERLORD_S3_BUCKET", "").strip()
+    bucket = os.getenv("HELM_S3_BUCKET", "").strip()
     if not bucket:
-        raise ValueError("OVERLORD_S3_BUCKET is not configured")
+        raise ValueError("HELM_S3_BUCKET is not configured")
 
     records = _read_all()
     key = f"sessions/{session_id}/{uuid.uuid4()}.json"
@@ -750,7 +750,7 @@ git commit -m "feat(guardrails): detect intent contradictions before execution"
 
 ---
 
-### Task 7: Route tripped guardrail to Overlord
+### Task 7: Route tripped guardrail to Helm
 
 **Files:**
 - Modify: `backend/bedrock/guardrails.py`
@@ -763,11 +763,11 @@ def arbitrate(agent_a: dict, agent_b: dict, kb_context: list[dict] | None = None
     # inject kb_context into Sonnet prompt when present
 ```
 
-- [ ] **Step 1: Write failing test with overlord stub**
+- [ ] **Step 1: Write failing test with helm stub**
 
 ```python
 # backend/tests/bedrock/test_guardrails.py
-def test_handle_proposed_action_routes_to_overlord(monkeypatch):
+def test_handle_proposed_action_routes_to_helm(monkeypatch):
     kb.log_action("agent_a", "add_file", "utils/cache.py", "Added caching utility")
 
     def fake_arbitrate(agent_a, agent_b, kb_context=None):
@@ -803,13 +803,13 @@ def test_handle_proposed_action_routes_to_overlord(monkeypatch):
 
 - [ ] **Step 2: Run — expect FAIL**
 
-Run: `cd backend && pytest tests/bedrock/test_guardrails.py::test_handle_proposed_action_routes_to_overlord -v`
+Run: `cd backend && pytest tests/bedrock/test_guardrails.py::test_handle_proposed_action_routes_to_helm -v`
 
 - [ ] **Step 3: Implement handle_proposed_action**
 
 ```python
 def _arbitrate(agent_a: dict, agent_b: dict, kb_context: list[dict] | None = None) -> dict:
-    from overlord import arbitrate
+    from helm import arbitrate
 
     return arbitrate(agent_a, agent_b, kb_context=kb_context)
 
@@ -851,7 +851,7 @@ Expected: `4 passed`
 
 ```bash
 git add backend/bedrock/guardrails.py backend/tests/bedrock/test_guardrails.py
-git commit -m "feat(guardrails): route tripped checks to Overlord with KB context"
+git commit -m "feat(guardrails): route tripped checks to Helm with KB context"
 ```
 
 ---
@@ -979,7 +979,7 @@ git commit -m "feat(guardrails): demo seed for proactive prevention scenario"
 ### Task 10: Person 1 integration — KB context in arbitrate prompt
 
 **Files:**
-- Modify: `backend/overlord.py` (Person 1 — coordinate in PR, not Person 3 commit if avoiding overlap)
+- Modify: `backend/helm.py` (Person 1 — coordinate in PR, not Person 3 commit if avoiding overlap)
 
 Person 3 opens a PR comment or Slack message with this exact diff for Person 1:
 
@@ -996,10 +996,10 @@ prompt = f"""
 """
 ```
 
-Person 3 adds a contract test that **mocks** overlord:
+Person 3 adds a contract test that **mocks** helm:
 
 ```python
-# backend/tests/bedrock/test_overlord_kb_contract.py
+# backend/tests/bedrock/test_helm_kb_contract.py
 def test_kb_context_forwarded_to_arbitrate(monkeypatch):
     captured = {}
 
@@ -1016,7 +1016,7 @@ def test_kb_context_forwarded_to_arbitrate(monkeypatch):
 - [ ] **Step 2: Run and commit**
 
 ```bash
-git add backend/tests/bedrock/test_overlord_kb_contract.py
+git add backend/tests/bedrock/test_helm_kb_contract.py
 git commit -m "test: contract for KB context passed into arbitrate"
 ```
 
@@ -1031,16 +1031,16 @@ git commit -m "test: contract for KB context passed into arbitrate"
 
 ```bash
 AWS_REGION=us-east-1
-OVERLORD_USE_LOCAL_KB=true
-OVERLORD_SESSION_PATH=.overlord/session.json
+HELM_USE_LOCAL_KB=true
+HELM_SESSION_PATH=.helm/session.json
 # --- Optional production path ---
-# OVERLORD_S3_BUCKET=your-overlord-logs-bucket
+# HELM_S3_BUCKET=your-helm-logs-bucket
 # BEDROCK_KB_ID=XXXXXXXX
 # BEDROCK_GUARDRAIL_ID=your-guardrail-id
 # BEDROCK_GUARDRAIL_VERSION=DRAFT
 ```
 
-- [ ] **Step 2: Create S3 bucket** `overlord-agent-logs-<team>` (console or CLI)
+- [ ] **Step 2: Create S3 bucket** `helm-agent-logs-<team>` (console or CLI)
 
 - [ ] **Step 3: Create Bedrock Knowledge Base**
   - Data source: S3 bucket prefix `sessions/`
@@ -1056,7 +1056,7 @@ OVERLORD_SESSION_PATH=.overlord/session.json
 Run:
 
 ```bash
-cd backend && OVERLORD_USE_LOCAL_KB=false BEDROCK_KB_ID=<id> python -c "
+cd backend && HELM_USE_LOCAL_KB=false BEDROCK_KB_ID=<id> python -c "
 from bedrock.knowledge_base import retrieve_context
 print(retrieve_context('What did agent_a optimize for in cache module?'))
 "
@@ -1143,12 +1143,12 @@ Expected: `preflight.allowed == false`, `resolution` object with `reasoning`, `e
 Run: `cd backend && pytest tests/bedrock -v`
 Expected: all tests passed
 
-- [ ] **Step 2: Verify .overlord in gitignore**
+- [ ] **Step 2: Verify .helm in gitignore**
 
 Add to `.gitignore`:
 
 ```
-.overlord/
+.helm/
 .env
 backend/.venv/
 ```
@@ -1172,7 +1172,7 @@ git commit -m "chore: ignore local session logs and venv"
 | File overlap detection | Task 4 |
 | Intent contradiction | Task 6 |
 | Reverses recent decision | Task 5 |
-| Trip → pause → route Overlord | Task 7 |
+| Trip → pause → route Helm | Task 7 |
 | Log actions, intents, decisions to KB | Task 1, Task 7 `log_decision` |
 | S3-backed logs | Task 3 |
 | `bedrock_agent_runtime.retrieve()` | Task 2 |
@@ -1192,7 +1192,7 @@ No TBD steps. All code blocks are complete.
 
 ### Gaps / team coordination
 
-- Person 1 must add `kb_context` param to `arbitrate()` before Task 7 integration test against real overlord.
+- Person 1 must add `kb_context` param to `arbitrate()` before Task 7 integration test against real helm.
 - Person 2 owns `main.py` routes — Task 12 is a handoff, not Person 3 file edit.
 - Frontend Act 3 panel should call `POST /guardrail/check` (Person 2 / frontend).
 
@@ -1200,7 +1200,7 @@ No TBD steps. All code blocks are complete.
 
 ## Merge checklist (Person 3 branch)
 
-1. Rebase on Person 1's `bedrock/client.py` + `overlord.py`
+1. Rebase on Person 1's `bedrock/client.py` + `helm.py`
 2. Ensure `PYTHONPATH=backend` or run tests from `backend/` with `pythonpath=.`
 3. PR only touches `backend/bedrock/knowledge_base.py`, `backend/bedrock/guardrails.py`, `backend/tests/bedrock/*`, `.env.example`, `.gitignore`
 4. Leave `INTEGRATION` comment on Person 2's PR with Task 12 snippets

@@ -1,0 +1,21 @@
+name: Helm merge conflict demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve demo conflict via Helm
+        env:
+          HELM_API_BASE: ${{ secrets.HELM_API_BASE }}
+        run: |
+          if [ -z "$HELM_API_BASE" ]; then
+            echo "Set repository secret HELM_API_BASE to your shared Helm URL"
+            exit 1
+          fi
+          curl -sf -X POST "$HELM_API_BASE/integrations/git/merge-conflict" \
+            -H 'Content-Type: application/json' \
+            -d @helm/demo/fixtures/git_merge_request.json | python3 -m json.tool

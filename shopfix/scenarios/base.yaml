@@ -1,0 +1,33 @@
+modules:
+  auth:
+    files:
+      - backend/app/routers/auth.py
+    intent_template: "Implement {feature} in ShopFix auth router"
+  listings:
+    files:
+      - backend/app/routers/listings.py
+    intent_template: "Implement {feature} in ShopFix catalog listings API"
+  cart:
+    files:
+      - backend/app/routers/cart.py
+    intent_template: "Implement {feature} for shopping cart"
+  orders:
+    files:
+      - backend/app/routers/orders.py
+    intent_template: "Implement {feature} for checkout orders"
+  frontend_home:
+    files:
+      - frontend/src/pages/HomePage.tsx
+    intent_template: "Improve ShopFix home discovery UI"
+  frontend_cart:
+    files:
+      - frontend/src/pages/CartPage.tsx
+    intent_template: "Improve ShopFix cart UI"
+  frontend_shop:
+    files:
+      - frontend/src/pages/ShopDashboardPage.tsx
+    intent_template: "Improve seller dashboard UI"
+  frontend_listing:
+    files:
+      - frontend/src/pages/ListingPage.tsx
+    intent_template: "Improve listing detail UI"

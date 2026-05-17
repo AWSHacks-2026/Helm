@@ -1,4 +1,4 @@
-# OVERLORD
+# HELM
 ## Multi-Agent Conflict Resolution System
 **Product Requirements Document | AWS Bedrock Hackathon**
 
@@ -13,9 +13,9 @@
 
 ## 1. Executive Summary
 
-Overlord is a supervisor agent system built on AWS Bedrock that sits above multiple AI coding agents and resolves conflicts before they waste tokens, time, and developer sanity.
+Helm is a supervisor agent system built on AWS Bedrock that sits above multiple AI coding agents and resolves conflicts before they waste tokens, time, and developer sanity.
 
-The core problem: in multi-agent coding environments, agents working in parallel inevitably conflict — either at the code level (merge conflicts) or at the intent level (contradictory goals). Today, each agent independently attempts to fix these conflicts, burning tokens and producing thrash. Overlord intercepts these conflicts, arbitrates a unified resolution, and eliminates the back-and-forth entirely.
+The core problem: in multi-agent coding environments, agents working in parallel inevitably conflict — either at the code level (merge conflicts) or at the intent level (contradictory goals). Today, each agent independently attempts to fix these conflicts, burning tokens and producing thrash. Helm intercepts these conflicts, arbitrates a unified resolution, and eliminates the back-and-forth entirely.
 
 > **Core Thesis:** A single orchestrator agent that understands all agents' code state and intent resolves conflicts in one pass, dramatically reducing token usage compared to agents resolving conflicts independently.
 
@@ -46,11 +46,11 @@ As AI coding agents become more capable, teams are deploying multiple agents to 
 
 ### 3.1 Architecture
 
-Overlord is a three-layer system:
+Helm is a three-layer system:
 
 ```
 [Agent A Simulator] ──┐
-                       ├──► [Overlord Agent (Bedrock)] ──► [Resolved Output]
+                       ├──► [Helm Agent (Bedrock)] ──► [Resolved Output]
 [Agent B Simulator] ──┘
          ▲
    [Guardrails Layer — intercepts before execution]
@@ -59,18 +59,18 @@ Overlord is a three-layer system:
 | Layer | Responsibility |
 |---|---|
 | 1. Sub-Agent Simulators | Produce pre-scripted conflict scenarios representing realistic agent outputs. In demo: simulated. Post-hackathon: real agents. |
-| 2. Overlord Agent | Core arbitration logic. Takes both agents' code + intent, calls Claude Sonnet via Bedrock, returns a unified resolution with reasoning. |
-| 3. Guardrails Layer | Proactive pre-flight check before agent actions execute. Catches conflicts before they happen and routes to Overlord early. |
+| 2. Helm Agent | Core arbitration logic. Takes both agents' code + intent, calls Claude Sonnet via Bedrock, returns a unified resolution with reasoning. |
+| 3. Guardrails Layer | Proactive pre-flight check before agent actions execute. Catches conflicts before they happen and routes to Helm early. |
 
 ### 3.2 AWS Bedrock Integration
 
-- **Claude Sonnet 4 via Bedrock** — Overlord arbitration. Used only for conflict resolution — the expensive reasoning step.
+- **Claude Sonnet 4 via Bedrock** — Helm arbitration. Used only for conflict resolution — the expensive reasoning step.
 - **Claude Haiku 3 via Bedrock** — Sub-agent simulation. Cheaper, faster model handles routine agent tasks.
-- **Bedrock Knowledge Base** — Shared agent memory. Stores each agent's action history, declared intents, and past decisions so the Overlord has full context.
+- **Bedrock Knowledge Base** — Shared agent memory. Stores each agent's action history, declared intents, and past decisions so the Helm has full context.
 - **Bedrock Guardrails** — Proactive conflict prevention. Intercepts agent actions before execution and flags potential conflicts.
-- **Bedrock Multi-Agent Supervisor** — Native orchestration framework. Overlord is implemented as a Bedrock supervisor agent with sub-agents wired to it.
+- **Bedrock Multi-Agent Supervisor** — Native orchestration framework. Helm is implemented as a Bedrock supervisor agent with sub-agents wired to it.
 
-> **Token Efficiency Strategy:** Model tiering is central to the token efficiency story. By using Haiku for routine tasks and only escalating to Sonnet for actual conflict resolution, Overlord minimizes cost while maximizing resolution quality.
+> **Token Efficiency Strategy:** Model tiering is central to the token efficiency story. By using Haiku for routine tasks and only escalating to Sonnet for actual conflict resolution, Helm minimizes cost while maximizing resolution quality.
 
 ---
 
@@ -83,7 +83,7 @@ Detects and resolves conflicts where two agents have produced incompatible diffs
 
 #### How it works
 - Agent A and Agent B each produce a modified version of a function or file
-- Overlord receives both versions along with each agent's stated intent
+- Helm receives both versions along with each agent's stated intent
 - Claude Sonnet analyzes the structural diff and produces a single unified resolution
 - Resolution includes the merged code, reasoning, and which agent's approach was prioritized and why
 
@@ -94,7 +94,7 @@ Detects and resolves conflicts where two agents have produced incompatible diffs
 
 #### Demo scenario
 > **Scenario: Cache vs. Readability**
-> Agent A adds a caching layer to `get_user()`. Agent B refactors `get_user()` for readability, removing the cache and adding type hints. Overlord produces a version that caches AND has type hints — respecting both intents.
+> Agent A adds a caching layer to `get_user()`. Agent B refactors `get_user()` for readability, removing the cache and adding type hints. Helm produces a version that caches AND has type hints — respecting both intents.
 
 ---
 
@@ -106,8 +106,8 @@ Detects and resolves conflicts where two agents have contradictory goals that wo
 #### How it works
 - Each agent declares its intent at task start: what it is optimizing for and why
 - Intent declarations are stored in the Knowledge Base
-- Before executing, the Overlord checks if declared intents are compatible
-- If they conflict, Overlord arbitrates a priority order or a compromise intent before either agent acts
+- Before executing, the Helm checks if declared intents are compatible
+- If they conflict, Helm arbitrates a priority order or a compromise intent before either agent acts
 - Agents then execute with aligned goals, preventing the conflict from ever manifesting in code
 
 #### Bedrock specifics
@@ -117,26 +117,26 @@ Detects and resolves conflicts where two agents have contradictory goals that wo
 
 #### Demo scenario
 > **Scenario: Performance vs. Minimalism**
-> Agent A declares: "I am optimizing this module for maximum performance." Agent B declares: "I am refactoring this module to minimize dependencies." These produce opposite results on the same codebase. Overlord arbitrates: "Optimize for performance where it doesn't add dependencies; prefer native implementations."
+> Agent A declares: "I am optimizing this module for maximum performance." Agent B declares: "I am refactoring this module to minimize dependencies." These produce opposite results on the same codebase. Helm arbitrates: "Optimize for performance where it doesn't add dependencies; prefer native implementations."
 
 ---
 
 ### Feature 3: Guardrails + Knowledge Base
 **Owner: Person 3**
 
-Proactive conflict prevention layer that intercepts agent actions before execution and routes to the Overlord early, before tokens are wasted on conflicting work.
+Proactive conflict prevention layer that intercepts agent actions before execution and routes to the Helm early, before tokens are wasted on conflicting work.
 
 #### Guardrails — how it works
 - Every agent action passes through a Guardrail check before executing
 - Guardrail checks: does this action touch a file another agent is working on? Does this contradict a logged intent? Does this reverse a recent decision?
-- If a guardrail trips, the action is paused and routed to Overlord
-- Overlord arbitrates proactively and returns a go/no-go with optional modifications
+- If a guardrail trips, the action is paused and routed to Helm
+- Helm arbitrates proactively and returns a go/no-go with optional modifications
 
 #### Knowledge Base — how it works
-- Every agent action, intent declaration, and Overlord decision is written to the KB
+- Every agent action, intent declaration, and Helm decision is written to the KB
 - KB is an S3-backed Bedrock Knowledge Base with semantic search
-- Overlord queries KB before every arbitration: "What has Agent A been optimizing for? What decisions have been made in this module?"
-- This gives the Overlord long-term memory across the entire session
+- Helm queries KB before every arbitration: "What has Agent A been optimizing for? What decisions have been made in this module?"
+- This gives the Helm long-term memory across the entire session
 
 #### Bedrock specifics
 - `bedrock_agent_runtime.retrieve()` for KB queries
@@ -145,7 +145,7 @@ Proactive conflict prevention layer that intercepts agent actions before executi
 
 #### Demo scenario
 > **Scenario: Proactive Prevention**
-> Agent B is about to delete a caching utility. Guardrail detects Agent A added this utility 3 actions ago and flags it. Overlord intervenes before Agent B executes, reviews both agents' history in the KB, and instructs Agent B to refactor around the utility instead of deleting it. Zero tokens wasted on conflicting execution.
+> Agent B is about to delete a caching utility. Guardrail detects Agent A added this utility 3 actions ago and flags it. Helm intervenes before Agent B executes, reviews both agents' history in the KB, and instructs Agent B to refactor around the utility instead of deleting it. Zero tokens wasted on conflicting execution.
 
 ---
 
@@ -166,10 +166,10 @@ Proactive conflict prevention layer that intercepts agent actions before executi
 ### 5.2 Project Structure
 
 ```
-overlord/
+helm/
 ├── backend/
 │   ├── main.py                    # FastAPI app — all routes, token counter
-│   ├── overlord.py                # Core arbitrate() function
+│   ├── helm.py                # Core arbitrate() function
 │   ├── agents/
 │   │   ├── simulator.py           # Packages scenarios into agent output format
 │   │   └── scenarios.py           # 3 pre-scripted conflict scenarios
@@ -199,9 +199,9 @@ overlord/
   },
   "resolution": {
     "conflict_type": "merge_conflict | intent_conflict | dependency_conflict",
-    "reasoning": "string — Overlord's explanation of the resolution decision",
+    "reasoning": "string — Helm's explanation of the resolution decision",
     "resolved_code": "string — the unified output code",
-    "tokens_saved_estimate": "string — estimated tokens saved vs no-overlord scenario"
+    "tokens_saved_estimate": "string — estimated tokens saved vs no-helm scenario"
   }
 }
 ```
@@ -213,7 +213,7 @@ Other routes:
 ### 5.4 Bedrock Model IDs
 
 ```
-Overlord (Sonnet 4):   us.anthropic.claude-sonnet-4-20250514-v1:0
+Helm (Sonnet 4):   us.anthropic.claude-sonnet-4-20250514-v1:0
 Sub-agents (Haiku 3):  us.anthropic.claude-haiku-3-20240307-v1:0
 Region:                us-east-1
 ```
@@ -240,18 +240,18 @@ def get_bedrock_agent_client():
     )
 ```
 
-**`backend/overlord.py`**
+**`backend/helm.py`**
 ```python
 import json
 from bedrock.client import get_bedrock_client
 
-OVERLORD_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
+HELM_MODEL = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 
 def arbitrate(agent_a: dict, agent_b: dict) -> dict:
     client = get_bedrock_client()
 
     prompt = f"""
-    You are a conflict resolution overlord managing two AI coding agents.
+    You are a conflict resolution helm managing two AI coding agents.
 
     Agent A Intent: {agent_a['intent']}
     Agent A Code:
@@ -278,7 +278,7 @@ def arbitrate(agent_a: dict, agent_b: dict) -> dict:
     """
 
     response = client.invoke_model(
-        modelId=OVERLORD_MODEL,
+        modelId=HELM_MODEL,
         body=json.dumps({
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
@@ -341,7 +341,7 @@ def get_user(user_id: str) -> User:
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from agents.scenarios import SCENARIOS
-from overlord import arbitrate
+from helm import arbitrate
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
@@ -371,7 +371,7 @@ Three equal vertical slices. Each person owns a full feature end to end. No file
 
 | Person | Feature | Files Owned |
 |---|---|---|
-| Person 1 | Merge Conflict Resolution | `bedrock/client.py`, `overlord.py` — AWS setup, `arbitrate()`, model tiering, prompt engineering |
+| Person 1 | Merge Conflict Resolution | `bedrock/client.py`, `helm.py` — AWS setup, `arbitrate()`, model tiering, prompt engineering |
 | Person 2 | Intent Conflict Resolution | `agents/scenarios.py`, `agents/simulator.py`, `main.py` — 3 conflict scenarios, FastAPI routes, token counter, response shaping |
 | Person 3 | Guardrails + Knowledge Base | `bedrock/knowledge_base.py`, `bedrock/guardrails.py` — KB read/write, Guardrail pre-flight checks, proactive routing |
 
@@ -385,16 +385,16 @@ Three equal vertical slices. Each person owns a full feature end to end. No file
 
 | Act | Feature | What Judges See |
 |---|---|---|
-| 1 | Merge Conflict | Two agents produce conflicting code. Overlord resolves in one pass with clear reasoning. Token counter shows savings. |
-| 2 | Intent Conflict | Two agents have contradictory goals. Overlord identifies the incompatibility and produces a unified directive before any code is written. |
-| 3 | Guardrails | Agent is about to do something that would conflict. Guardrail catches it before execution. Overlord proactively prevents the conflict. Zero wasted tokens. |
+| 1 | Merge Conflict | Two agents produce conflicting code. Helm resolves in one pass with clear reasoning. Token counter shows savings. |
+| 2 | Intent Conflict | Two agents have contradictory goals. Helm identifies the incompatibility and produces a unified directive before any code is written. |
+| 3 | Guardrails | Agent is about to do something that would conflict. Guardrail catches it before execution. Helm proactively prevents the conflict. Zero wasted tokens. |
 
 ### 7.2 The Killer Metric
 
 Every resolution screen shows:
 
-- Tokens used **WITH Overlord:** ~800
-- Tokens used **WITHOUT Overlord** (agents thrashing): ~3,200
+- Tokens used **WITH Helm:** ~800
+- Tokens used **WITHOUT Helm** (agents thrashing): ~3,200
 - **Savings: ~75%**
 
 > Use real token counts from actual Bedrock runs — not estimates. Run test scenarios before the demo and plug in the real numbers.
@@ -435,10 +435,10 @@ Complete in this order before splitting work:
 |---|---|---|
 | Bedrock model access not approved in time | HIGH | Request access tonight immediately. Have Claude.ai as backup to demo the prompts if API access fails. |
 | Knowledge Base infra takes too long to set up | MEDIUM | Build KB integration last. Core demo works without it — KB is an enhancement, not critical path. |
-| Overlord resolution quality is poor | MEDIUM | Prompt engineering is the lever. Allocate time to iterate on the arbitration prompt with real test cases. |
+| Helm resolution quality is poor | MEDIUM | Prompt engineering is the lever. Allocate time to iterate on the arbitration prompt with real test cases. |
 | Three-person merge causes conflicts (ironic) | LOW | Strict folder ownership + agreed API contract eliminates overlap. Merge in order: P1, P3, P2. |
 | Demo scenario feels fake to judges | LOW | Use real-looking code in scenarios. Frame as simulation explicitly — judges understand hackathon constraints. |
 
 ---
 
-*Overlord | AWS Bedrock Hackathon | Confidential*
+*Helm | AWS Bedrock Hackathon | Confidential*
