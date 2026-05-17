@@ -46,7 +46,11 @@ def overlord_guardrail_check(
     action: str,
     proposed_code: str = "",
 ) -> dict:
-    """Pre-flight check before an agent writes to a file."""
+    """Pre-flight check before an agent writes to a file.
+
+    When blocked due to file overlap, the response includes a ``handoff`` object
+    with owner intent and optional backlog mission suggestion.
+    """
     with _client() as client:
         response = client.post(
             "/guardrails/check",

@@ -248,18 +248,39 @@ def check_action(
     action: str,
     proposed_code: str,
     session_store: Any,
+    mission_store: Any = None,
 ) -> Any:
     """Agentic workflow guardrail check: session store + AgentCore policy preflight."""
     from models import GuardrailCheckResponse
+    from services.handoff import build_gratitude_handoff
 
-    others = mem.agents_on_file(session_id, file_path, exclude=agent_id)
-    if not others:
-        others = session_store.agents_on_file(session_id, file_path, exclude=agent_id)
+    others = list(session_store.agents_on_file(session_id, file_path, exclude=agent_id))
+    try:
+        for agent in mem.agents_on_file(session_id, file_path, exclude=agent_id):
+            if agent not in others:
+                others.append(agent)
+    except Exception:
+        pass
     if action in {"write", "delete"} and others:
+        owner_rows = session_store.intents_on_file(session_id, file_path, exclude=agent_id)
+        if not owner_rows or not isinstance(owner_rows[0].get("agent_id"), str):
+            owner_rows = [
+                {"agent_id": owner_id, "intent": "active work on this file"}
+                for owner_id in others
+            ]
+        handoff = build_gratitude_handoff(
+            session_id=session_id,
+            blocked_agent_id=agent_id,
+            file_path=file_path,
+            session_store=session_store,
+            mission_store=mission_store,
+            owners=owner_rows,
+        )
         return GuardrailCheckResponse(
             allowed=False,
             reason=f"File {file_path} active for agents: {', '.join(others)}",
             route_to_overlord=True,
+            handoff=handoff,
         )
 
     proposed = {

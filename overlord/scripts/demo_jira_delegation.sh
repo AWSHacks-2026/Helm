@@ -26,6 +26,15 @@ curl -s -X POST "$BASE/missions" -H 'Content-Type: application/json' -d "{
 }"
 echo ""
 
+curl -s -X POST "$BASE/missions" -H 'Content-Type: application/json' -d "{
+  \"session_id\": \"$SESSION\",
+  \"external_id\": \"PROJ-103\",
+  \"source\": \"jira\",
+  \"title\": \"Billing invoices\",
+  \"file_path\": \"app/billing/invoices.py\"
+}"
+echo ""
+
 echo "=== Act D2: Delegate (dedup overlapping file) ==="
 curl -s -X POST "$BASE/missions/delegate" -H 'Content-Type: application/json' -d "{
   \"session_id\": \"$SESSION\",

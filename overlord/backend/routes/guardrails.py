@@ -18,6 +18,7 @@ def guardrails_check(
         action=payload.action,
         proposed_code=payload.proposed_code,
         session_store=request.app.state.session_store,
+        mission_store=request.app.state.mission_store,
     )
     if not result.allowed:
         knowledge_base.append_event(
@@ -27,4 +28,15 @@ def guardrails_check(
                 "payload": {**payload.model_dump(), "reason": result.reason},
             },
         )
+        if result.handoff is not None:
+            knowledge_base.append_event(
+                payload.session_id,
+                {
+                    "event_type": "gratitude_handoff",
+                    "payload": {
+                        **payload.model_dump(),
+                        "handoff": result.handoff.model_dump(),
+                    },
+                },
+            )
     return result

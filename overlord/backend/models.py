@@ -76,6 +76,8 @@ class IntentRecordRequest(BaseModel):
 
 class IntentRecordResponse(BaseModel):
     recorded: bool = True
+    overlap_detected: bool = False
+    alignment: dict | None = None
 
 
 class GuardrailCheckRequest(BaseModel):
@@ -86,11 +88,21 @@ class GuardrailCheckRequest(BaseModel):
     proposed_code: str = ""
 
 
+class GratitudeHandoff(BaseModel):
+    owner_agent_id: str
+    owner_intent: str
+    message: str
+    suggested_file_path: str | None = None
+    suggested_mission_id: str | None = None
+    suggested_task: str | None = None
+
+
 class GuardrailCheckResponse(BaseModel):
     allowed: bool
     reason: str = ""
     route_to_overlord: bool = False
     conflict_id: str | None = None
+    handoff: GratitudeHandoff | None = None
 
 
 class HistoryEvent(BaseModel):
@@ -99,7 +111,9 @@ class HistoryEvent(BaseModel):
     timestamp: str
     event_type: Literal[
         "intent_declared",
+        "intent_aligned",
         "guardrail_blocked",
+        "gratitude_handoff",
         "conflict_resolved",
         "conflict_approved",
         "mission_created",

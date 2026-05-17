@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Any
 
 from overlord import detect_duplication, detect_duplication_fleet
+from services.thanksgiving_queue import pick_backlog_mission
 from store.missions import MissionRecord, MissionStore
 
 
@@ -76,27 +77,54 @@ def delegate_missions(
             if raw.get("duplicate_detected"):
                 continue_id = raw["agent_to_continue"]
                 reassign_id = raw["agent_to_reassign"]
-                suggested = raw.get("suggested_new_task")
                 if continue_id == agent_a_id:
-                    store.assign(first.mission_id, continue_id, suggested)
-                    store.assign(second.mission_id, reassign_id, suggested)
+                    continue_m, reassign_m = first, second
                 else:
-                    store.assign(second.mission_id, continue_id, suggested)
-                    store.assign(first.mission_id, reassign_id, suggested)
-                assignments.append(
-                    {
-                        "mission_id": first.mission_id,
-                        "assigned_agent_id": store.get(first.mission_id).assigned_agent_id,
-                        "action": "continue" if continue_id == agent_a_id else "reassign",
-                    }
+                    continue_m, reassign_m = second, first
+                store.assign(continue_m.mission_id, continue_id)
+                picked = pick_backlog_mission(
+                    store, session_id=session_id, exclude_file_paths={file_path}
                 )
-                assignments.append(
-                    {
-                        "mission_id": second.mission_id,
-                        "assigned_agent_id": store.get(second.mission_id).assigned_agent_id,
-                        "action": "continue" if continue_id == agent_b_id else "reassign",
-                    }
-                )
+                if picked:
+                    task = f"{picked.title}\n{picked.description}".strip()
+                    store.assign(reassign_m.mission_id, reassign_id, task)
+                    store.assign(picked.mission_id, reassign_id, task)
+                    assignments.append(
+                        {
+                            "mission_id": continue_m.mission_id,
+                            "assigned_agent_id": continue_id,
+                            "action": "continue",
+                        }
+                    )
+                    assignments.append(
+                        {
+                            "mission_id": reassign_m.mission_id,
+                            "assigned_agent_id": reassign_id,
+                            "action": "reassign",
+                            "assignment_source": "thanksgiving_queue",
+                            "backlog_mission_id": picked.mission_id,
+                            "backlog_external_id": picked.external_id,
+                        }
+                    )
+                else:
+                    suggested = raw.get("suggested_new_task")
+                    store.assign(reassign_m.mission_id, reassign_id, suggested)
+                    assignments.append(
+                        {
+                            "mission_id": continue_m.mission_id,
+                            "assigned_agent_id": continue_id,
+                            "action": "continue",
+                        }
+                    )
+                    assignments.append(
+                        {
+                            "mission_id": reassign_m.mission_id,
+                            "assigned_agent_id": reassign_id,
+                            "action": "reassign",
+                            "assignment_source": "llm_suggested",
+                            "suggested_new_task": suggested,
+                        }
+                    )
             else:
                 store.assign(first.mission_id, agent_a_id)
                 store.assign(second.mission_id, agent_b_id)
