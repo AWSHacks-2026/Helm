@@ -5,6 +5,7 @@ import os
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Literal
 
 from agents.haiku_agent import agent_model_id
 from bedrock.invoke_tracked import InvokeUsage
@@ -12,6 +13,9 @@ from bedrock.invoke_tracked import invoke_anthropic_messages
 
 
 AGENT_COUNTS = (2, 4, 8, 16)
+REALISTIC_OVERLAP_PROFILE = "realistic-overlap"
+WORST_CASE_PROFILE = "worst-case"
+BenchmarkProfile = Literal["realistic-overlap", "worst-case"]
 TEST_PROMPT = (
     "Build a full-stack e-commerce platform with user authentication, "
     "product catalog, shopping cart, payment processing, order management, "
@@ -26,6 +30,8 @@ class BenchmarkConfig:
     output_dir: Path = DEFAULT_OUTPUT_DIR
     max_tokens: int = 700
     allow_mock: bool = False
+    show_progress: bool = True
+    profile: BenchmarkProfile = REALISTIC_OVERLAP_PROFILE
 
 
 @dataclass(frozen=True)
@@ -78,6 +84,91 @@ def build_overlord_agents(agent_count: int) -> tuple[dict, dict]:
     )
 
 
+def _agent_ids(agent_count: int) -> list[str]:
+    return [f"agent_{index:02d}" for index in range(1, agent_count + 1)]
+
+
+def _realistic_clusters(agent_count: int) -> list[list[str]]:
+    agent_ids = _agent_ids(agent_count)
+    if agent_count <= 2:
+        sizes = [agent_count]
+    elif agent_count <= 4:
+        sizes = [2, agent_count - 2]
+    elif agent_count <= 8:
+        sizes = [3, 3, agent_count - 6]
+    else:
+        # Approximate real project overlap zones: auth, commerce, catalog, admin/ML.
+        base_sizes = [4, 5, 4, 3]
+        sizes = []
+        remaining = agent_count
+        for size in base_sizes:
+            if remaining <= 0:
+                break
+            sizes.append(min(size, remaining))
+            remaining -= size
+        if remaining > 0:
+            sizes[-1] += remaining
+
+    clusters: list[list[str]] = []
+    cursor = 0
+    for size in sizes:
+        if size <= 0:
+            continue
+        clusters.append(agent_ids[cursor : cursor + size])
+        cursor += size
+    return clusters
+
+
+def _validate_profile(profile: str) -> BenchmarkProfile:
+    if profile not in {REALISTIC_OVERLAP_PROFILE, WORST_CASE_PROFILE}:
+        raise ValueError(
+            f"profile must be {REALISTIC_OVERLAP_PROFILE!r} or {WORST_CASE_PROFILE!r}"
+        )
+    return profile  # type: ignore[return-value]
+
+
+def create_conflict_pairs(
+    *,
+    agent_count: int,
+    profile: BenchmarkProfile,
+) -> list[tuple[str, str]]:
+    _validate_profile(profile)
+    if profile == WORST_CASE_PROFILE:
+        agent_ids = _agent_ids(agent_count)
+        return [
+            (agent_id, peer_id)
+            for agent_id in agent_ids
+            for peer_id in agent_ids
+            if agent_id != peer_id
+        ]
+
+    pairs: list[tuple[str, str]] = []
+    for cluster in _realistic_clusters(agent_count):
+        pairs.extend(
+            (agent_id, peer_id)
+            for agent_id in cluster
+            for peer_id in cluster
+            if agent_id != peer_id
+        )
+    return pairs
+
+
+def build_overlord_coordination_pairs(
+    *,
+    agent_count: int,
+    profile: BenchmarkProfile,
+) -> list[tuple[str, str]]:
+    _validate_profile(profile)
+    if profile == WORST_CASE_PROFILE:
+        return [("agent_01", peer_id) for peer_id in _agent_ids(agent_count)[1:]]
+
+    pairs: list[tuple[str, str]] = []
+    for cluster in _realistic_clusters(agent_count):
+        lead_id = cluster[0]
+        pairs.extend((lead_id, peer_id) for peer_id in cluster[1:])
+    return pairs
+
+
 def count_conflicting_edits(outputs: dict[str, str]) -> int:
     overlapping_outputs = [
         output
@@ -120,6 +211,15 @@ def _build_rate(*, successful_calls: int, planned_calls: int) -> float:
     return successful_calls / planned_calls
 
 
+def _progress(iterable, *, total: int, desc: str, enabled: bool):
+    if not enabled:
+        return iterable
+
+    from tqdm import tqdm
+
+    return tqdm(iterable, total=total, desc=desc, unit="req")
+
+
 def _usage_to_dict(usage: InvokeUsage) -> dict[str, int | str]:
     return {
         "model_id": usage.model_id,
@@ -136,8 +236,15 @@ def arbitrate(agent_a: dict, agent_b: dict, **kwargs) -> dict:
     return overlord_arbitrate(agent_a, agent_b, **kwargs)
 
 
-def run_without_overlord(*, agent_count: int, max_tokens: int) -> dict:
+def run_without_overlord(
+    *,
+    agent_count: int,
+    max_tokens: int,
+    profile: BenchmarkProfile = REALISTIC_OVERLAP_PROFILE,
+    show_progress: bool = False,
+) -> dict:
     _validate_agent_count(agent_count)
+    profile = _validate_profile(profile)
     started = time.perf_counter()
     intents = {
         f"agent_{index:02d}": build_agent_intent(index)
@@ -145,28 +252,35 @@ def run_without_overlord(*, agent_count: int, max_tokens: int) -> dict:
     }
     usages: list[InvokeUsage] = []
     outputs: dict[str, str] = {}
-    planned_calls = agent_count * (agent_count - 1)
+    pair_ids = create_conflict_pairs(agent_count=agent_count, profile=profile)
+    planned_calls = len(pair_ids)
 
-    for agent_id, agent_intent in intents.items():
-        for peer_id, peer_intent in intents.items():
-            if agent_id == peer_id:
-                continue
+    pairs = [
+        (agent_id, intents[agent_id], peer_id, intents[peer_id])
+        for agent_id, peer_id in pair_ids
+    ]
 
-            prompt = build_agent_conflict_prompt(
-                agent_id=agent_id,
-                peer_id=peer_id,
-                agent_intent=agent_intent,
-                peer_intent=peer_intent,
-            )
-            output, usage = invoke_anthropic_messages(
-                model_id=agent_model_id(),
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=max_tokens,
-                role=agent_id,
-            )
-            _require_usage_tokens(usage, source="Agent Haiku resolution")
-            usages.append(usage)
-            outputs[f"{agent_id}->{peer_id}"] = output
+    for agent_id, agent_intent, peer_id, peer_intent in _progress(
+        pairs,
+        total=planned_calls,
+        desc=f"Without Overlord {profile} N={agent_count}",
+        enabled=show_progress,
+    ):
+        prompt = build_agent_conflict_prompt(
+            agent_id=agent_id,
+            peer_id=peer_id,
+            agent_intent=agent_intent,
+            peer_intent=peer_intent,
+        )
+        output, usage = invoke_anthropic_messages(
+            model_id=agent_model_id(),
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens,
+            role=agent_id,
+        )
+        _require_usage_tokens(usage, source="Agent Haiku resolution")
+        usages.append(usage)
+        outputs[f"{agent_id}->{peer_id}"] = output
 
     seconds = time.perf_counter() - started
     return {
@@ -222,27 +336,41 @@ def _usage_from_arbitration_result(result: dict, *, allow_mock: bool = False) ->
     return usage
 
 
-def run_with_overlord(*, agent_count: int, allow_mock: bool = False) -> dict:
+def run_with_overlord(
+    *,
+    agent_count: int,
+    allow_mock: bool = False,
+    profile: BenchmarkProfile = REALISTIC_OVERLAP_PROFILE,
+    show_progress: bool = False,
+) -> dict:
     _validate_agent_count(agent_count)
+    profile = _validate_profile(profile)
     started = time.perf_counter()
     intents = {
         f"agent_{index:02d}": build_agent_intent(index)
         for index in range(1, agent_count + 1)
     }
-    lead_id = "agent_01"
-    lead_agent = {"intent": intents[lead_id], "code": intents[lead_id]}
     usages: list[InvokeUsage] = []
     outputs: dict[str, str] = {}
-    planned_calls = agent_count - 1
+    pairs = build_overlord_coordination_pairs(
+        agent_count=agent_count,
+        profile=profile,
+    )
+    planned_calls = len(pairs)
 
-    for peer_index in range(2, agent_count + 1):
-        peer_id = f"agent_{peer_index:02d}"
+    for lead_id, peer_id in _progress(
+        pairs,
+        total=planned_calls,
+        desc=f"With Overlord {profile} N={agent_count}",
+        enabled=show_progress,
+    ):
+        lead_agent = {"intent": intents[lead_id], "code": intents[lead_id]}
         peer_agent = {"intent": intents[peer_id], "code": intents[peer_id]}
         result = arbitrate(
             lead_agent,
             peer_agent,
             conflict_kind="intent",
-            session_id=f"token-benchmark-{agent_count}-{peer_index}",
+            session_id=f"token-benchmark-{profile}-{agent_count}-{lead_id}-{peer_id}",
         )
         usages.append(_usage_from_arbitration_result(result, allow_mock=allow_mock))
         outputs[peer_id] = " ".join(
@@ -276,10 +404,14 @@ def run_benchmark_matrix(config: BenchmarkConfig) -> list[BenchmarkRow]:
         without_overlord = run_without_overlord(
             agent_count=agent_count,
             max_tokens=config.max_tokens,
+            profile=config.profile,
+            show_progress=config.show_progress,
         )
         with_overlord = run_with_overlord(
             agent_count=agent_count,
             allow_mock=config.allow_mock,
+            profile=config.profile,
+            show_progress=config.show_progress,
         )
         rows.append(
             BenchmarkRow(
@@ -307,24 +439,48 @@ def run_benchmark_matrix(config: BenchmarkConfig) -> list[BenchmarkRow]:
     return rows
 
 
-def write_results_json(rows: list[BenchmarkRow], output_dir: Path) -> Path:
+def _output_stem(profile: BenchmarkProfile | None = None) -> str:
+    if profile is None:
+        return "overlord-token-benchmark"
+    return f"overlord-token-benchmark-{_validate_profile(profile)}"
+
+
+def write_results_json(
+    rows: list[BenchmarkRow],
+    output_dir: Path,
+    *,
+    profile: BenchmarkProfile | None = None,
+) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
-    path = output_dir / "overlord-token-benchmark.json"
+    path = output_dir / f"{_output_stem(profile)}.json"
+    payload: list[dict[str, int | float]] | dict[str, object]
+    if profile is None:
+        payload = [row.to_dict() for row in rows]
+    else:
+        payload = {
+            "profile": _validate_profile(profile),
+            "rows": [row.to_dict() for row in rows],
+        }
     path.write_text(
-        json.dumps([row.to_dict() for row in rows], indent=2),
+        json.dumps(payload, indent=2),
         encoding="utf-8",
     )
     return path
 
 
-def save_benchmark_figure(rows: list[BenchmarkRow], output_dir: Path) -> Path:
+def save_benchmark_figure(
+    rows: list[BenchmarkRow],
+    output_dir: Path,
+    *,
+    profile: BenchmarkProfile | None = None,
+) -> Path:
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    path = output_dir / "overlord-token-benchmark.png"
+    path = output_dir / f"{_output_stem(profile)}.png"
 
     agent_counts = [row.agent_count for row in rows]
     without_tokens = [row.without_overlord_tokens for row in rows]
@@ -337,7 +493,8 @@ def save_benchmark_figure(rows: list[BenchmarkRow], output_dir: Path) -> Path:
     axes[0].plot(agent_counts, with_tokens, label="With Overlord")
     axes[0].set_xlabel("Number of agents")
     axes[0].set_ylabel("Total Bedrock tokens")
-    axes[0].set_title("Total Tokens vs Agents")
+    title_suffix = f" ({profile})" if profile else ""
+    axes[0].set_title(f"Total Tokens vs Agents{title_suffix}")
     axes[0].legend()
     axes[0].grid(True, alpha=0.3)
 
@@ -345,7 +502,7 @@ def save_benchmark_figure(rows: list[BenchmarkRow], output_dir: Path) -> Path:
     axes[1].plot(agent_counts, with_seconds, label="With Overlord")
     axes[1].set_xlabel("Number of agents")
     axes[1].set_ylabel("Wall-clock seconds")
-    axes[1].set_title("Resolution Time vs Agents")
+    axes[1].set_title(f"Resolution Time vs Agents{title_suffix}")
     axes[1].legend()
     axes[1].grid(True, alpha=0.3)
 

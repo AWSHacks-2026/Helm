@@ -25,6 +25,8 @@ if env_path.exists():
 
 from agents.token_benchmark import (  # noqa: E402
     AGENT_COUNTS,
+    REALISTIC_OVERLAP_PROFILE,
+    WORST_CASE_PROFILE,
     BenchmarkConfig,
     print_summary_table,
     run_benchmark_matrix,
@@ -54,6 +56,17 @@ def main() -> int:
         action="store_true",
         help="Allow OVERLORD_MOCK_BEDROCK=1 for local test runs only.",
     )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable tqdm progress bars.",
+    )
+    parser.add_argument(
+        "--profile",
+        choices=(REALISTIC_OVERLAP_PROFILE, WORST_CASE_PROFILE),
+        default=REALISTIC_OVERLAP_PROFILE,
+        help="Conflict model to benchmark.",
+    )
     args = parser.parse_args()
 
     config = BenchmarkConfig(
@@ -61,11 +74,13 @@ def main() -> int:
         output_dir=args.output_dir,
         max_tokens=args.max_tokens,
         allow_mock=args.allow_mock,
+        show_progress=not args.no_progress,
+        profile=args.profile,
     )
     rows = run_benchmark_matrix(config)
     print_summary_table(rows)
-    json_path = write_results_json(rows, config.output_dir)
-    figure_path = save_benchmark_figure(rows, config.output_dir)
+    json_path = write_results_json(rows, config.output_dir, profile=config.profile)
+    figure_path = save_benchmark_figure(rows, config.output_dir, profile=config.profile)
     print(f"Wrote {json_path}")
     print(f"Wrote {figure_path}")
     return 0

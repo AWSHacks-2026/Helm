@@ -101,17 +101,77 @@ source "$HOME/.bashrc" && activatevenv
 OVERLORD_MOCK_BEDROCK=0 python overlord/scripts/benchmark_overlord_tokens.py
 ```
 
+The default `realistic-overlap` profile models clustered project conflicts instead of every agent conflicting with every other agent. Use `--profile worst-case` only when you want the stress-test ceiling:
+
+```bash
+OVERLORD_MOCK_BEDROCK=0 python overlord/scripts/benchmark_overlord_tokens.py --profile worst-case
+```
+
 The benchmark uses real Bedrock API usage fields only. It refuses to run with `OVERLORD_MOCK_BEDROCK=1` unless `--allow-mock` is passed for local testing.
 
 Outputs:
 
-- `overlord/demo/overlord-token-benchmark.json`
-- `overlord/demo/overlord-token-benchmark.png`
+- `overlord/demo/overlord-token-benchmark-realistic-overlap.json`
+- `overlord/demo/overlord-token-benchmark-realistic-overlap.png`
 
 The figure contains:
 
 - Total tokens vs number of agents, with and without Overlord
 - Resolution time vs number of agents, with and without Overlord
+
+## Static Commerce Generation Benchmark
+
+Generate real browser-runnable static commerce sites for `N = 2, 4, 8` agents:
+
+```bash
+source "$HOME/.bashrc" && activatevenv
+OVERLORD_MOCK_BEDROCK=0 python overlord/scripts/benchmark_static_site_generation.py
+```
+
+The script writes generated projects under:
+
+- `overlord/demo/generated/static-commerce/without-overlord/N8/`
+- `overlord/demo/generated/static-commerce/with-overlord/N8/`
+
+Each generated project includes `index.html`, `styles.css`, `app.js`, `README.md`, and `manifest.json` with token usage and quality scoring.
+
+To view one locally:
+
+```bash
+python -m http.server 5174 --directory overlord/demo/generated/static-commerce/with-overlord/N8
+```
+
+Then open `http://127.0.0.1:5174`.
+
+For a no-cost smoke test:
+
+```bash
+OVERLORD_MOCK_BEDROCK=1 python overlord/scripts/benchmark_static_site_generation.py --allow-mock --no-progress --output-dir /tmp/static-commerce-demo
+```
+
+For the richer judge-facing version, use `--quality-mode rich`. This uses a higher default generation budget, seeded visual directions per agent, and writes a new project folder:
+
+```bash
+source "$HOME/.bashrc" && activatevenv
+OVERLORD_MOCK_BEDROCK=0 python overlord/scripts/benchmark_static_site_generation.py --quality-mode rich
+```
+
+The static benchmark logs timing, token usage, file sizes, merge/scoring results, and output paths at `INFO` level by default. Use `--log-level WARNING` for quiet runs or `--log-level DEBUG` if you add deeper diagnostics later.
+
+Rich outputs are written under:
+
+- `overlord/demo/generated/static-commerce-rich/without-overlord/N8/`
+- `overlord/demo/generated/static-commerce-rich/with-overlord/N8/`
+
+Each rich project includes the merged runnable app plus `agent-work/` folders containing each agent's isolated generated app and `merge-report.md` describing the simulated file-level conflicts. The summary table and `manifest.json` include the same token/time/quality metrics plus `merge_conflicts`.
+
+To view the rich Overlord-generated site locally:
+
+```bash
+python -m http.server 5174 --directory overlord/demo/generated/static-commerce-rich/with-overlord/N8
+```
+
+Then open `http://127.0.0.1:5174`.
 
 ## Dashboard
 
