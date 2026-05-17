@@ -1,13 +1,32 @@
-.venv/
+# Root: track only helm/, shopfix/, streamcast/, README.md (+ this file)
+/*
+!.gitignore
+!/README.md
+!/helm/
+!/helm/**
+!/shopfix/
+!/shopfix/**
+!/streamcast/
+!/streamcast/**
+
+# Root paths (including dotdirs not matched by /*)
+/.github/
+/.worktrees/
+/agent_docs/
+/docs/
+/.venv/
+/.overlord/
+/.superpowers/
+/.helm/
+.env
+AWSHacks2026_Rubric.pdf
+*.png
+helm_architecture.html
+
+# Artifacts inside allowed trees
+.helm/
 .overlord/
 .superpowers/
-.helm/
-.env
-.worktrees/
-agent_docs/*
-!agent_docs/
-!agent_docs/feature-2-demo.md
-docs/superpowers/plans
 helm/STACK_PRIVATE.md
 *.env.local
 helm/data/sessions/
