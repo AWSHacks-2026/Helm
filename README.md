@@ -247,18 +247,3 @@ cd frontend && npm test
 | [`helm/docs/STACK_FLOWCHART_SOURCE.md`](helm/docs/STACK_FLOWCHART_SOURCE.md) | Architecture for Claude / flowchart tools (nodes, edges, Mermaid) |
 | [`helm/experiments/EXPERIMENT_RESULTS.md`](helm/experiments/EXPERIMENT_RESULTS.md) | Numbers, reproduce commands |
 | [`helm/experiments/SHOPFIX_DEMO_PREP.md`](helm/experiments/SHOPFIX_DEMO_PREP.md) | Stage checklist |
-
----
-
-## Hackathon theme — why judges should score Theme Alignment highly
-
-| Rubric signal | How Overlord delivers |
-|---------------|----------------------|
-| Theme is **load-bearing** | Swap “gratitude” for “wellness” and the product breaks — the **Gratitude ledger** is the core UX payoff, not marketing copy. |
-| **Concrete** who it serves | Software engineers (our parents’ generation) — merge conflicts, fleet overlap, guardrail blocks. |
-| **Pays forward** | Session ledger + roadmap: fleet CI, shared memory, intent coordination for the next team. |
-| **Bedrock track** | AgentCore Memory, Policy, tiered models, contention gate — architecture worse on a single REST chat endpoint. |
-
-**Presenter line:** “This tab is our thank-you — every block and dedup is an hour someone gets back.”
-
-Questions during judging? `?presenter=1` → guided demo → **Gratitude** after replay — that’s the theme on screen.
