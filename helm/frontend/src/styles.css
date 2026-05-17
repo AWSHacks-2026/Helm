@@ -1034,8 +1034,100 @@ body.presenter-mode .pillar-headline-grid {
   font-size: 0.85em;
 }
 
-body.presenter-mode .app-nav button:last-child {
-  display: none;
+.presentation-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.presentation-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.presentation-hero::after {
+  position: absolute;
+  right: -5rem;
+  bottom: -7rem;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(101, 232, 209, 0.16), transparent 68%);
+  content: "";
+}
+
+.presentation-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.presentation-metric-card strong {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+}
+
+.presentation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.presentation-card {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  border: 1px solid rgba(139, 171, 217, 0.16);
+  border-radius: 24px;
+  padding: 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(20, 30, 49, 0.94), rgba(12, 18, 31, 0.94)),
+    rgba(12, 18, 31, 0.92);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.presentation-card h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.presentation-card p {
+  margin: 0;
+  color: #aebbd0;
+}
+
+.coordination-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(101, 232, 209, 0.28);
+  border-radius: 24px;
+  padding: 1.1rem;
+  background: rgba(6, 10, 18, 0.34);
+}
+
+.coordination-diagram span {
+  border: 1px solid rgba(139, 171, 217, 0.2);
+  border-radius: 999px;
+  padding: 0.65rem 0.95rem;
+  background: rgba(20, 30, 49, 0.8);
+  color: #edf4ff;
+  font-weight: 800;
+}
+
+.coordination-diagram .coordination-arrow {
+  border-color: transparent;
+  background: transparent;
+  color: #65e8d1;
 }
 
 body.presenter-mode .screen-header h1 {
@@ -1415,7 +1507,9 @@ body.presenter-mode .demo-chart-button img {
   }
 
   .metric-grid,
-  .proof-strip {
+  .proof-strip,
+  .impact-grid,
+  .presentation-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1466,8 +1560,19 @@ body.presenter-mode .demo-chart-button img {
   .landing-actions,
   .metric-grid,
   .proof-strip,
-  .merge-conflict-grid {
+  .merge-conflict-grid,
+  .impact-grid,
+  .presentation-grid {
     grid-template-columns: 1fr;
+  }
+
+  .coordination-diagram {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .coordination-diagram span {
+    text-align: center;
   }
 
   .screen-header {

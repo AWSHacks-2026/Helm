@@ -7,6 +7,8 @@ import { DemoWalkthrough } from "./components/DemoWalkthrough";
 import { IncidentConsole } from "./components/IncidentConsole";
 import { LandingPage } from "./components/LandingPage";
 import { LegacyLabPanel } from "./components/LegacyLabPanel";
+import { ProblemStatementPage } from "./components/ProblemStatementPage";
+import { SolutionPage } from "./components/SolutionPage";
 import { JUDGE_WALKTHROUGH } from "./demoWalkthrough";
 import GratitudeLedgerPanel from "./GratitudeLedger";
 import {
@@ -123,6 +125,14 @@ export default function App() {
           onStartJudgeDemo={handleStartJudgeDemo}
         />
       );
+    }
+
+    if (view === "problem") {
+      return <ProblemStatementPage />;
+    }
+
+    if (view === "solution") {
+      return <SolutionPage />;
     }
 
     if (view === "control") {
