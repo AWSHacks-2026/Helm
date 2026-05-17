@@ -10,7 +10,6 @@ interface IncidentConsoleProps {
 
 const incidentTypes = [
   "merge_conflict",
-  "intent_conflict",
   "guardrail_block",
   "duplicate_work",
 ] as const;

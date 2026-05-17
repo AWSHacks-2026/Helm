@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from fastapi import APIRouter
 
 from bedrock import knowledge_base
@@ -10,4 +12,4 @@ router = APIRouter(tags=["gratitude"])
 def get_gratitude(session_id: str) -> dict:
     events = knowledge_base.list_history(session_id)
     ledger = build_gratitude_ledger(events)
-    return ledger.__dict__
+    return asdict(ledger)

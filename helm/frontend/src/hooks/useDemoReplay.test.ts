@@ -158,11 +158,19 @@ vi.mock("react", () => ({
   useCallback: hookHarness.useCallback,
   useEffect: hookHarness.useEffect,
   useMemo: hookHarness.useMemo,
+  useRef: <T,>(initialValue: T) => ({ current: initialValue }),
   useState: hookHarness.useState,
 }));
 
-vi.mock("../orchestration/demoReplay", () => ({
-  createDemoReplayEvents: replayFixture.createDemoReplayEvents,
+vi.mock("../orchestration/demoScenarios", () => ({
+  DEFAULT_DEMO_SCENARIO_ID: "fleet_contention",
+  getDemoScenario: () => ({
+    id: "fleet_contention",
+    label: "Fleet dedup",
+    subtitle: "test",
+    completeHint: "done",
+    createEvents: replayFixture.createDemoReplayEvents,
+  }),
 }));
 
 describe("useDemoReplay", () => {
@@ -264,13 +272,13 @@ describe("useDemoReplay", () => {
     const { useDemoReplay } = await import("./useDemoReplay");
 
     hookHarness.beginRender();
-    let replay = useDemoReplay({ enabled: false });
+    let replay = useDemoReplay({ advancing: false });
     expect(replay.isPlaying).toBe(true);
     expect(vi.getTimerCount()).toBe(0);
 
     vi.advanceTimersByTime(1200);
     hookHarness.beginRender();
-    replay = useDemoReplay({ enabled: false });
+    replay = useDemoReplay({ advancing: false });
 
     expect(replay.model.timeline.map((event) => event.id)).toEqual(["event-001"]);
     expect(vi.getTimerCount()).toBe(0);

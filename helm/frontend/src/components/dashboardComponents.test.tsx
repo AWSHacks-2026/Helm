@@ -12,6 +12,10 @@ const reactState = vi.hoisted(() => ({
   setSelectedFilter: vi.fn(),
 }));
 
+vi.mock("./SetupChecker", () => ({
+  SetupChecker: () => <div data-testid="setup-checker-stub" />,
+}));
+
 vi.mock("react", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react")>();
 
@@ -170,14 +174,17 @@ describe("dashboard components", () => {
         sessionId="team-demo"
         onSessionIdChange={() => undefined}
         onStartReplay={() => undefined}
-        onOpenLiveSession={() => undefined}
+        onStartJudgeDemo={() => undefined}
       />,
     );
 
     expect(html).toContain("landing-page");
-    expect(html).toContain("Watch Demo");
-    expect(html).toContain("Open Live Session");
+    expect(html).toContain("Start guided demo");
+    expect(html).toContain("Watch replay");
+    expect(html).not.toContain("Open live session");
     expect(html).toContain("value=\"team-demo\"");
+    expect(html).toContain("Build with Gratitude");
+    expect(html).toContain("merge conflicts");
     expect(html).toContain("Merge conflicts");
     expect(html).toContain("Guardrails");
     expect(html).toContain("Dedup");
@@ -186,12 +193,12 @@ describe("dashboard components", () => {
   it("wires landing page session and action callbacks", () => {
     const onSessionIdChange = vi.fn();
     const onStartReplay = vi.fn();
-    const onOpenLiveSession = vi.fn();
+    const onStartJudgeDemo = vi.fn();
     const root = LandingPage({
       sessionId: "team-demo",
       onSessionIdChange,
       onStartReplay,
-      onOpenLiveSession,
+      onStartJudgeDemo,
     });
     const elements = walkElements(root);
     const buttons = elements.filter((element) => element.type === "button");
@@ -200,12 +207,12 @@ describe("dashboard components", () => {
     (buttons[0].props as ButtonProps).onClick?.();
     (buttons[1].props as ButtonProps).onClick?.();
     (input?.props as InputProps).onChange?.({
-      target: { value: "live-team-session" },
+      target: { value: "demo-team-session" },
     });
 
+    expect(onStartJudgeDemo).toHaveBeenCalledTimes(1);
     expect(onStartReplay).toHaveBeenCalledTimes(1);
-    expect(onOpenLiveSession).toHaveBeenCalledTimes(1);
-    expect(onSessionIdChange).toHaveBeenCalledWith("live-team-session");
+    expect(onSessionIdChange).toHaveBeenCalledWith("demo-team-session");
   });
 
   it("renders control tower metrics, fleet, timeline, incidents, and raw invalid timestamps", () => {
@@ -272,7 +279,7 @@ describe("dashboard components", () => {
 
     expect(html).toContain("incident-console");
     expect(html).toContain("Merge conflict");
-    expect(html).toContain("Intent conflict");
+    expect(html).not.toContain("Intent conflict");
     expect(html).toContain("Guardrail block");
     expect(html).toContain("Duplicate work");
     expect(html.indexOf("Checkout merge conflict")).toBeLessThan(

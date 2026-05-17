@@ -64,21 +64,24 @@ def log_action(
     if _use_local() or not _memory_id():
         return _append_local(record)
 
-    from bedrock_agentcore.memory import MemoryClient
+    try:
+        from bedrock_agentcore.memory import MemoryClient
 
-    client = MemoryClient()
-    client.create_event(
-        memory_id=_memory_id(),
-        actor_id=actor_id,
-        session_id=session_id,
-        messages=[(json.dumps(record["payload"]), "TOOL")],
-        metadata={
-            "record_type": {"stringValue": "action"},
-            "file_path": {"stringValue": file_path},
-            "action_type": {"stringValue": action_type},
-        },
-    )
-    return record
+        client = MemoryClient()
+        client.create_event(
+            memory_id=_memory_id(),
+            actor_id=actor_id,
+            session_id=session_id,
+            messages=[(json.dumps(record["payload"]), "TOOL")],
+            metadata={
+                "record_type": {"stringValue": "action"},
+                "file_path": {"stringValue": file_path},
+                "action_type": {"stringValue": action_type},
+            },
+        )
+        return record
+    except Exception:
+        return _append_local(record)
 
 
 def log_intent(
@@ -98,20 +101,23 @@ def log_intent(
     if _use_local() or not _memory_id():
         return _append_local(record)
 
-    from bedrock_agentcore.memory import MemoryClient
+    try:
+        from bedrock_agentcore.memory import MemoryClient
 
-    client = MemoryClient()
-    client.create_event(
-        memory_id=_memory_id(),
-        actor_id=actor_id,
-        session_id=session_id,
-        messages=[(intent, "USER")],
-        metadata={
-            "record_type": {"stringValue": "intent"},
-            "file_path": {"stringValue": file_path},
-        },
-    )
-    return record
+        client = MemoryClient()
+        client.create_event(
+            memory_id=_memory_id(),
+            actor_id=actor_id,
+            session_id=session_id,
+            messages=[(intent, "USER")],
+            metadata={
+                "record_type": {"stringValue": "intent"},
+                "file_path": {"stringValue": file_path},
+            },
+        )
+        return record
+    except Exception:
+        return _append_local(record)
 
 
 def agents_on_file(
@@ -154,17 +160,35 @@ def log_decision(
     if _use_local() or not _memory_id():
         return _append_local(record)
 
-    from bedrock_agentcore.memory import MemoryClient
+    try:
+        from bedrock_agentcore.memory import MemoryClient
 
-    client = MemoryClient()
-    client.create_event(
-        memory_id=_memory_id(),
-        actor_id="helm",
-        session_id=session_id,
-        messages=[(reasoning, "ASSISTANT")],
-        metadata={"record_type": {"stringValue": "decision"}},
-    )
-    return record
+        client = MemoryClient()
+        client.create_event(
+            memory_id=_memory_id(),
+            actor_id="helm",
+            session_id=session_id,
+            messages=[(reasoning, "ASSISTANT")],
+            metadata={"record_type": {"stringValue": "decision"}},
+        )
+        return record
+    except Exception:
+        return _append_local(record)
+
+
+def _list_events_local(
+    session_id: str,
+    *,
+    actor_id: str | None = None,
+    record_type: str | None = None,
+    limit: int = 50,
+) -> list[dict[str, Any]]:
+    records = [r for r in _read_local() if r.get("session_id") == session_id]
+    if actor_id:
+        records = [r for r in records if r.get("actor_id") == actor_id]
+    if record_type:
+        records = [r for r in records if r.get("record_type") == record_type]
+    return records[-limit:]
 
 
 def list_events(
@@ -175,32 +199,40 @@ def list_events(
     limit: int = 50,
 ) -> list[dict[str, Any]]:
     if _use_local() or not _memory_id():
-        records = [r for r in _read_local() if r.get("session_id") == session_id]
-        if actor_id:
-            records = [r for r in records if r.get("actor_id") == actor_id]
-        if record_type:
-            records = [r for r in records if r.get("record_type") == record_type]
-        return records[-limit:]
-
-    from bedrock_agentcore.memory import MemoryClient
-
-    client = MemoryClient()
-    actors = [actor_id] if actor_id else _distinct_actors(session_id)
-    out: list[dict[str, Any]] = []
-    for aid in actors:
-        resp = client.list_events(
-            memory_id=_memory_id(),
-            actor_id=aid,
-            session_id=session_id,
-            max_results=min(limit, 100),
+        return _list_events_local(
+            session_id,
+            actor_id=actor_id,
+            record_type=record_type,
+            limit=limit,
         )
-        events = resp if isinstance(resp, list) else resp.get("events", [])
-        for ev in events:
-            out.append(_event_to_record(session_id, aid, ev))
-    out.sort(key=lambda r: r["timestamp"])
-    if record_type:
-        out = [r for r in out if r.get("record_type") == record_type]
-    return out[-limit:]
+
+    try:
+        from bedrock_agentcore.memory import MemoryClient
+
+        client = MemoryClient()
+        actors = [actor_id] if actor_id else _distinct_actors(session_id)
+        out: list[dict[str, Any]] = []
+        for aid in actors:
+            resp = client.list_events(
+                memory_id=_memory_id(),
+                actor_id=aid,
+                session_id=session_id,
+                max_results=min(limit, 100),
+            )
+            events = resp if isinstance(resp, list) else resp.get("events", [])
+            for ev in events:
+                out.append(_event_to_record(session_id, aid, ev))
+        out.sort(key=lambda r: r["timestamp"])
+        if record_type:
+            out = [r for r in out if r.get("record_type") == record_type]
+        return out[-limit:]
+    except Exception:
+        return _list_events_local(
+            session_id,
+            actor_id=actor_id,
+            record_type=record_type,
+            limit=limit,
+        )
 
 
 def retrieve_context(session_id: str, query: str, top_k: int = 5) -> list[dict[str, Any]]:

@@ -10,7 +10,7 @@ const appHarness = vi.hoisted(() => {
     sessionId: string;
     onSessionIdChange: (sessionId: string) => void;
     onStartReplay: () => void;
-    onOpenLiveSession: () => void;
+    onStartJudgeDemo: () => void;
   };
 
   const model: DashboardModel = {
@@ -43,26 +43,15 @@ const appHarness = vi.hoisted(() => {
       pause: vi.fn(),
       reset: vi.fn(),
     })),
-    useLiveSession: vi.fn(() => ({
-      model,
-      status: "idle",
-      error: null,
-      refresh: vi.fn(),
-    })),
     reset() {
       this.landingProps = undefined;
       this.useDemoReplay.mockClear();
-      this.useLiveSession.mockClear();
     },
   };
 });
 
 vi.mock("./hooks/useDemoReplay", () => ({
   useDemoReplay: appHarness.useDemoReplay,
-}));
-
-vi.mock("./hooks/useLiveSession", () => ({
-  useLiveSession: appHarness.useLiveSession,
 }));
 
 vi.mock("./components/AppShell", () => ({
@@ -85,7 +74,7 @@ vi.mock("./components/LandingPage", () => ({
     sessionId: string;
     onSessionIdChange: (sessionId: string) => void;
     onStartReplay: () => void;
-    onOpenLiveSession: () => void;
+    onStartJudgeDemo: () => void;
   }) => {
     appHarness.landingProps = props;
 
@@ -123,7 +112,12 @@ describe("App", () => {
 
     renderToStaticMarkup(<App />);
 
-    expect(appHarness.useDemoReplay).toHaveBeenCalledWith({ enabled: false });
+    expect(appHarness.useDemoReplay).toHaveBeenCalledWith({
+      advancing: false,
+      scenarioId: "fleet_contention",
+      sessionId: "persisted-session",
+      syncToLedger: false,
+    });
   });
 
   it("persists session id changes from the landing page", async () => {

@@ -122,7 +122,9 @@ Etsy-lite fixture for **real git + optional real Bedrock** metrics:
 | `scripts/run_shopfix_benchmark.py --mock` | Mock | CI-friendly; needs Helm API on `:8000` |
 | `scripts/run_shopfix_live_benchmark.py` | Live | Real USD; refuses mock unless `--allow-mock` |
 
-Docs: `experiments/SHOPFIX_BENCHMARK.md`, `experiments/SHOPFIX_LIVE_RESULTS.md`.
+Docs: `experiments/SHOPFIX_BENCHMARK.md`, `experiments/SHOPFIX_LIVE_RESULTS.md`, `experiments/SHOPFIX_DEMO_PREP.md`.
+
+**Judge demo UI:** `cd frontend && npm run dev` → http://127.0.0.1:5173/?presenter=1 → **Start 5-minute judge demo** → **Proof & Charts**. See `docs/DEMO_JUDGES.md` Act C.
 
 ```bash
 # ShopFix app alone (repo root — sibling of helm/)

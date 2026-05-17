@@ -8,6 +8,7 @@ agent_docs/*
 !agent_docs/
 !agent_docs/feature-2-demo.md
 docs/superpowers/plans
+helm/STACK_PRIVATE.md
 *.env.local
 helm/data/sessions/
 backend/.venv/

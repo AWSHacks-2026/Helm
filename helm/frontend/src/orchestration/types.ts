@@ -103,6 +103,7 @@ export interface MergeResolvedEvent extends TimelineEventBase {
   kind: "merge_resolved";
   agentId?: string;
   incidentId?: string;
+  incident?: IncidentState;
 }
 
 export interface DuplicateDetectedEvent extends TimelineEventBase {
@@ -157,6 +158,7 @@ export interface DashboardModel {
   mode: DashboardMode;
   title: string;
   subtitle: string;
+  completeHint?: string;
   agents: AgentState[];
   incidents: IncidentState[];
   timeline: TimelineEvent[];

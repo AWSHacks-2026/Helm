@@ -2,7 +2,9 @@
 
 Supervisor service for multi-agent coding workflows. Resolves merge conflicts via Bedrock Sonnet, exposes APIs for IDE hooks (MCP / Claude Code), and includes a React dashboard.
 
-**Teammates / Cursor:** read **[`AGENTS.md`](AGENTS.md)** for contention gate vs guardrails, env vars, tests, and ShopFix benchmarks on branch `feature/contention-gated-coordination`.
+**Judges / hackathon reviewers:** start at the repo root **[`../README.md`](../README.md)** — 5-minute demo, architecture, and quick start.
+
+**Teammates / Cursor:** read **[`AGENTS.md`](AGENTS.md)** for contention gate vs guardrails, env vars, tests, and ShopFix benchmarks on branch `feature/contention-gated-coordination`. Presentation prep (private, gitignored): **`STACK_PRIVATE.md`**.
 
 ## Setup
 

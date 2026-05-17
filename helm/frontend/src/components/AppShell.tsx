@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { readPresenterMode } from "../hooks/usePresenterMode";
+
 export type AppView =
   | "landing"
   | "control"
@@ -18,13 +20,18 @@ interface AppShellProps {
 const navItems: Array<{ view: AppView; label: string }> = [
   { view: "control", label: "Control Tower" },
   { view: "incidents", label: "Incidents" },
-  { view: "missions", label: "Missions" },
   { view: "gratitude", label: "Gratitude" },
-  { view: "proof", label: "Benchmark Proof" },
+  { view: "proof", label: "Results" },
   { view: "labs", label: "Developer Labs" },
 ];
 
 export function AppShell({ view, onViewChange, children }: AppShellProps) {
+  const presenterMode =
+    typeof window !== "undefined" && readPresenterMode(window.location.search);
+  const navItemsFiltered = presenterMode
+    ? navItems.filter((item) => item.view !== "labs")
+    : navItems;
+
   return (
     <div className="app-shell">
       <nav className="app-nav" aria-label="Primary navigation">
@@ -35,7 +42,7 @@ export function AppShell({ view, onViewChange, children }: AppShellProps) {
         >
           Helm
         </button>
-        {navItems.map((item) => (
+        {navItemsFiltered.map((item) => (
           <button
             key={item.view}
             type="button"

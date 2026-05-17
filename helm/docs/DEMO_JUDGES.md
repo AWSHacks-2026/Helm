@@ -1,5 +1,15 @@
 # Judge demo script (5 minutes)
 
+## Build with Gratitude — open here (30 seconds)
+
+**Theme is the product, not the slide deck.** Our parents spent careers in software engineering watching hours vanish to merge conflicts, agents stepping on each other, and wasted compute. **Overlord** (Helm coordination + Amazon Bedrock) is our thank-you: every blocked write and deduped mission is **time back** for someone still in the chair.
+
+**Show the Gratitude tab** — the ledger is load-bearing. You cannot swap “wellness” for this theme without losing the point.
+
+**Presenter arc:** `?presenter=1` → Begin presentation → Control Tower replay → Incidents → **Gratitude** → Results charts.
+
+---
+
 ## Prerequisites
 
 1. **Shared Helm API** running (one laptop or Docker):
@@ -101,11 +111,33 @@ export HELM_API_BASE=...
 
 **Optional CI story:** GitHub → Actions → **Helm merge conflict demo** (requires repo secret `HELM_API_BASE`).
 
-## Act C — Dashboard
+## Act C — Control Tower (recommended judge path)
+
+**Terminals:**
 
 ```bash
-cd frontend && npm run dev
+# Terminal 1
+cd helm && source .venv/bin/activate && cd backend && uvicorn main:app --reload --port 8000
+# or: ./scripts/run_shared_helm.sh
+
+# Terminal 2
+cd helm/frontend && npm run dev
 ```
+
+**Browser:** http://127.0.0.1:5173/?presenter=1
+
+1. Click **Begin presentation** (guided walkthrough).
+2. Watch ShopFix replay — dedup on `auth.py`, guardrail block.
+3. **Incidents** — duplicate work our parents lived through.
+4. **Gratitude** — theme on screen: blocked, deduped, tokens returned (say the parent line here).
+5. **Results** — pillar headlines + chart deck (← → in presenter mode).
+6. Optional: **Run live guardrail (AWS)** on Results (`POST /guardrail/check`) only if AWS is verified.
+
+**Fallback if AWS fails:** replay + static charts only — do not click live benchmark buttons on stage.
+
+**ShopFix storefront (optional):** http://127.0.0.1:8001 — set `VITE_SHOPFIX_URL` in `frontend/.env`.
+
+## Act C (legacy) — Dashboard + curl history
 
 Open http://localhost:5173 — session `mergeai-hackathon-demo` shows history from Acts A/B.
 

@@ -159,7 +159,11 @@ _EVENT_TYPE_BY_RECORD = {
     "decision": "conflict_resolved",
 }
 
-_DECISION_EVENT_TYPES = {"conflict_resolved", "conflict_approved"}
+_DECISION_EVENT_TYPES = {
+    "conflict_resolved",
+    "conflict_approved",
+    "intent_aligned",
+}
 
 
 def _parse_json_object(value: Any) -> dict[str, Any] | None:
@@ -216,7 +220,21 @@ def append_event(session_id: str, event: dict[str, Any]) -> dict[str, Any]:
             agent_id=payload.get("agent_id", "unknown"),
             action_type="guardrail_blocked",
             file_path=payload.get("file_path", ""),
-            description=payload.get("reason", "blocked"),
+            description=payload.get("reason", payload.get("message", "blocked")),
+            session_id=session_id,
+        )
+    elif event_type == "mission_delegated":
+        record = log_action(
+            agent_id=payload.get("agent_id", "helm"),
+            action_type="mission_delegated",
+            file_path=payload.get("file_path", ""),
+            description=json.dumps(payload),
+            session_id=session_id,
+        )
+    elif event_type == "intent_aligned":
+        record = log_decision(
+            reasoning=json.dumps({"event_type": "intent_aligned", "payload": payload}),
+            affected_agents=payload.get("affected_agents", []),
             session_id=session_id,
         )
     elif event_type in {"conflict_resolved", "conflict_approved"}:
@@ -256,10 +274,20 @@ def list_history(session_id: str) -> list[dict[str, Any]]:
             action_type = payload.get("action_type", "")
             if action_type == "guardrail_blocked":
                 event_type = "guardrail_blocked"
+            elif action_type == "mission_delegated":
+                event_type = "mission_delegated"
+                parsed = _parse_json_object(payload.get("description"))
+                if parsed:
+                    payload = parsed
             elif action_type == "contention_gate":
                 event_type = "contention_gate"
         elif record_type == "decision":
             event_type, payload = _decision_event_from_payload(payload)
+            if event_type == "conflict_resolved" and isinstance(payload, dict):
+                nested = _parse_json_object(payload.get("reasoning"))
+                if nested and nested.get("event_type") == "intent_aligned":
+                    event_type = "intent_aligned"
+                    payload = nested.get("payload", payload)
         events.append(
             {
                 "event_id": record["id"],

@@ -13,6 +13,7 @@ const overlordActionKinds = new Set<TimelineKind>([
   "duplicate_detected",
   "agent_reassigned",
   "guardrail_blocked",
+  "merge_detected",
   "merge_resolved",
 ]);
 
@@ -99,9 +100,15 @@ const buildMetrics = (
   };
 };
 
+export interface DashboardModelOptions {
+  subtitle?: string;
+  completeHint?: string;
+}
+
 export const buildDashboardModel = (
   events: TimelineEvent[],
   mode: DashboardMode = "replay",
+  options: DashboardModelOptions = {},
 ): DashboardModel => {
   const timeline = sortByTimestamp(events);
   const agents = new Map<string, AgentState>();
@@ -143,13 +150,20 @@ export const buildDashboardModel = (
         taskTitle: event.taskTitle,
         filePath: event.filePath,
       }));
+
+      for (const [incidentId, incident] of incidents) {
+        if (
+          incident.type === "duplicate_work" &&
+          incident.status === "open" &&
+          incident.agentIds.includes(event.agentId)
+        ) {
+          incidents.set(incidentId, { ...incident, status: "resolved" });
+        }
+      }
     }
 
     if (event.kind === "guardrail_blocked") {
-      applyAgentUpdate(agents, event.agentId, (agent) => ({
-        ...agent,
-        status: "blocked",
-      }));
+      // Incident records the block; agent keeps its current task after Helm rejects the edit.
     }
 
     if (event.kind === "merge_detected") {
@@ -157,6 +171,24 @@ export const buildDashboardModel = (
         ...agent,
         status: "conflicted",
       }));
+    }
+
+    if (event.kind === "merge_resolved") {
+      if (event.incident) {
+        incidents.set(event.incident.id, cloneIncident(event.incident));
+      } else if (event.incidentId) {
+        const existing = incidents.get(event.incidentId);
+        if (existing) {
+          incidents.set(event.incidentId, { ...existing, status: "resolved" });
+        }
+      }
+
+      if (event.agentId) {
+        applyAgentUpdate(agents, event.agentId, (agent) => ({
+          ...agent,
+          status: "coding",
+        }));
+      }
     }
   }
 
@@ -167,10 +199,16 @@ export const buildDashboardModel = (
     right.createdAt.localeCompare(left.createdAt),
   );
 
+  const defaultSubtitle =
+    mode === "replay"
+      ? "ShopFix Etsy-lite · pick a scenario below or watch the guided replay."
+      : "Live session — shared AgentCore memory and Bedrock coordination.";
+
   return {
     mode,
     title: "Helm Control Tower",
-    subtitle: "Replay coordination, incidents, and token savings across the agent fleet.",
+    subtitle: options.subtitle ?? defaultSubtitle,
+    completeHint: options.completeHint,
     agents: agentList,
     incidents: incidentList,
     timeline,

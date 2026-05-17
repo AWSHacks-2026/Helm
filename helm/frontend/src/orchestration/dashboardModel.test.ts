@@ -10,10 +10,10 @@ describe("buildDashboardModel", () => {
 
     expect(model.agents).toHaveLength(6);
     expect(model.metrics.activeAgents).toBeGreaterThan(0);
-    expect(model.metrics.activeAgents).toBe(5);
+    expect(model.metrics.activeAgents).toBe(6);
     expect(model.metrics.reassignedAgents).toBe(1);
     expect(model.metrics.tokenSavingsLabel).toBe("42%");
-    expect(model.metrics.projectHealth).toBe("needs_review");
+    expect(model.metrics.projectHealth).toBe("needs_review"); // billing merge still open
     expect(model.metrics.overlordActions).toBeGreaterThanOrEqual(4);
     expect(model.timeline.map((event) => event.kind)).toEqual(
       expect.arrayContaining([
@@ -27,7 +27,7 @@ describe("buildDashboardModel", () => {
     );
     expect(
       model.incidents.some((incident) => incident.status === "open"),
-    ).toBe(true);
+    ).toBe(true); // billing merge still open
   });
 
   it("keeps replay coverage across demo domains and incidents", () => {
@@ -45,7 +45,7 @@ describe("buildDashboardModel", () => {
     expect(coverageText).toContain("billing");
     expect(coverageText).toContain("cache");
     expect(coverageText).toContain("search");
-    expect(agent05?.status).toBe("blocked");
+    expect(agent05?.status).toBe("coding");
     expect(billingMergeIncident?.status).toBe("open");
   });
 
@@ -150,5 +150,10 @@ describe("buildDashboardModel", () => {
     expect(agent08?.filePath).toBeUndefined();
     expect(model.metrics.activeAgents).toBe(2);
     expect(model.metrics.reassignedAgents).toBe(1);
+    expect(
+      model.incidents.find((incident) => incident.id === "incident-profile-duplicate")
+        ?.status,
+    ).toBe("resolved");
+    expect(model.metrics.projectHealth).toBe("clean");
   });
 });

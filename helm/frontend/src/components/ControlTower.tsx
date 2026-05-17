@@ -1,3 +1,4 @@
+import type { DemoScenario, DemoScenarioId } from "../orchestration/demoScenarios";
 import type {
   AgentState,
   DashboardModel,
@@ -8,6 +9,9 @@ import type {
 interface ControlTowerProps {
   model: DashboardModel;
   connectionLabel?: string;
+  demoScenarios?: DemoScenario[];
+  activeDemoScenarioId?: DemoScenarioId;
+  onDemoScenarioChange?: (scenarioId: DemoScenarioId) => void;
   onSelectIncident: (incidentId: string) => void;
 }
 
@@ -15,6 +19,10 @@ const titleCase = (value: string): string => {
   const label = value.replace(/_/g, " ");
 
   return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+const timelineKindLabel: Partial<Record<TimelineEvent["kind"], string>> = {
+  intent_declared: "Task registered",
 };
 
 const formatTimestamp = (timestamp: string): string => {
@@ -35,8 +43,16 @@ const formatTimestamp = (timestamp: string): string => {
   }
 };
 
-const modeLabel = (model: DashboardModel): string =>
-  model.mode === "live" ? "Live session" : "Demo replay";
+const modeLabel = (_model: DashboardModel): string => "Demo replay";
+
+const projectHealthLabel = (health: DashboardModel["metrics"]["projectHealth"]): string => {
+  if (health === "clean") return "Coordinated";
+  if (health === "needs_review") return "Needs review";
+  return "Blocked";
+};
+
+const replayFinished = (connectionLabel?: string): boolean =>
+  Boolean(connectionLabel?.toLowerCase().includes("complete"));
 
 const renderAgentCard = (agent: AgentState) => (
   <article key={agent.id} className={`agent-card status-${agent.status}`}>
@@ -55,7 +71,7 @@ const renderTimelineEvent = (event: TimelineEvent) => (
     <div>
       <strong>{event.title}</strong>
       <p>{event.description}</p>
-      <span>{titleCase(event.kind)}</span>
+      <span>{timelineKindLabel[event.kind] ?? titleCase(event.kind)}</span>
     </div>
   </li>
 );
@@ -79,20 +95,60 @@ const renderIncidentButton = (
 export function ControlTower({
   model,
   connectionLabel,
+  demoScenarios,
+  activeDemoScenarioId,
+  onDemoScenarioChange,
   onSelectIncident,
 }: ControlTowerProps) {
   const { metrics } = model;
+  const finished = replayFinished(connectionLabel);
+  const showScenarioPicker =
+    model.mode === "replay" &&
+    demoScenarios &&
+    demoScenarios.length > 0 &&
+    onDemoScenarioChange;
 
   return (
     <main className="control-tower">
+      {showScenarioPicker && (
+        <section className="demo-scenario-picker" aria-label="Demo scenarios">
+          <p className="eyebrow">Demo scenarios</p>
+          <div className="filter-pills" role="tablist">
+            {demoScenarios.map((scenario) => (
+              <button
+                key={scenario.id}
+                type="button"
+                role="tab"
+                className={activeDemoScenarioId === scenario.id ? "active" : ""}
+                onClick={() => onDemoScenarioChange(scenario.id)}
+                aria-pressed={activeDemoScenarioId === scenario.id}
+              >
+                {scenario.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <header className="screen-header">
         <div>
           <p className="eyebrow">{connectionLabel ?? modeLabel(model)}</p>
           <h1>{model.title}</h1>
-          <p>{model.subtitle}</p>
+          <p>
+            {finished
+              ? (model.completeHint ??
+                "Replay finished — open Incidents for detail or Results for charts.")
+              : model.subtitle}
+          </p>
         </div>
         <span className={`mode-label mode-${model.mode}`}>{modeLabel(model)}</span>
       </header>
+
+      {finished && model.completeHint && (
+        <p className="replay-complete-banner" role="status">
+          {model.completeHint}
+        </p>
+      )}
 
       <section className="metric-grid" aria-label="Dashboard metrics">
         <article className="metric-card">
@@ -105,7 +161,11 @@ export function ControlTower({
         <article className="metric-card">
           <span>Helm actions</span>
           <strong>{metrics.overlordActions}</strong>
-          <small>{metrics.openIncidents} open incidents</small>
+          <small>
+            {metrics.openIncidents > 0
+              ? `${metrics.openIncidents} open incidents`
+              : "No open incidents"}
+          </small>
         </article>
         <article className="metric-card">
           <span>Token savings</span>
@@ -114,7 +174,7 @@ export function ControlTower({
         </article>
         <article className={`metric-card health-${metrics.projectHealth}`}>
           <span>Project health</span>
-          <strong>{titleCase(metrics.projectHealth)}</strong>
+          <strong>{projectHealthLabel(metrics.projectHealth)}</strong>
           <small>{metrics.completedAgents} complete</small>
         </article>
       </section>

@@ -1,0 +1,21 @@
+suite: intent_opposition
+agent_counts: [2, 4, 6, 8]
+# Opposing goals on the same files — intent alignment should run before dedup/impl.
+clusters:
+  - file: backend/app/routers/auth.py
+    intents:
+      - "Replace all auth with JWT bearer tokens only; remove session cookies and cookie-based login entirely"
+      - "Use session cookies only for login; remove JWT access tokens and bearer auth from the auth router"
+      - "Add OAuth2 social login as the only auth path; deprecate password login and JWT"
+  - file: backend/app/routers/listings.py
+    intents:
+      - "Add heavy full-text search with Elasticsearch-style ranking on every listings query"
+      - "Remove search indexing; keep listings API minimal with simple SQL filters only"
+      - "Switch listings to read-only catalog; block create/update listing endpoints"
+fill_modules:
+  - cart
+  - orders
+  - frontend_home
+  - frontend_cart
+  - frontend_shop
+  - frontend_listing

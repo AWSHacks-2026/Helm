@@ -19,6 +19,44 @@ from agents.shopfix_live_benchmark import (  # noqa: E402
 )
 
 
+def _post_benchmark_checkpoint(suite: str, agent_count: int, pair: dict) -> None:
+    """Notify Helm UI live session (best-effort)."""
+    import urllib.error
+    import urllib.request
+
+    api = os.getenv("SHOPFIX_HELM_API", "http://127.0.0.1:8000").rstrip("/")
+    session_id = os.getenv("HELM_TEAM_SESSION", "mergeai-hackathon-demo")
+    helm = pair.get("helm") or {}
+    comparison = pair.get("comparison") or {}
+    detail = json.dumps(
+        {
+            "suite": suite,
+            "agent_count": agent_count,
+            "cost_savings_pct": comparison.get("cost_savings_pct"),
+            "wall_savings_pct": comparison.get("wall_savings_pct"),
+            "helm_agents_executed": helm.get("full_implementation_runs"),
+        }
+    )
+    body = json.dumps(
+        {
+            "session_id": session_id,
+            "agent_id": "shopfix-benchmark",
+            "event": "benchmark_complete",
+            "detail": detail,
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        f"{api}/history/checkpoint",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        urllib.request.urlopen(request, timeout=3)
+    except (urllib.error.URLError, TimeoutError):
+        pass
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="ShopFix live git + Bedrock benchmark")
     parser.add_argument("--suite", choices=["disjoint", "contention", "all"], default="all")
@@ -54,6 +92,7 @@ def main() -> int:
                 pair = run_shopfix_live_pair(suite, n, base / f"{suite}-n{n}")
                 print(format_summary(pair), flush=True)
                 results.append(pair)
+                _post_benchmark_checkpoint(suite, n, pair)
 
     out_dir = ROOT / "experiments" / "results"
     out_dir.mkdir(parents=True, exist_ok=True)

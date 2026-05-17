@@ -277,7 +277,45 @@ const normalizeHistoryEntry = (
     return normalizeConflictApproved(id, entry);
   }
 
+  if (eventType === "benchmark_checkpoint") {
+    return normalizeBenchmarkCheckpoint(id, entry);
+  }
+
   return null;
+};
+
+const normalizeBenchmarkCheckpoint = (
+  id: string,
+  entry: JsonRecord,
+): TimelineEvent | null => {
+  const payload = getPayload(entry);
+  const detail =
+    firstString(payload.detail, payload.summary, entry.summary) ??
+    "ShopFix benchmark completed.";
+  let savingsLabel = "18%";
+  try {
+    const parsed = JSON.parse(detail) as JsonRecord;
+    const cost = parsed.cost_savings_pct;
+    if (typeof cost === "number") {
+      savingsLabel = `${Math.round(cost)}%`;
+    }
+  } catch {
+    const match = detail.match(/\+(\d+)%/);
+    if (match) savingsLabel = `${match[1]}%`;
+  }
+
+  return {
+    id,
+    timestamp: getTimestamp(entry, payload),
+    kind: "benchmark_result",
+    title: "ShopFix benchmark checkpoint",
+    description: detail,
+    benchmark: {
+      tokenSavingsLabel: savingsLabel,
+      baselineTokens: 0,
+      overlordTokens: 0,
+    },
+  };
 };
 
 const historyEntries = (history: unknown): unknown[] =>
