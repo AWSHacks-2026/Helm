@@ -68,8 +68,13 @@ def log_action(
     return _record_from_raw(raw)
 
 
-def log_intent(agent_id: str, intent: str, session_id: str = _DEFAULT_SESSION) -> KnowledgeRecord:
-    raw = mem.log_intent(session_id, agent_id, intent)
+def log_intent(
+    agent_id: str,
+    intent: str,
+    session_id: str = _DEFAULT_SESSION,
+    file_path: str = "",
+) -> KnowledgeRecord:
+    raw = mem.log_intent(session_id, agent_id, intent, file_path=file_path)
     return _record_from_raw(raw)
 
 

@@ -15,7 +15,10 @@ def record_intent(payload: IntentRecordRequest, request: Request) -> IntentRecor
         intent=payload.intent,
     )
     knowledge_base.log_intent(
-        payload.agent_id, payload.intent, session_id=payload.session_id
+        payload.agent_id,
+        payload.intent,
+        session_id=payload.session_id,
+        file_path=payload.file_path,
     )
     knowledge_base.append_event(
         payload.session_id,

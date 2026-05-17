@@ -18,7 +18,16 @@ def agent_model_id() -> str:
     return resolved
 
 
-MAX_TOKENS = int(os.getenv("LIVE_AGENT_MAX_TOKENS", "800"))
+def continuation_max_tokens() -> int:
+    return int(os.getenv("LIVE_AGENT_MAX_TOKENS", "800"))
+
+
+def reassign_max_tokens() -> int:
+    return int(os.getenv("LIVE_AGENT_REASSIGN_MAX_TOKENS", "1024"))
+
+
+# Back-compat alias
+MAX_TOKENS = continuation_max_tokens()
 
 
 def build_initial_edit_prompt(
@@ -71,6 +80,7 @@ def run_agent_edit(
     file_path: str,
     intent: str,
     peer_code: str | None,
+    max_tokens: int | None = None,
 ) -> tuple[str, InvokeUsage]:
     prompt = build_initial_edit_prompt(
         agent_id=agent_id,
@@ -81,7 +91,7 @@ def run_agent_edit(
     text, usage = invoke_anthropic_messages(
         model_id=agent_model_id(),
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=MAX_TOKENS,
+        max_tokens=max_tokens if max_tokens is not None else continuation_max_tokens(),
         role=agent_id,
     )
     return _strip_fences(text), usage
@@ -105,7 +115,7 @@ def run_agent_merge_fix(
     text, usage = invoke_anthropic_messages(
         model_id=agent_model_id(),
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=MAX_TOKENS,
+        max_tokens=continuation_max_tokens(),
         role=agent_id,
     )
     return _strip_fences(text), usage

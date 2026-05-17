@@ -38,3 +38,20 @@ def test_run_agent_edit_returns_code_and_usage():
     )
     assert "MOCK" in code or "def" in code.lower()
     assert usage.role == "agent_a"
+
+
+def test_run_agent_edit_respects_max_tokens_override(monkeypatch):
+    from unittest.mock import patch
+
+    from bedrock.invoke_tracked import InvokeUsage
+
+    with patch("agents.haiku_agent.invoke_anthropic_messages") as mock_invoke:
+        mock_invoke.return_value = ("x = 1\n", InvokeUsage("model", "agent_a", 1, 1, 1))
+        run_agent_edit(
+            agent_id="agent_a",
+            file_path="app/user.py",
+            intent="cache",
+            peer_code=None,
+            max_tokens=512,
+        )
+        assert mock_invoke.call_args.kwargs["max_tokens"] == 512

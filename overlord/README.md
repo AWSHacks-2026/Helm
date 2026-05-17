@@ -173,6 +173,63 @@ python -m http.server 5174 --directory overlord/demo/generated/static-commerce-r
 
 Then open `http://127.0.0.1:5174`.
 
+## Deduplication benchmark (fleet)
+
+Compares six agents on the commerce platform (overlapping auth + catalog work) vs one Overlord Sonnet call that continues one agent per cluster and reassigns the rest.
+
+```bash
+export OVERLORD_MOCK_BEDROCK=1   # or 0 for live Sonnet + Haiku
+export LIVE_AGENT_MAX_TOKENS=4096
+export LIVE_AGENT_REASSIGN_MAX_TOKENS=1024   # smaller patches for reassigned agents
+python scripts/run_dedup_benchmark.py
+# pairwise legacy: python scripts/run_dedup_benchmark.py --scenario duplicate_work
+```
+
+API: `POST /live/benchmark/dedup/duplicate_work_fleet`
+
+Report: `overlord/experiments/results/dedup_report_<timestamp>.md`
+
+Full write-up: [`experiments/EXPERIMENT_RESULTS.md`](experiments/EXPERIMENT_RESULTS.md)
+
+## Merge conflict benchmark (baseline vs Overlord)
+
+```bash
+python scripts/run_live_benchmark.py --all --seed-mode scenario
+```
+
+Report: `overlord/experiments/results/merge_report_<scenario>_<timestamp>.md`
+
+## Merge conflict fleet (6 agents, 4096 tokens)
+
+Six agents with conflicting code on auth, catalog, and billing vs parallel per-file Overlord Sonnet merges.
+
+```bash
+export LIVE_AGENT_MAX_TOKENS=4096
+export MERGE_FLEET_PARALLEL=1
+export MERGE_FLEET_STRATEGY=haiku_chain
+export MERGE_FLEET_ESCALATE_SONNET=0
+python scripts/run_merge_fleet_benchmark.py
+```
+
+API: `POST /live/benchmark/merge-fleet/merge_conflict_fleet`
+
+Report: `overlord/experiments/results/merge_fleet_report_<timestamp>.md`
+
+## Guardrail benchmark (tiered Haiku / Sonnet)
+
+Preflight is always local policy. LLM resolution uses **Haiku** for simple two-agent incidents and **Sonnet** for fleet (3+ agents), `intent_contradiction`, multi-file context, or large KB history.
+
+```bash
+export GUARDRAIL_STRATEGY=tiered   # tiered | haiku | sonnet
+export GUARDRAIL_SONNET_MIN_AGENTS=3
+python scripts/run_guardrail_benchmark.py
+python scripts/run_guardrail_benchmark.py --fleet   # five-agent Sonnet path
+```
+
+API: `POST /guardrail/check` (pairwise demo)
+
+Report: `overlord/experiments/results/guardrail_report_<timestamp>.json`
+
 ## Dashboard
 
 ```bash

@@ -1,0 +1,6 @@
+{
+  "session_id": "mergeai-hackathon-demo",
+  "file_path": "src/user.py",
+  "ours": "def get_user(user_id):\n    if user_id in cache:\n        return cache[user_id]\n    return db.query(user_id)",
+  "theirs": "def get_user(user_id: str) -> User:\n    return db.query(user_id)"
+}

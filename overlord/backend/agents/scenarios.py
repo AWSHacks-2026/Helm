@@ -16,6 +16,11 @@ SCENARIO_META: dict[str, dict[str, str]] = {
         "title": "Duplicate user authentication work",
         "description": "Overlapping authentication intents before agents duplicate effort.",
     },
+    "duplicate_work_fleet": {
+        "kind": "duplicate_work",
+        "title": "Six-agent commerce platform duplication",
+        "description": "Multiple agents overlap on auth and catalog; one Overlord call coordinates all.",
+    },
     "dependency_conflict": {
         "kind": "dependency",
         "title": "Redis vs in-memory cache",
@@ -107,6 +112,51 @@ SCENARIOS: dict[str, dict[str, Any]] = {
                 "decision": "Started a parallel sign-in and session validation task.",
             },
         ],
+    },
+    "duplicate_work_fleet": {
+        "title": "Commerce Platform — Six Agent Duplication",
+        "file_path": "app/auth/handlers.py",
+        "file_paths": {
+            "agent_a": "app/auth/handlers.py",
+            "agent_b": "app/auth/handlers.py",
+            "agent_c": "app/auth/handlers.py",
+            "agent_d": "app/catalog/products.py",
+            "agent_e": "app/catalog/products.py",
+            "agent_f": "app/billing/invoices.py",
+        },
+        "agents": {
+            "agent_a": {
+                "intent": "I am implementing JWT-based user authentication for the API login flow.",
+                "code": "# Agent A: login endpoints, password verification, JWT issuance.",
+                "proposed_action": "Build API authentication endpoints for login and token issuance.",
+            },
+            "agent_b": {
+                "intent": "I am building user sign-in and session validation for the same API.",
+                "code": "# Agent B: sign-in handlers and session validation.",
+                "proposed_action": "Build sign-in and session validation for authenticated API access.",
+            },
+            "agent_c": {
+                "intent": "I am adding OAuth2 social login and token exchange to the auth module.",
+                "code": "# Agent C: OAuth callbacks and token exchange.",
+                "proposed_action": "Implement OAuth2 provider callbacks and token exchange.",
+            },
+            "agent_d": {
+                "intent": "I am implementing product search, filtering, and pagination in the catalog.",
+                "code": "# Agent D: search and filter API on products.",
+                "proposed_action": "Add product search with filters and pagination.",
+            },
+            "agent_e": {
+                "intent": "I am building the product listing API with sort and filters on the same catalog.",
+                "code": "# Agent E: listing endpoints overlapping search.",
+                "proposed_action": "Implement product listing with sort and filter parameters.",
+            },
+            "agent_f": {
+                "intent": "I am implementing invoice creation, line items, and tax in billing.",
+                "code": "# Agent F: invoice CRUD and tax calculation.",
+                "proposed_action": "Build invoice creation with line items and tax totals.",
+            },
+        },
+        "history": [],
     },
     "dependency_conflict": {
         "title": "Redis vs. In-Memory Cache",

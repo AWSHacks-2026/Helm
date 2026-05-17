@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from session.team_session import resolve_team_session_id
 
 
 class AgentPayload(BaseModel):
@@ -52,7 +54,7 @@ ConflictStatus = Literal["pending_approval", "approved", "rejected", "auto_appli
 
 
 class LiveResolveRequest(BaseModel):
-    session_id: str
+    session_id: str = Field(default_factory=resolve_team_session_id)
     file_path: str
     agent_a: AgentPayloadWithId
     agent_b: AgentPayloadWithId
@@ -66,7 +68,7 @@ class LiveResolveResponse(ResolveResponse):
 
 
 class IntentRecordRequest(BaseModel):
-    session_id: str
+    session_id: str = Field(default_factory=resolve_team_session_id)
     agent_id: str
     file_path: str
     intent: str
@@ -77,7 +79,7 @@ class IntentRecordResponse(BaseModel):
 
 
 class GuardrailCheckRequest(BaseModel):
-    session_id: str
+    session_id: str = Field(default_factory=resolve_team_session_id)
     agent_id: str
     file_path: str
     action: Literal["read", "write", "delete"]
@@ -131,4 +133,20 @@ class ConflictDetailResponse(BaseModel):
     status: ConflictStatus
     agent_a: AgentPayloadWithId
     agent_b: AgentPayloadWithId
+    resolution: ResolutionPayload
+
+
+class GitMergeConflictRequest(BaseModel):
+    session_id: str = Field(default_factory=resolve_team_session_id)
+    file_path: str
+    agent_a_id: str = "git_ours"
+    agent_b_id: str = "git_theirs"
+    ours: str
+    theirs: str
+    base: str | None = None
+
+
+class GitMergeConflictResponse(BaseModel):
+    session_id: str
+    file_path: str
     resolution: ResolutionPayload
