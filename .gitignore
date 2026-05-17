@@ -1,5 +1,6 @@
 .venv/
 .overlord/
+.superpowers/
 .env
 .worktrees/
 agent_docs/*

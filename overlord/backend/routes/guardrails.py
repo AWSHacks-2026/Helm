@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, BackgroundTasks, Request
 
 from bedrock import knowledge_base
 from bedrock.guardrails import check_action
@@ -9,7 +9,7 @@ router = APIRouter(tags=["guardrails"])
 
 @router.post("/guardrails/check", response_model=GuardrailCheckResponse)
 def guardrails_check(
-    payload: GuardrailCheckRequest, request: Request
+    payload: GuardrailCheckRequest, request: Request, background_tasks: BackgroundTasks
 ) -> GuardrailCheckResponse:
     result = check_action(
         session_id=payload.session_id,
@@ -20,11 +20,14 @@ def guardrails_check(
         session_store=request.app.state.session_store,
     )
     if not result.allowed:
-        knowledge_base.append_event(
+        event = {
+            "event_type": "guardrail_blocked",
+            "payload": {**payload.model_dump(), "reason": result.reason},
+        }
+        knowledge_base.append_event(payload.session_id, event)
+        background_tasks.add_task(
+            request.app.state.ws_hub.broadcast,
             payload.session_id,
-            {
-                "event_type": "guardrail_blocked",
-                "payload": {**payload.model_dump(), "reason": result.reason},
-            },
+            {"type": "guardrail_blocked", "event": event},
         )
     return result
