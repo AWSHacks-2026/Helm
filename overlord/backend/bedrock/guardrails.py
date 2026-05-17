@@ -51,15 +51,20 @@ def _arbitrate(
     agent_b: dict[str, str],
     kb_context: list[dict[str, Any]] | None = None,
     guardrail_context: dict[str, Any] | None = None,
+    fleet_agents: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     from overlord import arbitrate
+
+    ctx = dict(guardrail_context or {})
+    if fleet_agents:
+        ctx["fleet_agents"] = fleet_agents
 
     return arbitrate(
         agent_a,
         agent_b,
         kb_context=kb_context,
         conflict_kind="guardrail",
-        guardrail_context=guardrail_context,
+        guardrail_context=ctx,
     )
 
 
@@ -90,19 +95,78 @@ def handle_proposed_action(
             "message": preflight.message,
         },
     )
-    kb.log_decision(
-        reasoning=resolution.get("reasoning", ""),
-        affected_agents=[
-            agent_a.get("agent_id", "agent_a"),
-            agent_b.get("agent_id", "agent_b"),
-        ],
-        session_id=session_id,
-    )
+    try:
+        kb.log_decision(
+            reasoning=resolution.get("reasoning", ""),
+            affected_agents=[
+                agent_a.get("agent_id", "agent_a"),
+                agent_b.get("agent_id", "agent_b"),
+            ],
+            session_id=session_id,
+        )
+    except Exception:
+        pass
     return {
         "preflight": preflight.to_dict(),
         "resolution": resolution,
         "executed": False,
         "verdict": resolution.get("verdict", "blocked"),
+        "resolution_tier": resolution.get("resolution_tier"),
+        "escalated_to_sonnet": resolution.get("escalated_to_sonnet", False),
+    }
+
+
+def handle_proposed_action_fleet(
+    proposed_action: dict[str, Any],
+    agents: dict[str, dict[str, Any]],
+    session_id: str = _DEFAULT_SESSION,
+) -> dict[str, Any]:
+    """Multi-agent guardrail flow (Sonnet when agent count >= GUARDRAIL_SONNET_MIN_AGENTS)."""
+    if len(agents) < 3:
+        raise ValueError("handle_proposed_action_fleet requires at least 3 agents")
+
+    preflight = preflight_check(proposed_action, session_id=session_id)
+    if preflight.allowed:
+        kb.log_action(
+            agent_id=proposed_action["agent_id"],
+            action_type=proposed_action.get("action_type", "unknown"),
+            file_path=proposed_action.get("file_path", ""),
+            description=proposed_action.get("description", ""),
+            session_id=session_id,
+        )
+        return {"preflight": preflight.to_dict(), "resolution": None, "executed": True}
+
+    ordered = sorted(agents.keys())
+    agent_a = {**agents[ordered[0]], "agent_id": ordered[0]}
+    agent_b = {**agents[ordered[1]], "agent_id": ordered[1]}
+
+    resolution = _arbitrate(
+        agent_a,
+        agent_b,
+        kb_context=preflight.kb_context,
+        guardrail_context={
+            "proposed_action": proposed_action,
+            "rule": preflight.rule or "",
+            "message": preflight.message,
+        },
+        fleet_agents=agents,
+    )
+    try:
+        kb.log_decision(
+            reasoning=resolution.get("reasoning", ""),
+            affected_agents=list(agents.keys()),
+            session_id=session_id,
+        )
+    except Exception:
+        pass
+    return {
+        "preflight": preflight.to_dict(),
+        "resolution": resolution,
+        "executed": False,
+        "verdict": resolution.get("verdict", "blocked"),
+        "resolution_tier": resolution.get("resolution_tier"),
+        "escalated_to_sonnet": resolution.get("escalated_to_sonnet", False),
+        "agent_count": len(agents),
     }
 
 
@@ -130,6 +194,50 @@ def seed_guardrail_demo(session_id: str = "guardrail-demo") -> None:
     mem.log_action(session_id, "agent_a", "modify_file", "utils/cache.py", "Extended cache API")
     mem.log_action(session_id, "agent_a", "add_file", "utils/cache.py", "Documented cache usage")
     mem.log_intent(session_id, "agent_b", GUARDRAIL_DEMO_SCENARIO["agent_b"]["intent"])
+
+
+GUARDRAIL_FLEET_SCENARIO: dict[str, Any] = {
+    "agents": {
+        "agent_a": {
+            "intent": "Own auth handlers and JWT caching on app/auth/handlers.py",
+            "code": "# agent_a: JWT + token cache",
+        },
+        "agent_b": {
+            "intent": "Own catalog search API on app/catalog/products.py",
+            "code": "# agent_b: search + pagination",
+        },
+        "agent_c": {
+            "intent": "Refactor shared utils/cache.py for auth hot paths",
+            "code": "# agent_c: extends cache utilities",
+        },
+        "agent_d": {
+            "intent": "Remove legacy utilities to shrink the repo",
+            "code": "# agent_d: cleanup pass",
+        },
+        "agent_e": {
+            "intent": "Billing invoice module on app/billing/invoices.py",
+            "code": "# agent_e: invoices",
+        },
+    },
+    "proposed_action": {
+        "agent_id": "agent_d",
+        "action_type": "delete_file",
+        "file_path": "utils/cache.py",
+        "description": "Delete shared cache module during repo cleanup",
+    },
+}
+
+
+def seed_guardrail_fleet_demo(session_id: str = "guardrail-fleet-demo") -> None:
+    mem.log_intent(session_id, "agent_a", GUARDRAIL_FLEET_SCENARIO["agents"]["agent_a"]["intent"])
+    mem.log_action(session_id, "agent_a", "modify_file", "app/auth/handlers.py", "JWT cache wiring")
+    mem.log_intent(session_id, "agent_b", GUARDRAIL_FLEET_SCENARIO["agents"]["agent_b"]["intent"])
+    mem.log_action(session_id, "agent_b", "modify_file", "app/catalog/products.py", "Search API")
+    mem.log_intent(session_id, "agent_c", GUARDRAIL_FLEET_SCENARIO["agents"]["agent_c"]["intent"])
+    mem.log_action(session_id, "agent_c", "add_file", "utils/cache.py", "Shared cache for auth")
+    mem.log_action(session_id, "agent_c", "modify_file", "utils/cache.py", "TTL helpers")
+    mem.log_intent(session_id, "agent_d", GUARDRAIL_FLEET_SCENARIO["agents"]["agent_d"]["intent"])
+    mem.log_intent(session_id, "agent_e", GUARDRAIL_FLEET_SCENARIO["agents"]["agent_e"]["intent"])
 
 
 def check_action(

@@ -66,11 +66,12 @@ def test_detect_duplication_returns_mock_result_when_enabled(monkeypatch):
     }
 
 
-@patch("overlord.get_bedrock_client")
-def test_detect_duplication_calls_sonnet_and_parses_json(mock_get_client, monkeypatch):
+@patch("overlord.invoke_anthropic_messages")
+def test_detect_duplication_calls_sonnet_and_parses_json(mock_invoke, monkeypatch):
+    from bedrock.invoke_tracked import InvokeUsage
+
     monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
-    mock_client = _configure_bedrock_response(
-        mock_get_client,
+    model_json = json.dumps(
         {
             "conflict_type": "duplicate_work",
             "duplicate_detected": True,
@@ -78,7 +79,11 @@ def test_detect_duplication_calls_sonnet_and_parses_json(mock_get_client, monkey
             "agent_to_reassign": "agent_b",
             "suggested_new_task": "Implement password reset email templates.",
             "reasoning": "Both intents target authentication; split off password reset work.",
-        },
+        }
+    )
+    mock_invoke.return_value = (
+        model_json,
+        InvokeUsage(OVERLORD_MODEL, "overlord-dedup", 100, 50, 10),
     )
     agent_a, agent_b = _agents()
 
@@ -93,23 +98,26 @@ def test_detect_duplication_calls_sonnet_and_parses_json(mock_get_client, monkey
     assert result["suggested_new_task"] == "Implement password reset email templates."
     assert result["resolved_code"] == ""
     assert result["tokens_saved_estimate"] == "~1800"
+    assert result["_usage"]["input_tokens"] == 100
 
-    mock_client.invoke_model.assert_called_once()
-    call_kwargs = mock_client.invoke_model.call_args.kwargs
-    assert call_kwargs["modelId"] == OVERLORD_MODEL
-    body = json.loads(call_kwargs["body"])
-    assert body["anthropic_version"] == "bedrock-2023-05-31"
-    assert body["max_tokens"] == 1000
-    assert "duplicate_detected" in body["messages"][0]["content"]
+    mock_invoke.assert_called_once()
+    assert mock_invoke.call_args.kwargs["model_id"] == OVERLORD_MODEL
+    prompt = mock_invoke.call_args.kwargs["messages"][0]["content"]
+    assert "duplicate_detected" in prompt
 
 
-@patch("overlord.get_bedrock_client")
+def _mock_invoke_return(payload: dict) -> tuple[str, object]:
+    from bedrock.invoke_tracked import InvokeUsage
+
+    return json.dumps(payload), InvokeUsage(OVERLORD_MODEL, "overlord-dedup", 10, 5, 1)
+
+
+@patch("overlord.invoke_anthropic_messages")
 def test_detect_duplication_rejects_non_boolean_duplicate_detected(
-    mock_get_client, monkeypatch
+    mock_invoke, monkeypatch
 ):
     monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
-    _configure_bedrock_response(
-        mock_get_client,
+    mock_invoke.return_value = _mock_invoke_return(
         {
             "conflict_type": "duplicate_work",
             "duplicate_detected": "false",
@@ -125,13 +133,12 @@ def test_detect_duplication_rejects_non_boolean_duplicate_detected(
         detect_duplication(agent_a=agent_a, agent_b=agent_b)
 
 
-@patch("overlord.get_bedrock_client")
+@patch("overlord.invoke_anthropic_messages")
 def test_detect_duplication_rejects_invalid_agent_assignment(
-    mock_get_client, monkeypatch
+    mock_invoke, monkeypatch
 ):
     monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
-    _configure_bedrock_response(
-        mock_get_client,
+    mock_invoke.return_value = _mock_invoke_return(
         {
             "conflict_type": "duplicate_work",
             "duplicate_detected": True,
@@ -147,11 +154,10 @@ def test_detect_duplication_rejects_invalid_agent_assignment(
         detect_duplication(agent_a=agent_a, agent_b=agent_b)
 
 
-@patch("overlord.get_bedrock_client")
-def test_detect_duplication_rejects_same_agent_assignment(mock_get_client, monkeypatch):
+@patch("overlord.invoke_anthropic_messages")
+def test_detect_duplication_rejects_same_agent_assignment(mock_invoke, monkeypatch):
     monkeypatch.delenv("OVERLORD_MOCK_BEDROCK", raising=False)
-    _configure_bedrock_response(
-        mock_get_client,
+    mock_invoke.return_value = _mock_invoke_return(
         {
             "conflict_type": "duplicate_work",
             "duplicate_detected": True,

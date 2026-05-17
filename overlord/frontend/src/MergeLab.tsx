@@ -153,21 +153,28 @@ export default function MergeLab() {
       {live && (
         <div
           className={`live-benchmark-summary ${
-            live.comparison.overlord_beats_tokens ? "pass" : "fail"
+            live.comparison.overlord_beats_cost ? "pass" : "fail"
           }`}
         >
           <h3>Live benchmark (Haiku vs Overlord)</h3>
           {live.mock_bedrock && (
-            <p className="demo-hint">Mock Bedrock — token counts are estimated.</p>
+            <p className="demo-hint">Mock Bedrock — costs are estimated from mock usage.</p>
           )}
           <p>
-            Baseline {live.comparison.baseline_tokens} tokens (
+            Baseline {live.comparison.baseline_cost_display} (
             {live.comparison.baseline_score}%,{" "}
             {live.comparison.baseline_passed ? "passed" : "failed"}) · Overlord{" "}
-            {live.comparison.overlord_tokens} tokens ({live.comparison.overlord_score}%,{" "}
+            {live.comparison.overlord_cost_display} ({live.comparison.overlord_score}%,{" "}
             {live.comparison.overlord_passed ? "passed" : "failed"}) · Saved{" "}
-            {live.comparison.token_savings_pct}%
+            {live.comparison.cost_savings_pct}% cost
           </p>
+          <p className="demo-hint">
+            Tokens: {live.comparison.baseline_tokens} → {live.comparison.overlord_tokens}{" "}
+            ({live.comparison.token_savings_pct}%) — Sonnet costs more per token; compare USD.
+          </p>
+          {live.comparison.cost_note && (
+            <p className="demo-hint">{live.comparison.cost_note}</p>
+          )}
           <p>
             Rounds: baseline {live.baseline.rounds} vs Overlord {live.overlord.rounds}
           </p>

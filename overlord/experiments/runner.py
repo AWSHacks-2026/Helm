@@ -38,18 +38,18 @@ def load_base_files(theme_dir: Path, manifest: dict[str, Any]) -> dict[str, str]
 def _mock_agent_code(agent_id: str, feature: str, base: str) -> str:
     """Valid Python that diverges per agent (cheap, deterministic)."""
     tag = agent_id.replace("agent_", "")
-    if "alpha" in agent_id:
-        return (
-            base.rstrip()
-            + f"\n\n# {tag}: in-memory cache path\n"
-            + "_LOOKUP_CACHE: dict[str, dict] = {}\n"
+    suffix = hash(agent_id) % 3
+    if suffix == 0:
+        extra = f"\n\n# {tag}: in-memory cache path\n_LOOKUP_CACHE: dict[str, dict] = {{}}\n"
+    elif suffix == 1:
+        extra = (
+            f"\n\n# {tag}: disk cache path\n"
+            "import json\nfrom pathlib import Path\n"
+            "_CACHE_FILE = Path('.cache') / 'data.json'\n"
         )
-    return (
-        base.rstrip()
-        + f"\n\n# {tag}: disk cache path\n"
-        + "import json\nfrom pathlib import Path\n"
-        + "_CACHE_FILE = Path('.cache') / 'data.json'\n"
-    )
+    else:
+        extra = f"\n\n# {tag}: feature branch\n_FEATURE_FLAG_{tag.upper()} = True\n"
+    return base.rstrip() + extra
 
 
 def run_theme(
