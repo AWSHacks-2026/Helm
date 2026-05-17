@@ -1,0 +1,199 @@
+/**
+ * Site-wide contrast fixes — ensures readable text on light surfaces.
+ * Loaded last; targets cards/panels missed by earlier migrations.
+ */
+
+/* Metric & impact cards (Problem / Solution pages) */
+.metric-card,
+.presentation-metric-card,
+.impact-grid article {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.metric-card strong,
+.presentation-metric-card strong {
+  color: var(--semantic-save) !important;
+  font-size: clamp(1.25rem, 2.2vw, 1.65rem) !important;
+  line-height: 1.2 !important;
+}
+
+.metric-card span {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.metric-card small,
+.presentation-metric-card small {
+  color: var(--text-muted) !important;
+}
+
+/* Presentation & solution panels */
+.presentation-card,
+.solution-research-panel,
+.architecture-panel,
+.env-switch-panel,
+.presenter-script,
+.gratitude-mission {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.presentation-card h2,
+.solution-research-copy h2,
+.gratitude-mission h2 {
+  color: var(--text-primary) !important;
+}
+
+.presentation-card p,
+.solution-research-copy p {
+  color: var(--text-muted) !important;
+}
+
+/* Architecture flowchart */
+.architecture-flowchart,
+.architecture-lane-label,
+.env-switch-panel dl div {
+  background: var(--bg-muted) !important;
+}
+
+.architecture-lane-label {
+  color: var(--text-muted) !important;
+}
+
+.architecture-node {
+  background: var(--bg-surface) !important;
+}
+
+.architecture-node strong {
+  color: var(--text-primary) !important;
+}
+
+.architecture-node span {
+  color: var(--text-muted) !important;
+}
+
+.architecture-node--teal {
+  border-color: var(--semantic-save-muted) !important;
+  background: var(--semantic-save-bg) !important;
+}
+
+.architecture-node--green {
+  border-color: var(--semantic-save-muted) !important;
+  background: var(--semantic-save-bg) !important;
+}
+
+.architecture-node--purple {
+  border-color: #d4c4f0 !important;
+  background: #f6f0ff !important;
+}
+
+.architecture-node--blue {
+  border-color: #b8d4f0 !important;
+  background: #eef5fc !important;
+}
+
+.architecture-node--amber {
+  border-color: #e8c878 !important;
+  background: var(--accent-gift) !important;
+}
+
+.architecture-node--coral,
+.architecture-node--red {
+  border-color: #f0b8b8 !important;
+  background: #fef7f7 !important;
+}
+
+.architecture-lane-note {
+  color: var(--text-muted) !important;
+}
+
+/* Control tower */
+.agent-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.agent-card-header span {
+  background: var(--bg-muted) !important;
+  color: var(--text-muted) !important;
+}
+
+.dashboard-panel,
+.incident-queue,
+.incident-detail,
+.incident-row {
+  background: var(--bg-surface) !important;
+}
+
+/* Status chips & pills */
+.filter-pills button,
+.status-pill {
+  color: var(--text-primary);
+}
+
+/* Gratitude roadmap cards */
+.gratitude-roadmap,
+.gratitude-roadmap-list li,
+.gratitude-mission-card {
+  background: var(--bg-muted) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+.gratitude-roadmap-list h3,
+.gratitude-mission-card h3 {
+  color: var(--semantic-save) !important;
+}
+
+.gratitude-timeline li {
+  background: var(--bg-muted);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.gratitude-kind {
+  color: var(--semantic-save) !important;
+}
+
+/* Pillar / proof */
+.pillar-card,
+.presenter-script,
+.demo-chart-figure {
+  background: var(--bg-surface) !important;
+}
+
+.pillar-card h2 {
+  color: var(--text-primary) !important;
+}
+
+.pillar-metrics dt {
+  color: var(--text-muted) !important;
+}
+
+/* Technical badges */
+.technical-badge-stack span {
+  background: var(--semantic-save-bg) !important;
+  color: var(--semantic-save) !important;
+  border-color: var(--semantic-save-muted) !important;
+}
+
+/* Global: no dark-on-dark headings in cards */
+[class*="card"] strong,
+[class*="card"] h2,
+[class*="card"] h3,
+[class*="panel"] h2,
+article h2 {
+  text-shadow: none;
+}
+
+.screen-header h1,
+.presentation-hero h1 {
+  color: var(--text-primary) !important;
+}
+
+.screen-header p,
+.presentation-hero p {
+  color: var(--text-muted) !important;
+}
