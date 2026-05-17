@@ -57,6 +57,7 @@ describe("AppShell", () => {
     expect(html).toContain("Helm");
     expect(html).toContain("Problem Statement");
     expect(html).toContain("Our Solution");
+    expect(html).toContain("Technical Workflow");
     expect(html).toContain("Control Tower");
     expect(html).toContain("Incidents");
     expect(html).not.toContain("Missions");
@@ -79,6 +80,7 @@ describe("AppShell", () => {
 
     expect(html).toContain("Problem Statement");
     expect(html).toContain("Our Solution");
+    expect(html).toContain("Technical Workflow");
     expect(html).toContain("Control Tower");
     expect(html).toContain("Incidents");
     expect(html).toContain("Gratitude");
@@ -101,6 +103,7 @@ describe("AppShell", () => {
     (buttonsByLabel.get("Helm")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Problem Statement")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Our Solution")?.props as ButtonProps).onClick?.();
+    (buttonsByLabel.get("Technical Workflow")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Control Tower")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Incidents")?.props as ButtonProps).onClick?.();
     (buttonsByLabel.get("Gratitude")?.props as ButtonProps).onClick?.();
@@ -110,11 +113,12 @@ describe("AppShell", () => {
     expect(onViewChange).toHaveBeenNthCalledWith(1, "landing" satisfies AppView);
     expect(onViewChange).toHaveBeenNthCalledWith(2, "problem" satisfies AppView);
     expect(onViewChange).toHaveBeenNthCalledWith(3, "solution" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(4, "control" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(5, "incidents" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(6, "gratitude" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(7, "proof" satisfies AppView);
-    expect(onViewChange).toHaveBeenNthCalledWith(8, "labs" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(4, "technical" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(5, "control" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(6, "incidents" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(7, "gratitude" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(8, "proof" satisfies AppView);
+    expect(onViewChange).toHaveBeenNthCalledWith(9, "labs" satisfies AppView);
     expect((buttonsByLabel.get("Control Tower")?.props as ButtonProps).className).toBe(
       "active",
     );

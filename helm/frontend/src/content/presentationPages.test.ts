@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { PROBLEM_PAGE, SOLUTION_PAGE } from "./presentationPages";
+import { PROBLEM_PAGE, SOLUTION_PAGE, TECHNICAL_WORKFLOW_PAGE } from "./presentationPages";
 
 describe("presentation page content", () => {
   it("keeps the problem statement focused on agent thrashing and customer impact", () => {
@@ -24,5 +24,21 @@ describe("presentation page content", () => {
     expect(text).toContain("helm");
     expect(text).toContain("intent");
     expect(text).toContain("guardrails");
+  });
+
+  it("keeps the technical workflow page focused on AWS, Bedrock, and source-backed flow", () => {
+    const text = JSON.stringify(TECHNICAL_WORKFLOW_PAGE).toLowerCase();
+
+    expect(TECHNICAL_WORKFLOW_PAGE.title).toContain("How Helm coordinates");
+    expect(text).toContain("react 19");
+    expect(text).toContain("fastapi");
+    expect(text).toContain("agentcore memory");
+    expect(text).toContain("agentcore policy");
+    expect(text).toContain("agentcore runtime");
+    expect(text).toContain("haiku 4.5");
+    expect(text).toContain("sonnet 4.6");
+    expect(text).toContain("contention gate");
+    expect(text).toContain("guardrails");
+    expect(text).toContain("helm_mock_bedrock");
   });
 });

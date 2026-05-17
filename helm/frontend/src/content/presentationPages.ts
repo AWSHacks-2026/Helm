@@ -17,6 +17,24 @@ export type PresentationPageContent = {
   sections: PresentationSection[];
 };
 
+export type TechnicalNode = {
+  title: string;
+  detail: string;
+  tone: "teal" | "purple" | "coral" | "amber" | "blue" | "gray" | "green" | "red";
+};
+
+export type TechnicalLane = {
+  label: string;
+  nodes: TechnicalNode[];
+  note?: string;
+};
+
+export type TechnicalWorkflowPageContent = PresentationPageContent & {
+  badges: string[];
+  lanes: TechnicalLane[];
+  envSwitches: Array<{ name: string; value: string }>;
+};
+
 export const PROBLEM_PAGE: PresentationPageContent = {
   eyebrow: "Problem Statement",
   title: "Agent fleets are starting to thrash like uncoordinated threads.",
@@ -112,5 +130,124 @@ export const SOLUTION_PAGE: PresentationPageContent = {
       body:
         "Overlord does not replace the agents. It gives them a lightweight control tower so each agent can stay focused while the system prevents fleet-level chaos.",
     },
+  ],
+};
+
+export const TECHNICAL_WORKFLOW_PAGE: TechnicalWorkflowPageContent = {
+  eyebrow: "Technical Workflow",
+  title: "How Helm coordinates agent fleets on AWS.",
+  lede:
+    "Architecture first: coding agents declare work, Helm decides whether coordination is needed, Amazon Bedrock handles the hard arbitration, and session history feeds the Control Tower and Gratitude ledger.",
+  badges: [
+    "Bedrock Claude Haiku 4.5",
+    "Bedrock Claude Sonnet 4.6",
+    "AgentCore Memory / Policy / Runtime",
+  ],
+  metrics: [
+    {
+      value: "React 19 + Vite",
+      label: "Control Tower UI",
+      body:
+        "The presenter site is a TypeScript React app that renders replay state, incidents, gratitude, results, and this technical workflow.",
+    },
+    {
+      value: "FastAPI :8000",
+      label: "Helm coordination API",
+      body:
+        "Python 3.11, FastAPI, Uvicorn, in-memory stores, websocket broadcasts, and API routes for intents, guardrails, resolve, history, missions, and gratitude.",
+    },
+    {
+      value: "ShopFix :8001",
+      label: "Real benchmark target",
+      body:
+        "The Etsy-lite fixture gives Helm real git contention, auth/cart/listing files, and reproducible benchmark scenarios.",
+    },
+  ],
+  sections: [
+    {
+      title: "AWS service usage",
+      body:
+        "Amazon Bedrock Runtime runs Anthropic Messages calls. AgentCore Memory stores session events with a local .helm/session.json fallback. AgentCore Policy represents Cedar-style preflight checks. AgentCore Runtime can host the merge arbitrator when HELM_ARBITRATOR_ARN is configured.",
+    },
+    {
+      title: "Bedrock routing",
+      body:
+        "Claude Haiku 4.5 handles light coordination, agent work, guardrail checks, and cheaper merge paths. Claude Sonnet 4.6 handles fleet dedup, hard merges, and multi-agent arbitration when complexity crosses the routing threshold.",
+    },
+    {
+      title: "Two decisions, not one",
+      body:
+        "Contention gate asks: should we spend Bedrock on coordination? Guardrails ask: may this agent write this file? They compose; neither replaces the other.",
+    },
+    {
+      title: "Judge demo mode",
+      body:
+        "HELM_MOCK_BEDROCK=1 swaps live Bedrock calls for local simulators, while replay events still sync through POST /history/event so the Gratitude ledger shows returned time and tokens.",
+    },
+  ],
+  lanes: [
+    {
+      label: "Agents",
+      nodes: [
+        { title: "Coding agents", detail: "Cursor / Claude Code / MCP", tone: "teal" },
+        { title: "ShopFix harness", detail: "git benchmark :8001", tone: "teal" },
+        { title: "Control Tower", detail: "React/Vite :5173", tone: "blue" },
+      ],
+    },
+    {
+      label: "Helm API",
+      nodes: [
+        { title: "POST /intents", detail: "declare work", tone: "gray" },
+        { title: "POST /guardrails", detail: "/check + demo check", tone: "gray" },
+        { title: "POST /resolve", detail: "merge conflict", tone: "gray" },
+        { title: "POST /missions/delegate", detail: "fleet dedup", tone: "gray" },
+        { title: "GET /gratitude", detail: "ledger endpoint", tone: "green" },
+        { title: "WS /ws/conflicts", detail: "live broadcast", tone: "gray" },
+      ],
+    },
+    {
+      label: "Coordination",
+      nodes: [
+        { title: "Contention gate", detail: "allow skips Bedrock", tone: "amber" },
+        { title: "Guardrails", detail: "write safety always runs", tone: "teal" },
+        { title: "Inference routing", detail: "Haiku or Sonnet", tone: "purple" },
+        { title: "Fleet dedup", detail: "continue one, reassign rest", tone: "green" },
+      ],
+      note: "HELM_GATE_ENABLED, assess_intent, assess_dedup, preflight_check",
+    },
+    {
+      label: "AWS Bedrock",
+      nodes: [
+        { title: "Claude Haiku 4.5", detail: "agents / guardrails / light merge", tone: "teal" },
+        { title: "Claude Sonnet 4.6", detail: "fleet dedup / hard merges", tone: "coral" },
+        { title: "AgentCore Memory", detail: "session log / local fallback", tone: "purple" },
+        { title: "AgentCore Policy", detail: "Cedar preflight on writes", tone: "purple" },
+        { title: "AgentCore Runtime", detail: "optional merge arbitrator", tone: "amber" },
+      ],
+    },
+    {
+      label: "Judge UI",
+      nodes: [
+        { title: "useDemoReplay", detail: "scripted timeline", tone: "gray" },
+        { title: "syncReplayToLedger", detail: "POST /history/event", tone: "gray" },
+        { title: "ControlTower", detail: "timeline + incidents", tone: "blue" },
+        { title: "BenchmarkProof", detail: "static charts + pillars", tone: "green" },
+      ],
+    },
+    {
+      label: "Stores",
+      nodes: [
+        { title: "SessionStore", detail: "intents per file / RAM", tone: "gray" },
+        { title: "ConflictStore", detail: "active conflicts / RAM", tone: "gray" },
+        { title: "MissionStore", detail: "fleet assignments / RAM", tone: "gray" },
+        { title: "GratitudeLedger", detail: "blocked / deduped / tokens", tone: "green" },
+      ],
+    },
+  ],
+  envSwitches: [
+    { name: "HELM_MOCK_BEDROCK", value: "1 demo / 0 live" },
+    { name: "HELM_USE_LOCAL_MEMORY", value: "true / false" },
+    { name: "HELM_USE_LOCAL_POLICY", value: "true / false" },
+    { name: "HELM_GATE_ENABLED", value: "1" },
   ],
 };

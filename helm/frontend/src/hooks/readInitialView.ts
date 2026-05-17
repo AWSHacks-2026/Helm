@@ -4,6 +4,7 @@ const VIEWS: AppView[] = [
   "landing",
   "problem",
   "solution",
+  "technical",
   "control",
   "incidents",
   "missions",

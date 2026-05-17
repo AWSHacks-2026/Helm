@@ -9,6 +9,7 @@ import { LandingPage } from "./components/LandingPage";
 import { LegacyLabPanel } from "./components/LegacyLabPanel";
 import { ProblemStatementPage } from "./components/ProblemStatementPage";
 import { SolutionPage } from "./components/SolutionPage";
+import { TechnicalWorkflowPage } from "./components/TechnicalWorkflowPage";
 import { JUDGE_WALKTHROUGH } from "./demoWalkthrough";
 import GratitudeLedgerPanel from "./GratitudeLedger";
 import {
@@ -133,6 +134,10 @@ export default function App() {
 
     if (view === "solution") {
       return <SolutionPage />;
+    }
+
+    if (view === "technical") {
+      return <TechnicalWorkflowPage />;
     }
 
     if (view === "control") {
