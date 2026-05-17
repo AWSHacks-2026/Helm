@@ -92,6 +92,27 @@ Or: **Merge lab** → **Run live benchmark**. Use `seed_mode=scenario` for cheap
 
 **Cost control:** `LIVE_BENCHMARK_DISABLED=1` blocks live calls.
 
+## Token Benchmark Demo
+
+Run the live benchmark after AWS credentials and Bedrock model access are configured:
+
+```bash
+source "$HOME/.bashrc" && activatevenv
+OVERLORD_MOCK_BEDROCK=0 python overlord/scripts/benchmark_overlord_tokens.py
+```
+
+The benchmark uses real Bedrock API usage fields only. It refuses to run with `OVERLORD_MOCK_BEDROCK=1` unless `--allow-mock` is passed for local testing.
+
+Outputs:
+
+- `overlord/demo/overlord-token-benchmark.json`
+- `overlord/demo/overlord-token-benchmark.png`
+
+The figure contains:
+
+- Total tokens vs number of agents, with and without Overlord
+- Resolution time vs number of agents, with and without Overlord
+
 ## Dashboard
 
 ```bash
